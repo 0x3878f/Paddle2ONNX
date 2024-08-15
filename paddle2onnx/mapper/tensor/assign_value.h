@@ -82,7 +82,7 @@ class AssignValueMapper : public Mapper {
     if (handler != type_handlers.end()) {
       handler->second();
     } else {
-      throw std::invalid_argument("Unsupported dtype value");
+        Error() << "Unsupported dtype value" << std::endl;
     }
   }
 
@@ -98,7 +98,7 @@ class AssignValueMapper : public Mapper {
     } else if (dtype == P2ODataType::BOOL) {
       return "bool_values";
     }
-    throw std::invalid_argument("Unsupported dtype value");
+    Error() << "Unsupported dtype value" << std::endl;
   }
 
   AssignValueMapper(const PaddlePirParser& p,
