@@ -82,6 +82,8 @@ class PaddleParser {
                  const std::string& name, std::vector<float>* res) const;
   void GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
                  const std::string& name, std::vector<double>* res) const;
+  void GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
+                 const std::string& name, std::vector<bool>* res) const;
 
   bool IsConstantTensor(const int64_t& block_idx,
                         const std::string& tensor_name) const;
@@ -89,6 +91,11 @@ class PaddleParser {
   bool TryGetTensorValue(const int64_t& block_id,
                          const std::string& tensor_name,
                          std::vector<T>* data) const;
+
+  template <typename T>
+  void GetOpScalars(const paddle2onnx::framework::proto::OpDesc& op,
+                    const std::string& name,
+                    std::vector<T>* res) const;
 
  private:
   // If the model has same output name in difference operators
