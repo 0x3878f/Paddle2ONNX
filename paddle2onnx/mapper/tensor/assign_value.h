@@ -44,35 +44,35 @@ class AssignValueMapper : public Mapper {
         {P2ODataType::INT32,
          [&]() {
            if (attr_name == "values")
-             GetScalarsAttr(attr_name, &int64_values_);
+             GetScalars(attr_name, &int64_values_);
            else if (attr_name == "int32_values")
              GetAttr(attr_name, &int64_values_);
          }},
         {P2ODataType::INT64,
          [&]() {
            if (attr_name == "values")
-             GetScalarsAttr(attr_name, &int64_values_);
+             GetScalars(attr_name, &int64_values_);
            else if (attr_name == "int64_values")
              GetAttr(attr_name, &int64_values_);
          }},
         {P2ODataType::FP32,
          [&]() {
            if (attr_name == "values")
-             GetScalarsAttr(attr_name, &fp32_values_);
+             GetScalars(attr_name, &fp32_values_);
            else if (attr_name == "fp32_values")
              GetAttr(attr_name, &fp32_values_);
          }},
         {P2ODataType::FP64,
          [&]() {
            if (attr_name == "values")
-             GetScalarsAttr(attr_name, &double_values_);
+             GetScalars(attr_name, &double_values_);
            else if (attr_name == "fp32_values")
              GetAttr(attr_name, &double_values_);
          }},
         {P2ODataType::BOOL,
          [&]() {
            if (attr_name == "values")
-             GetScalarsAttr(attr_name, &bool_values_);
+             GetScalars(attr_name, &bool_values_);
            else if (attr_name == "bool_values")
              GetAttr(attr_name, &bool_values_);
          }},
@@ -82,7 +82,7 @@ class AssignValueMapper : public Mapper {
     if (handler != type_handlers.end()) {
       handler->second();
     } else {
-        Error() << "Unsupported dtype value" << std::endl;
+      Error() << "Unsupported dtype value" << std::endl;
     }
   }
 
