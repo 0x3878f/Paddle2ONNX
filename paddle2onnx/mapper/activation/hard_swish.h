@@ -23,7 +23,9 @@
 namespace paddle2onnx {
 class HardSwishMapper : public Mapper {
  public:
-  HardSwishMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  HardSwishMapper(const PaddleParser& p,
+                  OnnxHelper* helper,
+                  int64_t block_id,
                   int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("scale", &scale_);
@@ -31,8 +33,10 @@ class HardSwishMapper : public Mapper {
     GetAttr("threshold", &threshold_);
   }
 
-  HardSwishMapper(const PaddlePirParser& p, OnnxHelper* helper,
-                  int64_t op_id, bool c)
+  HardSwishMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t op_id,
+                  bool c)
       : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
     if (HasAttr("scale")) {
@@ -45,6 +49,7 @@ class HardSwishMapper : public Mapper {
       GetAttr("threshold", &threshold_);
     }
   }
+  int32_t GetMinOpsetVersion(bool verbose) override;
 
   void Opset7() override;
   void Opset14() override;
