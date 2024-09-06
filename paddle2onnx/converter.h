@@ -33,30 +33,61 @@ struct PADDLE2ONNX_DECL CustomOp {
   char export_op_name[100] = "paddle2onnx_null";
 };
 
-PADDLE2ONNX_DECL bool
-Export(const char *model, const char *params, char **out, int *out_size,
-       int32_t opset_version = 7, bool auto_upgrade_opset = true,
-       bool verbose = false, bool enable_onnx_checker = true,
-       bool enable_experimental_op = false, bool enable_optimize = true,
-       const char *deploy_backend = "onnxruntime",
-       char **calibration_cache = nullptr, int *calibration_size = 0,
-       const char *external_file = "", bool *save_external = nullptr,
-       bool export_fp16_model = false, char **disable_fp16_op_types = nullptr,
-       int disable_fp16_op_types_count = 0);
+PADDLE2ONNX_DECL bool Export(const char *model,
+                             const char *params,
+                             char **out,
+                             int *out_size,
+                             int32_t opset_version = 7,
+                             bool auto_upgrade_opset = true,
+                             bool verbose = false,
+                             bool enable_onnx_checker = true,
+                             bool enable_experimental_op = false,
+                             bool enable_optimize = true,
+                             CustomOp *ops = nullptr,
+                             int op_count = 0,
+                             const char *deploy_backend = "onnxruntime",
+                             char **calibration_cache = nullptr,
+                             int *calibration_size = 0,
+                             const char *external_file = "",
+                             bool *save_external = nullptr,
+                             bool export_fp16_model = false,
+                             char **disable_fp16_op_types = nullptr,
+                             int disable_fp16_op_types_count = 0);
 
-PADDLE2ONNX_DECL bool
-Export(const void *model_buffer, int64_t model_size, const void *params_buffer,
-       int64_t params_size, char **out, int *out_size,
-       int32_t opset_version = 7, bool auto_upgrade_opset = true,
-       bool verbose = false, bool enable_onnx_checker = true,
-       bool enable_experimental_op = false, bool enable_optimize = true,
-       const char *deploy_backend = "onnxruntime",
-       char **calibration_cache = nullptr, int *calibration_size = 0,
-       const char *external_file = "", bool *save_external = nullptr,
-       bool export_fp16_model = false, char **disable_fp16_op_types = nullptr,
-       int disable_fp16_op_types_count = 0);
+PADDLE2ONNX_DECL bool Export(const void *model_buffer,
+                             int64_t model_size,
+                             const void *params_buffer,
+                             int64_t params_size,
+                             char **out,
+                             int *out_size,
+                             int32_t opset_version = 7,
+                             bool auto_upgrade_opset = true,
+                             bool verbose = false,
+                             bool enable_onnx_checker = true,
+                             bool enable_experimental_op = false,
+                             bool enable_optimize = true,
+                             CustomOp *ops = nullptr,
+                             int op_count = 0,
+                             const char *deploy_backend = "onnxruntime",
+                             char **calibration_cache = nullptr,
+                             int *calibration_size = 0,
+                             const char *external_file = "",
+                             bool *save_external = nullptr,
+                             bool export_fp16_model = false,
+                             char **disable_fp16_op_types = nullptr,
+                             int disable_fp16_op_types_count = 0);
 
 // Following are inside usage, will remove it maybe
+PADDLE2ONNX_DECL bool RemoveMultiClassNMS(const char *onnx_model,
+                                          int model_size,
+                                          char **out_model,
+                                          int *out_model_size);
+
+PADDLE2ONNX_DECL bool ConvertFP32ToFP16(const char *onnx_model,
+                                        int model_size,
+                                        char **out_model,
+                                        int *out_model_size);
+
 struct PADDLE2ONNX_DECL ModelTensorInfo {
   char name[100] = "";
   int64_t *shape = nullptr;
@@ -92,13 +123,6 @@ struct PADDLE2ONNX_DECL OnnxReader {
   int num_inputs;
   int num_outputs;
 };
-
-PADDLE2ONNX_DECL bool RemoveMultiClassNMS(const char *onnx_model,
-                                          int model_size, char **out_model,
-                                          int *out_model_size);
-
-PADDLE2ONNX_DECL bool ConvertFP32ToFP16(const char *onnx_model, int model_size,
-                                        char **out_model, int *out_model_size);
 
 struct PADDLE2ONNX_DECL PaddleReader {
   PaddleReader(const char *model_buffer, int buffer_size);

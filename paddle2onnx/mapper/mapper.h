@@ -48,6 +48,11 @@ class Mapper {
     in_pir_mode = true;
     if_in_cf_block = in_contro_flow_block;
   }
+  // The flag will control if the op is exported as a custom operator
+  // if export_as_custom_op = true, will exported as description in
+  // custom_op_info
+  bool export_as_custom_op = false;
+  // [exported_op_name, domain]
 
   // [exported_op_name, domain]
   std::string custom_op_name;
@@ -123,12 +128,16 @@ class Mapper {
   // opset_version
   // if return value < 0, means the op is not supported.
   virtual int32_t GetMinOpsetVersion(bool verbose) { return 7; }
+  virtual bool IsExportAsCustomOp() { return export_as_custom_op; }
 
   void Run() {
     int32_t opset_version = helper_->GetOpsetVersion();
     Assert(opset_version >= 7 && opset_version <= MAX_ONNX_OPSET_VERSION,
            "[Paddle2ONNX] Only support opset_version in range of [7, " +
                std::to_string(MAX_ONNX_OPSET_VERSION) + "].");
+    if (IsExportAsCustomOp()) {
+      return ExportAsCustomOp();
+    }
 
     if (opset_version == 23) {
       Opset23();
@@ -165,6 +174,11 @@ class Mapper {
     } else {
       Opset7();
     }
+  }
+
+  virtual void ExportAsCustomOp() {
+    Assert(false,
+           "Operator " + name_ + "doesn't support export as custom operator.");
   }
 
   virtual void Opset23() { Opset22(); }
@@ -347,7 +361,8 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data, if_in_cf_block);
+          data,
+          if_in_cf_block);
     } else {
       auto input_info = GetInput(input_key);
       return parser_->TryGetTensorValue(block_idx_, input_info[0].name, data);
@@ -361,7 +376,8 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data, if_in_cf_block);
+          data,
+          if_in_cf_block);
     } else {
       Assert(false, "Not support in old IR.");
     }

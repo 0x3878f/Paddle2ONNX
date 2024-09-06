@@ -100,6 +100,9 @@ inline std::string GetFilenameFromPath(const std::string& path) {
 namespace paddle2onnx {
 class ModelExporter {
  public:
+  // custom operators for export
+  // <key: op_name, value:[exported_op_name, domain]>
+  std::map<std::string, std::string> custom_ops;
   QuantizeModelProcessor quantize_model_processer;
 
   void SaveExternalData(ONNX_NAMESPACE::GraphProto* graph,
@@ -122,19 +125,20 @@ class ModelExporter {
                   bool* save_external = nullptr,
                   bool export_fp16_model = false,
                   std::vector<std::string> disable_fp16_op_types = {});
+
   std::string Run(PaddlePirParser& pir_parser,
-                  int opset_version = 9,
-                  bool auto_upgrade_opset = true,
-                  bool verbose = false,
-                  bool enable_onnx_checker = true,
-                  bool enable_experimental_op = false,
-                  bool enable_optimize = true,
-                  const std::string& deploy_backend = "onnxruntime",
-                  std::string* calibration_cache = nullptr,
-                  const std::string& external_file = "",
-                  bool* save_external = nullptr,
-                  bool export_fp16_model = false,
-                  std::vector<std::string> disable_fp16_op_types = {});
+                  int opset_version,
+                  bool auto_upgrade_opset,
+                  bool verbose,
+                  bool enable_onnx_checker,
+                  bool enable_experimental_op,
+                  bool enable_optimize,
+                  const std::string& deploy_backend,
+                  std::string* calibration_cache,
+                  const std::string& external_file,
+                  bool* save_external,
+                  bool export_fp16_model,
+                  std::vector<std::string> disable_fp16_op_types={});
 
  private:
   bool verbose_ = false;
@@ -238,5 +242,9 @@ class ModelExporter {
                     bool verbose);
 #endif
   ONNX_NAMESPACE::ModelProto Optimize(const ONNX_NAMESPACE::ModelProto& model);
+  void CovertCustomOps(const PaddleParser& parser,
+                       OnnxHelper* helper,
+                       int64_t block_id,
+                       int64_t op_id);
 };
 }  // namespace paddle2onnx
