@@ -20,8 +20,8 @@
 
 #include "paddle2onnx/converter.h"
 #include "paddle2onnx/mapper/exporter.h"
+#include "paddle2onnx/mapper/register_mapper.h"
 #include "paddle2onnx/optimizer/paddle2onnx_optimizer.h"
-
 namespace paddle2onnx {
 
 typedef std::map<std::string, std::string> CustomOpInfo;
@@ -156,5 +156,9 @@ PYBIND11_MODULE(paddle2onnx_cpp2py_export, m) {
           ONNX_NAMESPACE::optimization::Paddle2ONNXFP32ToFP16(fp32_model_path,
                                                               fp16_model_path);
         });
+  m.def("get_all_supported_operators", []() {
+    auto operators = MapperHelper::Get()->GetAllOps();
+    return operators;
+  });
 }
 }  // namespace paddle2onnx
