@@ -61,10 +61,9 @@ void DropoutMapper::Opset7() {
       }
     }
     std::string scale_node = helper_->Constant(
-        {}, GetOnnxDtype(input_info[0].dtype), 1 - dropout_prob_);
-    helper_->MakeNode("Mul", {input_info[0].name, scale_node},
-                      {output_info[0].name});
+        {1}, GetOnnxDtype(input_info[0].dtype), 1 - dropout_prob_);
+    helper_->MakeNode(
+        "Mul", {input_info[0].name, scale_node}, {output_info[0].name});
   }
 }
-
 }  // namespace paddle2onnx

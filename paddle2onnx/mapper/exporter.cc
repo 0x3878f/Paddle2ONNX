@@ -79,10 +79,8 @@ bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
         continue;
       }
 #if 0
-        if (op.type() == "while" && enable_experimental_op)
-        {
-          if (!IsLoopSupported(parser, i, j))
-          {
+        if (op.type() == "while" && enable_experimental_op) {
+          if (!IsLoopSupported(parser, i, j)) {
             unsupported_ops.insert("while");
           }
           continue;
@@ -103,6 +101,9 @@ bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
       }
     }
   }
+  if (unsupported_ops.size() == 0) {
+    return true;
+  }
 
   auto logger = P2OLogger();
   logger << "Oops, there are some operators not supported yet, including ";
@@ -110,7 +111,7 @@ bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
     logger << item << ",";
   }
   logger << std::endl;
-  return (unsupported_ops.size() == 0);
+  return false;
 }
 
 int32_t ModelExporter::GetMinOpsetVersion(const PaddleParser& parser) {
