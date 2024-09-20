@@ -206,12 +206,20 @@ class ModelExporter {
   ONNX_NAMESPACE::GraphProto ExportIfBlock(PaddlePirParser& pir_parser,
                                            pir::Block& block);
 
+  ONNX_NAMESPACE::GraphProto ExportFillConstant(
+      const PaddleParser& parser,
+      OnnxHelper* temp_helper,
+      int32_t block_id,
+      int32_t op_id,
+      const std::string& output_names);
+
   ONNX_NAMESPACE::GraphProto ExportBlock(
       const PaddleParser& parser,
       int32_t block_id,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs);
+
   ONNX_NAMESPACE::GraphProto ExportBlock(
       PaddlePirParser& pir_parser,
       pir::Block* block,
