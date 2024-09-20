@@ -22,6 +22,10 @@
 #include "onnxoptimizer/optimize.h"
 #include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 #include "paddle/phi/core/enforce.h"
+#include "paddle2onnx/mapper/quantize/ort_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/other_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/rknn_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/tensorrt_quantize_processor.h"
 #include "paddle2onnx/optimizer/convert_fp32_to_fp16.h"
 #include "paddle2onnx/optimizer/eliminate_non_transpose.h"
 #include "paddle2onnx/optimizer/fuse_constant_cast.h"
@@ -654,15 +658,32 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
                               outputs,
                               temp_helper.nodes,
                               temp_helper.quantize_info);
+  // Process the model according to deploy_mackend_
   if (parser.is_quantized_model) {
-    quantize_model_processer.ProcessQuantizeModel(&parameters,
-                                                  &inputs,
-                                                  &outputs,
-                                                  &temp_helper.nodes,
-                                                  &temp_helper,
-                                                  deploy_backend_,
-                                                  parser,
-                                                  calibration_cache_);
+    if (deploy_backend_ == "onnxruntime") {
+      quantize_processer_ = new ORTQuantizeProcessor();
+    } else if (deploy_backend_ == "rknn") {
+      quantize_processer_ = new RKNNQuantizeProcessor();
+    } else if (deploy_backend_ == "tensorrt") {
+      quantize_processer_ = new TensorRTQuantizeProcessor();
+    } else if (deploy_backend_ == "other") {
+      quantize_processer_ = new OtherQuantizeProcessor();
+    } else {
+      Assert(false,
+             "Only support onnxruntime/rknn/tensorrt/other as backend now, but "
+             "now the backend is: " +
+                 deploy_backend_ + ".");
+    }
+    P2OLogger() << "Deploy backend is: " << deploy_backend_ << std::endl;
+    quantize_processer_->ProcessQuantizeModel(&parameters,
+                                              &inputs,
+                                              &outputs,
+                                              &temp_helper.nodes,
+                                              &temp_helper,
+                                              parser,
+                                              calibration_cache_);
+    delete quantize_processer_;
+    quantize_processer_ = nullptr;
     // Update int8 weights in quantized OP to float32
     UpdateParameters(temp_helper.updated_params, parameters);
   }
@@ -881,9 +902,10 @@ void ModelExporter::ProcessGraphDumplicateNames(
         }
         auto new_tensor_name =
             MapperHelper::Get()->GenName(renamed_tensor_name);
-        P2OLogger() << "Find dumplicate output name '" << renamed_tensor_name
-                    << "', it will rename to '" << new_tensor_name << "'."
-                    << std::endl;
+        // P2OLogger() << "Find dumplicate output name '" <<
+        // renamed_tensor_name
+        //             << "', it will rename to '" << new_tensor_name << "'."
+        //             << std::endl;
         if (quantize_info.find(renamed_tensor_name) != quantize_info.end()) {
           quantize_info[new_tensor_name] = quantize_info[renamed_tensor_name];
         }
@@ -1049,8 +1071,8 @@ std::string ModelExporter::Run(const PaddleParser& parser,
   deploy_backend_ = deploy_backend;
   calibration_cache_ = calibration_cache;
 
-  // Clear name_counter, this use to generate unique name for intermdiate while
-  // converting all the op
+  // Clear name_counter, this use to generate unique name for intermdiate
+  // while converting all the op
   MapperHelper::Get()->ClearNameCounter();
 
   if (!IsOpsRegistered(parser, enable_experimental_op)) {
@@ -1149,5 +1171,4 @@ ONNX_NAMESPACE::ModelProto ModelExporter::Optimize(
                                      "eliminate_unused_initializer"};
   return ONNX_NAMESPACE::optimization::Optimize(model, passes);
 }
-
 }  // namespace paddle2onnx

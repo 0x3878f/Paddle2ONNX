@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "paddle2onnx/mapper/mapper.h"
-#include "paddle2onnx/mapper/quantize_helper.h"
+#include "paddle2onnx/mapper/quantize/base_quantize_processor.h"
 #include "paddle2onnx/parser/parser.h"
 #include "paddle2onnx/parser/pir_parser.h"
 
@@ -89,6 +89,7 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
   return op_name;
 }
 
+namespace paddle2onnx {
 inline std::string GetFilenameFromPath(const std::string& path) {
   auto pos = path.find_last_of(PATH_SEP);
   if (pos == std::string::npos) {
@@ -97,13 +98,11 @@ inline std::string GetFilenameFromPath(const std::string& path) {
   return path.substr(pos + 1);
 }
 
-namespace paddle2onnx {
 class ModelExporter {
  public:
   // custom operators for export
   // <key: op_name, value:[exported_op_name, domain]>
   std::map<std::string, std::string> custom_ops;
-  QuantizeModelProcessor quantize_model_processer;
 
   void SaveExternalData(ONNX_NAMESPACE::GraphProto* graph,
                         const std::string& external_file_path,
@@ -138,12 +137,13 @@ class ModelExporter {
                   const std::string& external_file,
                   bool* save_external,
                   bool export_fp16_model,
-                  std::vector<std::string> disable_fp16_op_types={});
+                  std::vector<std::string> disable_fp16_op_types = {});
 
  private:
   bool verbose_ = false;
   // The _deploy_backend will pass to Mapper to influence the conversion
   std::string deploy_backend_ = "onnxruntime";
+  BaseQuantizeProcessor* quantize_processer_ = nullptr;
   std::string* calibration_cache_ = nullptr;
   int32_t opset_version_ = 7;
 
