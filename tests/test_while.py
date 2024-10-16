@@ -14,7 +14,7 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import _test_only_pir
+from onnxbase import _test_with_pir
 
 
 class BaseNet1(paddle.nn.Layer):
@@ -29,7 +29,7 @@ class BaseNet1(paddle.nn.Layer):
         return inputs
 
 
-@_test_only_pir
+@_test_with_pir
 def test_while_1():
     op = BaseNet1()
     op.eval()
@@ -49,7 +49,7 @@ class BaseNet2(paddle.nn.Layer):
         return inputs
 
 
-@_test_only_pir
+@_test_with_pir
 def test_while_2():
     op = BaseNet2()
     op.eval()
@@ -70,7 +70,7 @@ class BaseNet3(paddle.nn.Layer):
         return j + k
 
 
-@_test_only_pir
+@_test_with_pir
 def test_while_3():
     op = BaseNet3()
     op.eval()
@@ -95,7 +95,7 @@ class BaseNet4(paddle.nn.Layer):
         return j + k
 
 
-@_test_only_pir
+@_test_with_pir
 def test_while_4():
     op = BaseNet4()
     op.eval()
@@ -104,6 +104,20 @@ def test_while_4():
         "input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0)
     )
     obj.run()
+
+
+class BaseNet5(paddle.nn.Layer):
+    def __init__(self):
+        super(BaseNet5, self).__init__()
+
+    def forward(self, i, j, k):
+        while i <= 3:
+            if i < 1:
+                j += 1
+            else:
+                j += 2
+            i += 1
+        return j + k
 
 
 if __name__ == "__main__":

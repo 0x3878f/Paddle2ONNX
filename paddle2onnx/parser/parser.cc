@@ -457,19 +457,21 @@ void PaddleParser::GetBlocksOps() {
 TensorInfo PaddleParser::GetTensorInfo(
     const std::string& name,
     const paddle2onnx::framework::proto::BlockDesc& block) const {
-  auto block_idx = block.idx();
-  auto iter = _blocks_var_name2id[block_idx].find(name);
-  if (iter == _blocks_var_name2id[block_idx].end()) {
-    if (block_idx == 0) {
-      Assert(false,
-             "Cannot find " + name + " in _blocks_var_name2id(global block).");
-    } else {
-      block_idx = block.parent_idx();
-      iter = _blocks_var_name2id[block_idx].find(name);
-      Assert(iter != _blocks_var_name2id[block_idx].end(),
-             "Cannot find " + name + " in _blocks_var_name2id(parent block).");
+  int32_t block_idx = block.idx();
+  bool is_find = false;
+  auto iter = _blocks_var_name2id[block_idx].begin();
+  do {
+    iter = _blocks_var_name2id[block_idx].find(name);
+    if (iter != _blocks_var_name2id[block_idx].end()) {
+      is_find = true;
+      break;
     }
-  }
+    block_idx--;
+  } while (block_idx >= 0);
+
+  Assert(is_find,
+         "Cannot find " + name + " in _blocks_var_name2id(global block).");
+
   auto var_idx = iter->second;
 
   // Dangerous conversion, lod tensor array is under limited supporting
