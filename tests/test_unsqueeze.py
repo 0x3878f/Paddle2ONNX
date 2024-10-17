@@ -188,13 +188,13 @@ def test_unsqueeze_9_multil_negative_axis():
     obj.run()
 
 
-# if __name__ == '__main__':
-#     test_unsqueeze_9()
-#     test_unsqueeze_10()
-#     test_unsqueeze_11()
-#     test_unsqueeze_12()
-#     test_unsqueeze_axis_12()
-#     test_unsqueeze_9_two_tensor_axis()
-#     test_unsqueeze_9_two_axis()
-#     test_unsqueeze_9_multil_axis()
-#     test_unsqueeze_9_multil_negative_axis()
+if __name__ == "__main__":
+    test_unsqueeze_9()
+    test_unsqueeze_10()
+    test_unsqueeze_11()
+    test_unsqueeze_12()
+    test_unsqueeze_axis_13()
+    test_unsqueeze_13_two_tensor_axis()
+    test_unsqueeze_9_two_axis()
+    test_unsqueeze_9_multil_axis()
+    test_unsqueeze_9_multil_negative_axis()
