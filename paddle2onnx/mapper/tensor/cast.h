@@ -27,9 +27,11 @@ class CastMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("out_dtype", &out_dtype_);
   }
-  CastMapper(const PaddlePirParser& p, OnnxHelper* helper,
-             int64_t op_id)
-      : Mapper(p, helper, op_id) {
+  CastMapper(const PaddlePirParser& p,
+             OnnxHelper* helper,
+             int64_t op_id
+             bool c)
+      : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
     GetAttr("dtype", &out_dtype_);
   }
