@@ -29,7 +29,7 @@ class MeshgridMapper : public Mapper {
   }
   MeshgridMapper(const PaddlePirParser& p,
                  OnnxHelper* helper,
-                 int64_t op_id
+                 int64_t op_id,
                  bool c)
       : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
