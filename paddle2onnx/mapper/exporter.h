@@ -34,12 +34,13 @@
 #endif
 
 inline std::string convert_pir_op_name(const std::string pir_op_name) {
-    std::unordered_map<std::string, std::string> op_name_mappings = {
-        {"matmul", "matmul_v2"},
-        // {"relu", "relu6"},
-        {"batch_norm_", "batch_norm"},
-        {"flatten", "flatten_contiguous_range"},
-        {"add", "elementwise_add"}};
+  std::unordered_map<std::string, std::string> op_name_mappings = {
+      {"matmul", "matmul_v2"},
+      // {"relu", "relu6"},
+      {"batch_norm_", "batch_norm"},
+      {"assign_value_", "assign_value"},
+      {"flatten", "flatten_contiguous_range"},
+      {"add", "elementwise_add"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
   std::string builtin_prefix = "builtin.";
@@ -47,11 +48,10 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
   size_t prefix_pos = op_name.find(prefix);
   if (prefix_pos != std::string::npos) {
     op_name = op_name.substr(prefix_pos + prefix.size());
-  }
-  else {
-    if(op_name.substr(0, builtin_prefix.size()) == builtin_prefix) {
+  } else {
+      if(op_name.substr(0, builtin_prefix.size()) == builtin_prefix) {
         op_name[builtin_prefix.size() - 1] = '_';
-    }
+      }
   }
   auto it = op_name_mappings.find(op_name);
   if (it != op_name_mappings.end()) {
@@ -162,8 +162,10 @@ class ModelExporter {
           &inputs,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
           &outputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &nodes,
-      std::map<std::string, QuantizeInfo> &quantize_info);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+          &nodes,
+      std::map<std::string, QuantizeInfo>
+          &quantize_info);
   // Update constant node in parameters. When process quantize model, the weight
   // dtype may be int8, it should be convet to float32 and use this function to
   // update converted params.
@@ -181,7 +183,8 @@ class ModelExporter {
   ONNX_NAMESPACE::GraphProto ExportBlock(
       const PaddleParser &parser,
       int32_t block_id,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &parameters,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+          &parameters,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
           &inputs,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
@@ -189,7 +192,8 @@ class ModelExporter {
 
   ONNX_NAMESPACE::GraphProto ExportBlock(
       const PaddlePirParser &pir_parser,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &parameters,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+          &parameters,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
           &inputs,
       std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>

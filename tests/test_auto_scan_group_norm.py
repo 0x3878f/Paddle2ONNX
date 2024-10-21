@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -27,17 +26,18 @@ class Net(BaseNet):
 
     def __init__(self, config=None):
         super(Net, self).__init__(config)
-        groups = self.config['groups']
-        epsilon = self.config['epsilon']
-        num_channels = self.config['num_channels']
-        data_format = self.config['data_format']
+        groups = self.config["groups"]
+        epsilon = self.config["epsilon"]
+        num_channels = self.config["num_channels"]
+        data_format = self.config["data_format"]
         self.group_norm = paddle.nn.GroupNorm(
             num_groups=groups,
             num_channels=num_channels,
             epsilon=epsilon,
-            weight_attr=None if self.config['has_weight_attr'] else False,
-            bias_attr=None if self.config['has_bias_attr'] else False,
-            data_format=data_format)
+            weight_attr=None if self.config["has_weight_attr"] else False,
+            bias_attr=None if self.config["has_bias_attr"] else False,
+            data_format=data_format,
+        )
 
     def forward(self, inputs):
         """
@@ -55,9 +55,8 @@ class TestGroupNormConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=4, max_value=10), min_size=4, max_size=4))
+            st.lists(st.integers(min_value=4, max_value=10), min_size=4, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32"]))
         data_format = draw(st.sampled_from(["NCHW"]))
@@ -84,6 +83,7 @@ class TestGroupNormConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

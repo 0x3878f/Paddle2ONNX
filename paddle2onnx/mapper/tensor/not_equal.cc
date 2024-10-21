@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(not_equal, NotEqualMapper)
+REGISTER_PIR_MAPPER(not_equal, NotEqualMapper)
 
 int32_t NotEqualMapper::GetMinOpsetVersion(bool verbose) {
   auto x_info = GetInput("X");

@@ -24,6 +24,12 @@ class StackMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
   }
+  StackMapper(const PaddlePirParser& p, OnnxHelper* helper,
+              int64_t op_id)
+      : Mapper(p, helper, op_id) {
+    in_pir_mode = true;
+    GetAttr("axis", &axis_);
+  }
   void Opset7() override;
 
  private:

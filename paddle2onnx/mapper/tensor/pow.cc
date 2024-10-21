@@ -18,6 +18,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(pow, PowMapper)
+REGISTER_PIR_MAPPER(pow, PowMapper)
 
 void PowMapper::Opset7() {
   auto input_info = GetInput("X");

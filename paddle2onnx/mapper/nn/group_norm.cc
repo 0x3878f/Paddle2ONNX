@@ -20,6 +20,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(group_norm, GroupNormMapper)
+REGISTER_PIR_MAPPER(group_norm, GroupNormMapper)
 
 int32_t GroupNormMapper::GetMinOpsetVersion(bool verbose) {
   auto input_info = GetInput("X");

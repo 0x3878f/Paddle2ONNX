@@ -14,7 +14,7 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -33,6 +33,7 @@ class Net(paddle.nn.Layer):
         return x + y
 
 
+@_test_with_pir
 def test_meshgrid_base():
     """
     api: paddle.meshgrid
@@ -41,13 +42,16 @@ def test_meshgrid_base():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'meshgrid', [11, 12])
-    obj.set_input_data("input_data",
-                       paddle.to_tensor([1, 2, 3]).astype('float32'),
-                       paddle.to_tensor([4, 5, 6]).astype('float32'))
+    obj = APIOnnx(op, "meshgrid", [11, 12])
+    obj.set_input_data(
+        "input_data",
+        paddle.to_tensor([1, 2, 3]).astype("float32"),
+        paddle.to_tensor([4, 5, 6]).astype("float32"),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_meshgrid_unlikeSize():
     """
     api: paddle.meshgrid
@@ -56,10 +60,12 @@ def test_meshgrid_unlikeSize():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'meshgrid', [11, 12])
-    obj.set_input_data("input_data",
-                       paddle.to_tensor([1, 2, 3]).astype('float32'),
-                       paddle.to_tensor([5, 6]).astype('float32'))
+    obj = APIOnnx(op, "meshgrid", [11, 12])
+    obj.set_input_data(
+        "input_data",
+        paddle.to_tensor([1, 2, 3]).astype("float32"),
+        paddle.to_tensor([5, 6]).astype("float32"),
+    )
     obj.run()
 
 
@@ -79,6 +85,7 @@ class Net_3(paddle.nn.Layer):
         return x + y + z
 
 
+@_test_with_pir
 def test_meshgrid_3():
     """
     api: paddle.meshgrid
@@ -87,9 +94,11 @@ def test_meshgrid_3():
     op = Net_3()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'meshgrid', [11, 12])
-    obj.set_input_data("input_data",
-                       paddle.to_tensor([1, 2, 3]).astype('float32'),
-                       paddle.to_tensor([5, 6]).astype('float32'),
-                       paddle.to_tensor([1, 2, 3, 4]).astype('float32'))
+    obj = APIOnnx(op, "meshgrid", [11, 12])
+    obj.set_input_data(
+        "input_data",
+        paddle.to_tensor([1, 2, 3]).astype("float32"),
+        paddle.to_tensor([5, 6]).astype("float32"),
+        paddle.to_tensor([1, 2, 3, 4]).astype("float32"),
+    )
     obj.run()

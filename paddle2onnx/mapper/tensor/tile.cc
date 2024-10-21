@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(tile, TileMapper)
+REGISTER_PIR_MAPPER(tile, TileMapper)
 
 void TileMapper::Opset7() {
   auto x_info = GetInput("X");

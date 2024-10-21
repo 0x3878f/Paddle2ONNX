@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(cast, CastMapper)
+REGISTER_PIR_MAPPER(cast, CastMapper)
 
 void CastMapper::Opset7() {
   auto input_info = GetInput("X");
