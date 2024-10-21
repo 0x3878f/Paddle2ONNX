@@ -122,9 +122,11 @@ class LeakyReluMapper : public Mapper {
     GetAttr("alpha", &alpha_);
   }
 
-  LeakyReluMapper(const PaddlePirParser& p, OnnxHelper* helper,
-                  int64_t op_id)
-      : Mapper(p, helper, op_id) {
+  LeakyReluMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {
     in_pir_mode = true;
     GetAttr("alpha", &alpha_);
   }
@@ -143,9 +145,11 @@ class GeluMapper : public Mapper {
              int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
 
-  GeluMapper(const PaddlePirParser& p, OnnxHelper* helper,
-             int64_t op_id)
-      : Mapper(p, helper, op_id) {
+  GeluMapper(const PaddlePirParser& p,
+             OnnxHelper* helper,
+             int64_t i,
+             bool c)
+      : Mapper(p, helper, i, c) {
     in_pir_mode = true;
   }
 
@@ -171,9 +175,11 @@ class SoftMaxMapper : public Mapper {
     }
   }
 
-  SoftMaxMapper(const PaddlePirParser& p, OnnxHelper* helper,
-                int64_t op_id)
-      : Mapper(p, helper, op_id) {
+  SoftMaxMapper(const PaddlePirParser& p,
+                OnnxHelper* helper,
+                int64_t i,
+                bool c)
+      : Mapper(p, helper, i, c) {
     in_pir_mode = true;
     if (HasAttr("axis")) {
       GetAttr("axis", &axis_);
@@ -378,9 +384,11 @@ class SiluMapper : public Mapper {
              int64_t block_id,
              int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
-  SiluMapper(const PaddlePirParser& p, OnnxHelper* helper,
-             int64_t op_id)
-      : Mapper(p, helper, op_id) {
+  SiluMapper(const PaddlePirParser& p,
+             OnnxHelper* helper,
+             int64_t i,
+             bool c)
+      : Mapper(p, helper, i, c) {
     in_pir_mode = true;
   }
   void Opset7() override;
