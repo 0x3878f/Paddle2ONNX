@@ -28,6 +28,15 @@ class GroupNormMapper : public Mapper {
     GetAttr("groups", &groups_);
     GetAttr("epsilon", &epsilon_);
   }
+  GroupNormMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t op_id,
+                  bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("groups", &groups_);
+    GetAttr("epsilon", &epsilon_);
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;

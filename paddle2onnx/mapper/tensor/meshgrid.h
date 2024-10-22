@@ -27,6 +27,14 @@ class MeshgridMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     MarkAsExperimentalOp();
   }
+  MeshgridMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t op_id,
+                 bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    MarkAsExperimentalOp();
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override { return 8; }
   void Opset8() override;

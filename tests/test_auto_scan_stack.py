@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -29,7 +28,7 @@ class Net(BaseNet):
         """
         forward
         """
-        x = paddle.stack([inputs1, inputs2], axis=self.config['axis'])
+        x = paddle.stack([inputs1, inputs2], axis=self.config["axis"])
         return x
 
 
@@ -41,16 +40,14 @@ class TestStackConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=4, max_value=8), min_size=0, max_size=5))
+            st.lists(st.integers(min_value=4, max_value=8), min_size=0, max_size=5)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
         if len(input_shape) > 0:
             axis = draw(
-                st.integers(
-                    min_value=-len(input_shape), max_value=len(input_shape) -
-                    1))
+                st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
+            )
         else:
             axis = 0
 
@@ -67,6 +64,7 @@ class TestStackConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

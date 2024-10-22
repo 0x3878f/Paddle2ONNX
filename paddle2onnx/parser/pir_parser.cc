@@ -576,9 +576,9 @@ void PaddlePirParser::GetGlobalBlockInputOutputInfo() {
   }
 }
 
-bool PaddlePirParser::IsAttrVar(const pir::Operation* op,
-                                const int64_t& attr_id) const {
-  // TODO: For Resnet50, this interface always return false.
+bool PaddlePirParser::IsAttrVar(const pir::Operation *op,
+                                const int64_t &attr_id) const {
+  // TODO(qzylalala): For Resnet50, this interface always return false.
   return false;
 }
 
@@ -646,7 +646,16 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
         *res = pair.second.dyn_cast<::pir::Int32Attribute>().data();
       } else if (pair.second.isa<pir::Int64Attribute>()) {
         *res = pair.second.dyn_cast<::pir::Int64Attribute>().data();
-      } 
+      } else if (pair.second.isa<pir::Attribute>()) {
+        // a_dtype
+        auto type = op->result(0).type().cast<pir::DenseTensorType>().dtype();
+        auto data_type = TransToPhiDataType(type);
+        auto it = pir_dtype_to_onnx_dtype.find(data_type);
+        if (it == pir_dtype_to_onnx_dtype.end()) {
+          std::cerr << "data_type not found" << std::endl;
+        }
+        *res = it->second;
+      }
       break;
     }
   }
@@ -748,7 +757,7 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
         auto array_list =
             pair.second.dyn_cast<::pir::ArrayAttribute>().AsVector();
         if (array_list.size() > 0) {
-          // TODO: Need double check.
+          // TODO(qzylalala): Need double check.
           PADDLE_ENFORCE_EQ(
               array_list[0].isa<::pir::Int64Attribute>() ||
                   array_list[0].isa<::pir::Int32Attribute>(),

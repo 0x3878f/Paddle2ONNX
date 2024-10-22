@@ -32,10 +32,39 @@ class Conv2dTransposeMapper : public Mapper {
     GetAttr("padding_algorithm", &padding_algorithm_);
     GetAttr("data_format", &data_format_);
 
-    if (HasAttr("output_padding")){
+    if (HasAttr("output_padding")) {
       GetAttr("output_padding", &output_padding_);
     }
     GetAttr("output_size", &output_size_);
+    if (paddings_.size() == 2) {
+      paddings_.push_back(paddings_[0]);
+      paddings_.push_back(paddings_[1]);
+    } else if (paddings_.size() == 4) {
+      int32_t tmp = paddings_[1];
+      paddings_[1] = paddings_[2];
+      paddings_[2] = tmp;
+    }
+  }
+
+  Conv2dTransposeMapper(const PaddlePirParser& p,
+                        OnnxHelper* helper,
+                        int64_t op_id,
+                        bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("groups", &groups_);
+    GetAttr("dilations", &dilations_);
+    GetAttr("strides", &strides_);
+    GetAttr("paddings", &paddings_);
+    GetAttr("padding_algorithm", &padding_algorithm_);
+    GetAttr("data_format", &data_format_);
+
+    if (HasAttr("output_padding")) {
+      GetAttr("output_padding", &output_padding_);
+    }
+    if (HasAttr("output_size")) {
+      GetAttr("output_size", &output_size_);
+    }
     if (paddings_.size() == 2) {
       paddings_.push_back(paddings_[0]);
       paddings_.push_back(paddings_[1]);

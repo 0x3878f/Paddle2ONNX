@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
 from onnxbase import randtool
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net0(BaseNet):
@@ -94,11 +93,8 @@ class TestClipConvert0(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -120,6 +116,7 @@ class TestClipConvert0(OPConvertAutoScanTest):
 
         return (config0, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -132,11 +129,8 @@ class TestClipConvert1(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -159,6 +153,7 @@ class TestClipConvert1(OPConvertAutoScanTest):
 
         return (config1, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -171,9 +166,8 @@ class TestClipConvert2(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -192,6 +186,7 @@ class TestClipConvert2(OPConvertAutoScanTest):
 
         return (config2, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -204,11 +199,8 @@ class TestClipConvert3(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -232,6 +224,7 @@ class TestClipConvert3(OPConvertAutoScanTest):
 
         return (config3, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -244,11 +237,8 @@ class TestClipConvert4(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -265,6 +255,7 @@ class TestClipConvert4(OPConvertAutoScanTest):
 
         return (config0, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

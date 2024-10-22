@@ -27,6 +27,14 @@ class PowMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("factor", &factor_);
   }
+  PowMapper(const PaddlePirParser& p,
+            OnnxHelper* helper,
+            int64_t op_id,
+            bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("factor", &factor_);
+  }
   void Opset7() override;
 
  private:

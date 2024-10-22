@@ -19,7 +19,9 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(conv2d_transpose, Conv2dTransposeMapper)
+REGISTER_PIR_MAPPER(conv2d_transpose, Conv2dTransposeMapper)
 REGISTER_MAPPER(depthwise_conv2d_transpose, Conv2dTransposeMapper)
+REGISTER_PIR_MAPPER(depthwise_conv2d_transpose, Conv2dTransposeMapper)
 
 int32_t Conv2dTransposeMapper::GetMinOpsetVersion(bool verbose) {
   // NHWC is not supported

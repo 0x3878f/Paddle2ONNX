@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(logical_not, LogicalNotMapper)
+REGISTER_PIR_MAPPER(logical_not, LogicalNotMapper)
 
 void LogicalNotMapper::Opset7() {
   auto input_info = GetInput("X");

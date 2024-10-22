@@ -39,6 +39,7 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"matmul", "matmul_v2"},
       // {"relu", "relu6"},
       {"batch_norm_", "batch_norm"},
+      {"assign_value_", "assign_value"},
       {"flatten", "flatten_contiguous_range"},
       {"add", "elementwise_add"}};
   std::string op_name = pir_op_name;
@@ -94,7 +95,8 @@ class ModelExporter {
                   bool* save_external = nullptr,
                   bool export_fp16_model = false,
                   std::vector<std::string> disable_fp16_op_types = {});
-  std::string Run(PaddlePirParser& pir_parser,
+  std::string Run(PaddlePirParser
+                    & pir_parser,
                   int opset_version = 9,
                   bool auto_upgrade_opset = true,
                   bool verbose = false,
@@ -132,34 +134,46 @@ class ModelExporter {
   //
   void ExportInputOutputs(
       const PaddleParser& parser,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & inputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & outputs);
 
   void ExportInputOutputs(
       const PaddlePirParser& pir_parser,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & inputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & outputs);
 
   void ExportParameters(
       const PaddleParser& parser,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters);
   void ExportParameters(
       const PaddlePirParser& pir_parser,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters);
   // Process dumplicate tensor names in paddle model
   std::set<std::string> tensor_names_;
   void ProcessGraphDumplicateNames(
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& nodes,
-      std::map<std::string, QuantizeInfo>& quantize_info);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & inputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & outputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & nodes,
+      std::map<std::string, QuantizeInfo>
+        & quantize_info);
   // Update constant node in parameters. When process quantize model, the
   // weight dtype may be int8, it should be convet to float32 and use this
   // function to update converted params.
   void UpdateParameters(
       const std::map<std::string, Weight>& params,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters);
   //
   std::map<std::string, std::pair<int32_t, int32_t>> sub_block_map_;
   ONNX_NAMESPACE::GraphProto ExportConditionalBlock(
@@ -168,21 +182,30 @@ class ModelExporter {
       int32_t op_id,
       const std::string& output_names);
 
-  ONNX_NAMESPACE::GraphProto ExportIfBlock(PaddlePirParser& pir_parser,
-                                           pir::Block& block);
+  ONNX_NAMESPACE::GraphProto ExportIfBlock(PaddlePirParser
+                                            & pir_parser,
+                                           pir::Block
+                                            & block);
 
   ONNX_NAMESPACE::GraphProto ExportBlock(
       const PaddleParser& parser,
       int32_t block_id,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs);
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & inputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & outputs);
   ONNX_NAMESPACE::GraphProto ExportBlock(
-      PaddlePirParser& pir_parser,
+      PaddlePirParser
+        & pir_parser,
       pir::Block* block,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>
+        & parameters,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & inputs,
+      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>
+        & outputs,
       bool if_in_subblock);
 
   void ExportOp(const PaddleParser& parser,

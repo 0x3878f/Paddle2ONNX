@@ -22,6 +22,13 @@ class NotEqualMapper : public Mapper {
   NotEqualMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
                  int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  NotEqualMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t op_id,
+                 bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 };

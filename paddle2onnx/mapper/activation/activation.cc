@@ -17,19 +17,26 @@
 namespace paddle2onnx {
 
 REGISTER_MAPPER(abs, ActivationMapper)
+REGISTER_PIR_MAPPER(abs, ActivationMapper)
 REGISTER_MAPPER(acos, ActivationMapper)
 REGISTER_MAPPER(asin, ActivationMapper)
 REGISTER_MAPPER(atan, ActivationMapper)
 REGISTER_MAPPER(brelu, BReluMapper)
 REGISTER_MAPPER(ceil, ActivationMapper)
 REGISTER_MAPPER(cos, ActivationMapper)
+REGISTER_PIR_MAPPER(cos, ActivationMapper)
 REGISTER_MAPPER(elu, EluMapper)
 REGISTER_MAPPER(erf, ActivationMapper)
 REGISTER_MAPPER(exp, ActivationMapper)
+REGISTER_PIR_MAPPER(exp, ActivationMapper)
 REGISTER_MAPPER(floor, ActivationMapper)
+REGISTER_PIR_MAPPER(floor, ActivationMapper)
 REGISTER_MAPPER(gelu, GeluMapper)
+REGISTER_PIR_MAPPER(gelu, GeluMapper)
 REGISTER_MAPPER(leaky_relu, LeakyReluMapper)
+REGISTER_PIR_MAPPER(leaky_relu, LeakyReluMapper)
 REGISTER_MAPPER(log, ActivationMapper)
+REGISTER_PIR_MAPPER(log, ActivationMapper)
 REGISTER_MAPPER(log10, Log10Mapper)
 REGISTER_MAPPER(log1p, Log1PMapper)
 REGISTER_MAPPER(log2, Log2Mapper)
@@ -45,13 +52,17 @@ REGISTER_MAPPER(rsqrt, RsqrtMapper)
 REGISTER_MAPPER(sel, ActivationMapper)
 REGISTER_MAPPER(selu, SeluMapper)
 REGISTER_MAPPER(silu, SiluMapper)
+REGISTER_PIR_MAPPER(silu, SiluMapper)
 REGISTER_MAPPER(sin, ActivationMapper)
+REGISTER_PIR_MAPPER(sin, ActivationMapper)
 REGISTER_MAPPER(size, SizeMapper)
 REGISTER_MAPPER(softmax, SoftMaxMapper)
+REGISTER_PIR_MAPPER(softmax, SoftMaxMapper)
 REGISTER_MAPPER(softplus, ActivationMapper)
 REGISTER_MAPPER(softshrink, SoftShrinkMapper)
 REGISTER_MAPPER(softsign, ActivationMapper)
 REGISTER_MAPPER(sqrt, ActivationMapper)
+REGISTER_PIR_MAPPER(sqrt, ActivationMapper)
 REGISTER_MAPPER(square, SquareMapper)
 REGISTER_MAPPER(tan, ActivationMapper)
 REGISTER_MAPPER(tanh, ActivationMapper)
@@ -85,7 +96,9 @@ void ActivationMapper::Opset7() {
   auto output_info = GetOutput("Out");
   auto iter = op_mapper_.find(convert_pir_op_name(OpType()));
   Assert(op_mapper_.end() != iter,
-         "Cannot find " + convert_pir_op_name(OpType()) + " in activation op_mapper.");
+         "Cannot find " +
+         convert_pir_op_name(OpType()) +
+         " in activation op_mapper.");
   if (convert_pir_op_name(OpType()) == "erf") {
     auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
                                    P2ODataType::FP32);
@@ -367,7 +380,9 @@ void ThresholdedReluMapper::Opset10() {
 void Log1PMapper::Opset7() {
   auto x_info = GetInput("X");
   auto out_info = GetOutput("Out");
-  auto one = helper_->Constant({}, GetOnnxDtype(x_info[0].dtype), float(1.0));
+  auto one = helper_->Constant({},
+                               GetOnnxDtype(x_info[0].dtype),
+                               static_cast<float>(1.0));
   auto input = helper_->MakeNode("Add", {x_info[0].name, one})->output(0);
   helper_->MakeNode("Log", {input}, {out_info[0].name});
 }

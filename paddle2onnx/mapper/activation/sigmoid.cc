@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(sigmoid, SigmoidMapper)
+REGISTER_PIR_MAPPER(sigmoid, SigmoidMapper)
 
 void SigmoidMapper::Opset7() {
   auto input_info = GetInput("X");

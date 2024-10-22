@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -36,19 +35,17 @@ class Net(BaseNet):
 class TestBmmConvert(OPConvertAutoScanTest):
     """
     api: paddle.bmm
-    OPset version: 7, 9, 15 
+    OPset version: 7, 9, 15
     """
 
     def sample_convert_config(self, draw):
         input1_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=3, max_size=3))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=3, max_size=3)
+        )
 
         input2_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=3, max_size=3))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=3, max_size=3)
+        )
 
         input2_shape[0] = input1_shape[0]
         input2_shape[1] = input1_shape[2]
@@ -60,13 +57,14 @@ class TestBmmConvert(OPConvertAutoScanTest):
             "test_data_shapes": [input1_shape, input2_shape],
             "test_data_types": [[dtype], [dtype]],
             "opset_version": [15],
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = Net(config)
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

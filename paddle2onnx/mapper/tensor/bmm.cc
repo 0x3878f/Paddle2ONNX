@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(bmm, BmmMapper)
+REGISTER_PIR_MAPPER(bmm, BmmMapper)
 
 void BmmMapper::Opset7() {
   auto x_info = GetInput("X");

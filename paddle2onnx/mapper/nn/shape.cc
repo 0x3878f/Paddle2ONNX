@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(shape, ShapeMapper)
+REGISTER_PIR_MAPPER(shape, ShapeMapper)
 
 void ShapeMapper::Opset7() {
   auto input_info = GetInput("Input");

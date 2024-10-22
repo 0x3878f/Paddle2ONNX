@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(meshgrid, MeshgridMapper)
+REGISTER_PIR_MAPPER(meshgrid, MeshgridMapper)
 
 void MeshgridMapper::Opset8() {
   auto x_info = GetInput("X");

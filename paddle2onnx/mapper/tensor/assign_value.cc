@@ -20,7 +20,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(assign_value, AssignValueMapper)
-REGISTER_PIR_MAPPER(assign_value_, AssignValueMapper)
+REGISTER_PIR_MAPPER(assign_value, AssignValueMapper)
 
 int32_t AssignValueMapper::GetMinOpsetVersion(bool verbose) {
   int32_t dtype = static_cast<int32_t>(dtype_);

@@ -16,8 +16,10 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(clip, ClipMapper)
+REGISTER_PIR_MAPPER(clip, ClipMapper)
 
 int32_t ClipMapper::GetMinOpsetVersion(bool verbose) {
+  if (in_pir_mode) return 7;
   bool has_max_tensor_input = HasInput("Max");
   bool has_min_tensor_input = HasInput("Min");
   if (has_max_tensor_input || has_min_tensor_input) {
@@ -32,6 +34,11 @@ void ClipMapper::Opset7() {
 
   bool has_max_tensor_input = HasInput("Max");
   bool has_min_tensor_input = HasInput("Min");
+  if (in_pir_mode) {
+    bool has_input = helper_->opset_version >= 11;
+    has_max_tensor_input = has_input;
+    has_min_tensor_input = has_input;
+  }
 
   if (has_max_tensor_input || has_min_tensor_input) {
     bool dtype_converted = false;
@@ -53,7 +60,11 @@ void ClipMapper::Opset7() {
       }
     } else {
       float max_val;
-      GetAttr("max", &max_val);
+      if (in_pir_mode) {
+        TryGetInputValue("max", &max_val);
+      } else {
+        GetAttr("max", &max_val);
+      }
       max_name = helper_->Constant({}, GetOnnxDtype(dtype), max_val);
     }
     std::string min_name;
@@ -65,7 +76,11 @@ void ClipMapper::Opset7() {
       }
     } else {
       float min_val;
-      GetAttr("min", &min_val);
+      if (in_pir_mode) {
+        TryGetInputValue("min", &min_val);
+      } else {
+        GetAttr("min", &min_val);
+      }
       min_name = helper_->Constant({}, GetOnnxDtype(dtype), min_val);
     }
     if (dtype_converted) {
@@ -77,10 +92,14 @@ void ClipMapper::Opset7() {
                         {output_info[0].name});
     }
   } else {
-    float max_val;
-    GetAttr("max", &max_val);
-    float min_val;
-    GetAttr("min", &min_val);
+    float max_val, min_val;
+    if (in_pir_mode) {
+      TryGetInputValue("max", &max_val);
+      TryGetInputValue("min", &min_val);
+    } else {
+      GetAttr("max", &max_val);
+      GetAttr("min", &min_val);
+    }
     helper_->Clip(input_info[0].name, output_info[0].name, min_val, max_val,
                   input_info[0].dtype);
   }
