@@ -44,6 +44,9 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"unsqueeze", "unsqueeze2"},
       {"arange", "range"},
       {"argmax", "arg_max"},
+      {"floor_divide", "elementwise_floordiv"},
+      {"hardswish", "hard_swish"},
+      {"hardsigmoid", "hard_sigmoid"},
       {"add", "elementwise_add"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
