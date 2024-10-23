@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 op_api_map = {"log1p": paddle.log1p, "log10": paddle.log10}
 
@@ -35,9 +34,8 @@ class TestLogConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=1, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=1, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
@@ -46,7 +44,7 @@ class TestLogConvert(OPConvertAutoScanTest):
             "test_data_shapes": [input_shape],
             "test_data_types": [[dtype]],
             "opset_version": [7, 9, 15],
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = list()
@@ -59,6 +57,7 @@ class TestLogConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(where, WhereMapper)
+REGISTER_PIR_MAPPER(where, WhereMapper)
 
 void WhereMapper::Opset9() {
   auto x_info = GetInput("X");
