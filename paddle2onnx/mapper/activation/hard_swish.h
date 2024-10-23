@@ -13,13 +13,12 @@
 // limitations under the License.
 #pragma once
 
-
-#include "paddle2onnx/mapper/mapper.h"
-
 #include <cmath>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 class HardSwishMapper : public Mapper {
@@ -32,12 +31,27 @@ class HardSwishMapper : public Mapper {
     GetAttr("threshold", &threshold_);
   }
 
+  HardSwishMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                  int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    if (HasAttr("scale")) {
+      GetAttr("scale", &scale_);
+    }
+    if (HasAttr("offset")) {
+      GetAttr("offset", &offset_);
+    }
+    if (HasAttr("threshold")) {
+      GetAttr("threshold", &threshold_);
+    }
+  }
+
   void Opset7() override;
   void Opset14() override;
 
  private:
-  float scale_;
-  float offset_;
-  float threshold_;
+  float scale_ = 6.0;
+  float offset_ = 3.0;
+  float threshold_ = 6.0;
 };
-}
+}  // namespace paddle2onnx

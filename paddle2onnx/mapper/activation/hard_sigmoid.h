@@ -13,13 +13,12 @@
 // limitations under the License.
 #pragma once
 
-
-#include "paddle2onnx/mapper/mapper.h"
-
 #include <cmath>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 class HardSigmoidMapper : public Mapper {
@@ -31,10 +30,18 @@ class HardSigmoidMapper : public Mapper {
     GetAttr("offset", &beta_);
   }
 
+  HardSigmoidMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                    int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("slope", &alpha_);
+    GetAttr("offset", &beta_);
+  }
+
   void Opset7() override;
 
  private:
   float alpha_;
   float beta_;
 };
-}
+}  // namespace paddle2onnx

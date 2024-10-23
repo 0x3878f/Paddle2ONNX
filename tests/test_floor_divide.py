@@ -14,7 +14,7 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -33,6 +33,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_floor_divide_base():
     """
     api: paddle.floor_divide
@@ -41,8 +42,8 @@ def test_floor_divide_base():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-10, rtol=1e-11
-    obj = APIOnnx(op, 'floor_divide', [9, 10, 11, 12])
-    obj.set_input_data("input_data",
-                       paddle.to_tensor([2, 3, 8, 7]),
-                       paddle.to_tensor([1, 5, 3, 3]))
+    obj = APIOnnx(op, "floor_divide", [9, 10, 11, 12])
+    obj.set_input_data(
+        "input_data", paddle.to_tensor([2, 3, 8, 7]), paddle.to_tensor([1, 5, 3, 3])
+    )
     obj.run()
