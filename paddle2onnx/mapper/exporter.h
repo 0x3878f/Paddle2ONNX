@@ -45,6 +45,12 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"arange", "range"},
       {"argmax", "arg_max"},
       {"floor_divide", "elementwise_floordiv"},
+      {"subtract", "elementwise_sub"},
+      {"multiply", "elementwise_mul"},
+      {"divide", "elementwise_div"},
+      {"remainder", "elementwise_mod"},
+      {"minimum", "elementwise_min"},
+      {"maximum", "elementwise_max"},
       {"hardswish", "hard_swish"},
       {"hardsigmoid", "hard_sigmoid"},
       {"add", "elementwise_add"}};
