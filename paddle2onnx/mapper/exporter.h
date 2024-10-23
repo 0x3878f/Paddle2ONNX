@@ -41,6 +41,9 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"batch_norm_", "batch_norm"},
       {"assign_value_", "assign_value"},
       {"flatten", "flatten_contiguous_range"},
+      {"unsqueeze", "unsqueeze2"},
+      {"arange", "range"},
+      {"argmax", "arg_max"},
       {"add", "elementwise_add"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";

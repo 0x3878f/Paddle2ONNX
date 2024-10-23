@@ -29,6 +29,14 @@ class ArgMaxMapper : public Mapper {
     GetAttr("keepdims", &keepdims_);
     GetAttr("dtype", &dtype_);
   }
+  ArgMaxMapper(const PaddlePirParser& p, OnnxHelper* helper,
+               int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("flatten", &flatten_);
+    GetAttr("keepdims", &keepdims_);
+    GetAttr("dtype", &dtype_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 
