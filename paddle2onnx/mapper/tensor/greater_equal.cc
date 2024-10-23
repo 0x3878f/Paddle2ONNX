@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(greater_equal, GreaterEqualMapper)
+REGISTER_PIR_MAPPER(greater_equal, GreaterEqualMapper)
 
 void GreaterEqualMapper::Opset7() {
   auto x_info = GetInput("X");

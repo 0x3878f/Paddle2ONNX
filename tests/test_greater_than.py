@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -34,6 +35,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_greater_than_7():
     """
     api: paddle.greater_than
@@ -42,16 +44,16 @@ def test_greater_than_7():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'greater_than', [7])
+    obj = APIOnnx(op, "greater_than", [7])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')),
-        paddle.to_tensor(randtool("float", 0, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+        paddle.to_tensor(randtool("float", 0, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
-
-
+@_test_with_pir
 def test_greater_than_9():
     """
     api: paddle.greater_than
@@ -60,13 +62,16 @@ def test_greater_than_9():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'greater_than', [9])
+    obj = APIOnnx(op, "greater_than", [9])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')),
-        paddle.to_tensor(randtool("float", 0, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+        paddle.to_tensor(randtool("float", 0, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
+
+@_test_with_pir
 def test_greater_than_9_bool():
     """
     api: paddle.greater_than
@@ -75,14 +80,17 @@ def test_greater_than_9_bool():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'greater_than', [9])
+    obj = APIOnnx(op, "greater_than", [9])
     obj.set_input_data(
         "input_data",
         paddle.to_tensor([True, False, True, False, True], dtype=paddle.bool),
-        paddle.to_tensor([False], dtype=paddle.bool))
+        paddle.to_tensor([False], dtype=paddle.bool),
+    )
     obj.run()
     # x[0] = 1
 
+
+@_test_with_pir
 def test_greater_than_9_bool_matrix():
     """
     api: paddle.greater_than
@@ -91,10 +99,14 @@ def test_greater_than_9_bool_matrix():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'greater_than', [9])
+    obj = APIOnnx(op, "greater_than", [9])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor([[True, False, True, False, True],[False, False, True, True, True]], dtype=paddle.bool),
-        paddle.to_tensor([[False],[True]], dtype=paddle.bool))
+        paddle.to_tensor(
+            [[True, False, True, False, True], [False, False, True, True, True]],
+            dtype=paddle.bool,
+        ),
+        paddle.to_tensor([[False], [True]], dtype=paddle.bool),
+    )
     obj.run()
     # x[0] = 1

@@ -29,6 +29,16 @@ class PNormMapper : public Mapper {
     GetAttr("axis", &axis_);
     GetAttr("porder", &porder_);
   }
+  PNormMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t op_id,
+              bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("keepdim", &keepdim_);
+    GetAttr("axis", &axis_);
+    GetAttr("porder", &porder_);
+  }
   void Opset7() override;
 
  private:
