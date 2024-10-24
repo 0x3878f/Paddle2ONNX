@@ -54,7 +54,8 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"hardswish", "hard_swish"},
       {"hardsigmoid", "hard_sigmoid"},
       {"add", "elementwise_add"},
-      {"grid_sample", "grid_sampler"}};
+      {"grid_sample", "grid_sampler"},
+      {"nonzero", "where_index"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
   std::string builtin_prefix = "builtin.";

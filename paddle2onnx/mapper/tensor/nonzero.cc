@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(where_index, NonZeroMapper)
+REGISTER_PIR_MAPPER(where_index, NonZeroMapper)
 
 void NonZeroMapper::Opset9() {
   auto input_info = GetInput("Condition");
