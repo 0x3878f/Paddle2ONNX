@@ -51,11 +51,16 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"remainder", "elementwise_mod"},
       {"minimum", "elementwise_min"},
       {"maximum", "elementwise_max"},
+      {"min", "reduce_min"},
+      {"max", "reduce_max"},
+      {"numel", "size"},
       {"hardswish", "hard_swish"},
       {"hardsigmoid", "hard_sigmoid"},
       {"add", "elementwise_add"},
+      {"add_n", "sum"},
       {"grid_sample", "grid_sampler"},
-      {"nonzero", "where_index"}};
+      {"nonzero", "where_index"},
+      {"topk", "top_k"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
   std::string builtin_prefix = "builtin.";
