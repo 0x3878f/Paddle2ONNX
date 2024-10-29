@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(index_select, IndexSelectMapper)
+REGISTER_PIR_MAPPER(index_select, IndexSelectMapper)
 
 void IndexSelectMapper::Opset7() {
   auto x_info = GetInput("X");

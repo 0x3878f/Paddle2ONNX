@@ -27,6 +27,12 @@ class IndexSelectMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("dim", &axis_);
   }
+  IndexSelectMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                    int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("axis", &axis_);
+  }
   void Opset7() override;
 
  private:
