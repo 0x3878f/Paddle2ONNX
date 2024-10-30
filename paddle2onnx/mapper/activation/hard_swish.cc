@@ -16,17 +16,29 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(hard_swish, HardSwishMapper)
+REGISTER_PIR_MAPPER(hard_swish, HardSwishMapper)
 
 void HardSwishMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
-  std::string scale_node = helper_->Constant({}, GetOnnxDtype(input_info[0].dtype), scale_);
-  std::string offset_node = helper_->Constant({}, GetOnnxDtype(input_info[0].dtype), offset_);
-  auto add_node = helper_->MakeNode("Add", {input_info[0].name, offset_node});
-  auto clip_node = helper_->Clip(add_node->output(0), 0.0, threshold_, input_info[0].dtype);
-  auto mul_node = helper_->MakeNode("Mul", {input_info[0].name, clip_node});
-  helper_->MakeNode("Div", {mul_node->output(0), scale_node}, {output_info[0].name});
+  std::string scale_node = helper_->Constant({},
+                                             GetOnnxDtype(input_info[0].dtype),
+                                             scale_);
+  std::string offset_node = helper_->Constant({},
+                                              GetOnnxDtype(input_info[0].dtype),
+                                              offset_);
+  auto add_node = helper_->MakeNode("Add",
+                                    {input_info[0].name, offset_node});
+  auto clip_node = helper_->Clip(add_node->output(0),
+                                 0.0,
+                                 threshold_,
+                                 input_info[0].dtype);
+  auto mul_node = helper_->MakeNode("Mul",
+                                    {input_info[0].name, clip_node});
+  helper_->MakeNode("Div",
+                    {mul_node->output(0), scale_node},
+                    {output_info[0].name});
 }
 
 void HardSwishMapper::Opset14() {
@@ -38,4 +50,4 @@ void HardSwishMapper::Opset14() {
   auto output_info = GetOutput("Out");
   helper_->MakeNode("HardSwish", {input_info[0].name}, {output_info[0].name});
 }
-}
+}  // namespace paddle2onnx

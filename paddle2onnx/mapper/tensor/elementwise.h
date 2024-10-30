@@ -43,7 +43,7 @@ class ElementwiseMapper : public Mapper {
                     int64_t op_id,
                     bool c)
       : Mapper(p, helper, op_id, c) {
-    // TODO: no axis in PIR
+    // TODO(wangmingkai): no axis in PIR
     axis_ = -1;
     // GetAttr("axis", &axis_);
 
@@ -101,12 +101,12 @@ class ElementWiseFloordivMapper : public Mapper {
                             int64_t op_id,
                             bool c)
       : Mapper(p, helper, op_id, c) {
-    GetAttr("axis", &axis_);
+    in_pir_mode = true;
   }
   void Opset7() override;
 
  private:
-  int64_t axis_;
+  int64_t axis_ = -1;
 };
 
 };  // namespace paddle2onnx

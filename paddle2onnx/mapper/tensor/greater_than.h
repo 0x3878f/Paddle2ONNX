@@ -22,6 +22,13 @@ class GreaterThanMapper : public Mapper {
   GreaterThanMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
                     int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  GreaterThanMapper(const PaddlePirParser& p,
+                    OnnxHelper* helper,
+                    int64_t op_id,
+                    bool c)
+      : Mapper(p, helper, op_id) {
+    in_pir_mode = true;
+  }
   void Opset7() override;
   int32_t GetMinOpsetVersion(bool verbose);
 };

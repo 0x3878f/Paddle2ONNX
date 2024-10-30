@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(less_than, LessThanMapper)
+REGISTER_PIR_MAPPER(less_than, LessThanMapper)
 
 void LessThanMapper::Opset7() {
   auto x_info = GetInput("X");

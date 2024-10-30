@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(range, RangeMapper)
+REGISTER_PIR_MAPPER(range, RangeMapper)
 
 void RangeMapper::Opset11() {
   auto start_info = GetInput("Start");

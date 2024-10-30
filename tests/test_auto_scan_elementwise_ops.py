@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
 from onnxbase import randtool
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_only_pir
 
 op_api_map = {
     "elementwise_add": paddle.add,
@@ -51,9 +50,8 @@ class TestElementwiseopsConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input1_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         if len(input1_shape) > 0:
             if draw(st.booleans()):
@@ -73,10 +71,9 @@ class TestElementwiseopsConvert(OPConvertAutoScanTest):
                 # [] + [N * N]
                 input2_shape = draw(
                     st.lists(
-                        st.integers(
-                            min_value=10, max_value=20),
-                        min_size=1,
-                        max_size=4))
+                        st.integers(min_value=10, max_value=20), min_size=1, max_size=4
+                    )
+                )
 
         dtype = draw(st.sampled_from(["float32", "int32"]))
 
@@ -90,7 +87,7 @@ class TestElementwiseopsConvert(OPConvertAutoScanTest):
             "test_data_shapes": [input1_shape, generator_data],
             "test_data_types": [[dtype], [dtype]],
             "opset_version": [7, 9, 15],
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = list()
@@ -107,9 +104,9 @@ class TestElementwiseopsConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
-        # self.run_and_statis(max_examples=30)
-        pass
+        self.run_and_statis(max_examples=30)
 
 
 op_api_map_2 = {
@@ -139,9 +136,8 @@ class TestElementwiseopsConvert_2(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input1_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         if len(input1_shape) > 0:
             if draw(st.booleans()):
@@ -161,10 +157,9 @@ class TestElementwiseopsConvert_2(OPConvertAutoScanTest):
                 # [] + [N * N]
                 input2_shape = draw(
                     st.lists(
-                        st.integers(
-                            min_value=10, max_value=20),
-                        min_size=1,
-                        max_size=4))
+                        st.integers(min_value=10, max_value=20), min_size=1, max_size=4
+                    )
+                )
 
         dtype = draw(st.sampled_from(["float32"]))
 
@@ -173,7 +168,7 @@ class TestElementwiseopsConvert_2(OPConvertAutoScanTest):
             "test_data_shapes": [input1_shape, input2_shape],
             "test_data_types": [[dtype], [dtype]],
             "opset_version": [7, 9, 16],
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = list()
@@ -190,9 +185,9 @@ class TestElementwiseopsConvert_2(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
-        # self.run_and_statis(max_examples=30)
-        pass
+        self.run_and_statis(max_examples=30)
 
 
 if __name__ == "__main__":

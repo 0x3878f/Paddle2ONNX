@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(hard_sigmoid, HardSigmoidMapper)
+REGISTER_PIR_MAPPER(hard_sigmoid, HardSigmoidMapper)
 
 void HardSigmoidMapper::Opset7() {
   auto input_info = GetInput("X");
@@ -25,4 +26,4 @@ void HardSigmoidMapper::Opset7() {
   AddAttribute(node, "alpha", alpha_);
   AddAttribute(node, "beta", beta_);
 }
-}
+}  // namespace paddle2onnx

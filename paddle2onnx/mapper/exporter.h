@@ -41,7 +41,26 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"batch_norm_", "batch_norm"},
       {"assign_value_", "assign_value"},
       {"flatten", "flatten_contiguous_range"},
-      {"add", "elementwise_add"}};
+      {"unsqueeze", "unsqueeze2"},
+      {"arange", "range"},
+      {"argmax", "arg_max"},
+      {"floor_divide", "elementwise_floordiv"},
+      {"subtract", "elementwise_sub"},
+      {"multiply", "elementwise_mul"},
+      {"divide", "elementwise_div"},
+      {"remainder", "elementwise_mod"},
+      {"minimum", "elementwise_min"},
+      {"maximum", "elementwise_max"},
+      {"min", "reduce_min"},
+      {"max", "reduce_max"},
+      {"numel", "size"},
+      {"hardswish", "hard_swish"},
+      {"hardsigmoid", "hard_sigmoid"},
+      {"add", "elementwise_add"},
+      {"add_n", "sum"},
+      {"grid_sample", "grid_sampler"},
+      {"nonzero", "where_index"},
+      {"topk", "top_k"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
   std::string builtin_prefix = "builtin.";

@@ -29,9 +29,15 @@ class GridSamplerMapper : public Mapper {
     GetAttr("mode", &mode_);
     GetAttr("align_corners", &align_corners_);
   }
-
+  GridSamplerMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                    int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("padding_mode", &padding_mode_);
+    GetAttr("mode", &mode_);
+    GetAttr("align_corners", &align_corners_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
-
   void Opset16() override;
 
  private:

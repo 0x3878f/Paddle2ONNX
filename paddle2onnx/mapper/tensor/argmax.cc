@@ -16,9 +16,10 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(arg_max, ArgMaxMapper)
+REGISTER_PIR_MAPPER(arg_max, ArgMaxMapper)
 
 int32_t ArgMaxMapper::GetMinOpsetVersion(bool verbose) {
-  if (IsAttrVar("axis") && !IsConstant(GetAttrVar("axis")[0])) {
+  if (!in_pir_mode && IsAttrVar("axis") && !IsConstant(GetAttrVar("axis")[0])) {
     Error() << "While Attribute(axis)'s type is Tensor, it's not "
                "supported "
                "unless it's a constant tensor."
@@ -29,14 +30,16 @@ int32_t ArgMaxMapper::GetMinOpsetVersion(bool verbose) {
 }
 
 void ArgMaxMapper::Opset7() {
-  auto input_info = parser_->GetOpInput(block_idx_, op_idx_, "X");
-  auto output_info = parser_->GetOpOutput(block_idx_, op_idx_, "Out");
+  auto input_info = GetInput("X");
+  auto output_info = GetOutput("Out");
   auto input = input_info[0].name;
   if (flatten_) {
     input = helper_->Flatten(input_info[0].name);
   }
 
-  if (IsAttrVar("axis")) {
+  if (HasInput("axis")) {
+    TryGetInputValue("axis", &axis_);
+  } else if (IsAttrVar("axis")) {
     auto axis_info = GetAttrVar("axis");
     std::vector<int64_t> temp;
     TryGetValue(axis_info[0], &temp);

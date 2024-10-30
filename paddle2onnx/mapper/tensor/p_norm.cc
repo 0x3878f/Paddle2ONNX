@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(p_norm, PNormMapper)
+REGISTER_PIR_MAPPER(p_norm, PNormMapper)
 
 void PNormMapper::Opset7() {
   auto input_info = GetInput("X");

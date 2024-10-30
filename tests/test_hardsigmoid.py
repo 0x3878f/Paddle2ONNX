@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -33,6 +34,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_hardsigmoid_9():
     """
     api: paddle.hardsigmoid
@@ -41,13 +43,15 @@ def test_hardsigmoid_9():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'hardsigmoid', [9])
+    obj = APIOnnx(op, "hardsigmoid", [9])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_hardsigmoid_10():
     """
     api: paddle.hardsigmoid
@@ -56,13 +60,15 @@ def test_hardsigmoid_10():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'hardsigmoid', [10])
+    obj = APIOnnx(op, "hardsigmoid", [10])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_hardsigmoid_11():
     """
     api: paddle.hardsigmoid
@@ -71,13 +77,15 @@ def test_hardsigmoid_11():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'hardsigmoid', [11])
+    obj = APIOnnx(op, "hardsigmoid", [11])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_hardsigmoid_12():
     """
     api: paddle.hardsigmoid
@@ -86,8 +94,9 @@ def test_hardsigmoid_12():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'hardsigmoid', [12])
+    obj = APIOnnx(op, "hardsigmoid", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()

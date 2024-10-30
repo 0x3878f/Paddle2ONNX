@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(sum, AddNMapper)
+REGISTER_PIR_MAPPER(sum, AddNMapper)
 
 void AddNMapper::Opset7() {
   auto x_info = GetInput("X");

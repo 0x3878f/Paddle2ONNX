@@ -25,6 +25,13 @@ class WhereMapper : public Mapper {
   WhereMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  WhereMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t op_id,
+              bool c)
+      : Mapper(p, helper, op_id) {
+    in_pir_mode = true;
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 9) << RequireOpset(9) << std::endl;
