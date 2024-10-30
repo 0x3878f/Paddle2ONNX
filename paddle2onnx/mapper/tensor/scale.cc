@@ -21,7 +21,10 @@ REGISTER_MAPPER(scale, ScaleMapper)
 REGISTER_PIR_MAPPER(scale, ScaleMapper)
 
 void ScaleMapper::Opset7() {
+  std::cout<<"----24"<<std::endl;
   auto input_info = GetInput("X");
+  std::cout<<"----26"<<std::endl;
+
   auto output_info = GetOutput("Out");
   bool has_scale_tensor = HasInput("ScaleTensor");
   bool is_scale_1 = ((scale_ - 1.0) < 1e-06 && (scale_ - 1.0) > -1e-06);
