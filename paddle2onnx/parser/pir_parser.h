@@ -35,6 +35,8 @@ class PaddlePirParser {
   std::vector<pir::Operation*> global_blocks_ops;
   // recoring set of operators for sub block
   std::vector<pir::Operation*> sub_blocks_ops;
+  // recording args of while op body name info
+  std::unordered_map<pir::detail::ValueImpl*,pir::detail::ValueImpl*>while_op_input_value_map;
   int NumOfBlocks() const;
   // int NumOfOps(int block_idx) const;
   int NumOfProgramOps() const;
@@ -42,6 +44,8 @@ class PaddlePirParser {
   TensorInfo GetTensorInfo(const std::string& name,
                            const pir::Type& value_type) const;
   std::vector<TensorInfo> GetTensorInfo(const pir::Value& value) const;
+  std::vector<TensorInfo> GetTensorInfo(const pir::Value& value, 
+                                        std::string name) const;
   std::vector<TensorInfo> GetSubBlockValueTensorInfo(
       const pir::Value& value) const;
   bool OpIsAttrVar(int64_t op_id,
@@ -78,6 +82,7 @@ class PaddlePirParser {
   bool OpHasAttr(pir::Operation* op,
                  const std::string& name,
                  bool if_in_sub_block) const;
+  std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
                                      int64_t input_idx,
                                      bool if_in_sub_block) const;
@@ -97,7 +102,7 @@ class PaddlePirParser {
   bool IsConstantTensor(int64_t op_id,
                         int64_t input_idx,
                         bool if_in_sub_block) const;
-
+  std::string GetOpOutputName(const pir::Value& source) const;
   template <typename T>
   bool TryGetTensorValue(int64_t op_id,
                          int64_t input_idx,
@@ -225,8 +230,8 @@ class PaddlePirParser {
   void AddOpOutputName(pir::Operation* op,
                        std::string var_name,
                        int64_t output_idx) const;
-  std::string GetOpOutputName(const pir::Value& source) const;
-  std::string GetSubBlockOpOutputName(const pir::Value& source) const;
+  
+  
 
   void GetOpArgNameMappings();
   mutable std::unordered_map<std::string, int64_t> _name_counter;

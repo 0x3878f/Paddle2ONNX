@@ -20,6 +20,10 @@
 #include <array>
 
 #include "onnxoptimizer/optimize.h"
+#include "paddle2onnx/mapper/quantize/ort_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/other_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/rknn_quantize_processor.h"
+#include "paddle2onnx/mapper/quantize/tensorrt_quantize_processor.h"
 #include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 #include "paddle/phi/core/enforce.h"
 #include "paddle2onnx/optimizer/convert_fp32_to_fp16.h"
@@ -33,6 +37,59 @@
 namespace paddle2onnx {
 MapperHelper* MapperHelper::helper = nullptr;
 int32_t OnnxHelper::opset_version = 7;
+bool ModelExporter::IsWhileSupported(const PaddlePirParser& pir_parser,pir::Operation* op) {
+  std::set<std::string> input_names;
+  std::vector<TensorInfo> x_info;
+  std::vector<TensorInfo> out_info;
+  auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
+  auto cond_info = pir_parser.GetTensorInfo(while_op.cond());
+  for(int index=1;index<while_op.num_operands();index++){
+    const pir::Value& value = while_op.operand_source(index);
+    std::cout<< "value.define op :"<<value.defining_op()->name()<<std::endl;
+    x_info.push_back(pir_parser.GetTensorInfo(pir_parser.GetOpOutputName(value.defining_op()->result(0)),value.type()));
+  }
+  for(int index=0;index<while_op.num_results();index++){
+    const pir::Value& value = while_op.result(index);
+    out_info.push_back(pir_parser.GetTensorInfo(pir_parser.GetOpOutputName(value),value.type()));
+  }
+  // auto out_info = pir_parser.GetTensorInfo(while_op->result(output_idx))
+  std::cout<<"while op out put size:"<<while_op->num_results()<<std::endl;
+  std::cout<<"out_info:"<<out_info[0].name<<","<<out_info[1].name<<std::endl;
+  std::cout<<"x_info:"<<x_info[0].name<<","<<x_info[1].name<<std::endl;
+  
+  return true;
+}
+bool ModelExporter::IsWhileSupported(const PaddleParser &parser,
+                                     const int64_t &block_id,
+                                     const int64_t &op_id) {
+  auto x_info = parser.GetOpInput(block_id, op_id, "X");
+  auto out_info = parser.GetOpOutput(block_id, op_id, "Out");
+  auto cond_info = parser.GetOpInput(block_id, op_id, "Condition");
+  std::set<std::string> input_names;
+  for (size_t i = 0; i < x_info.size(); ++i) {
+    input_names.insert(x_info[i].name);
+  }
+  input_names.insert(cond_info[0].name);
+
+  for (size_t i = 0; i < out_info.size(); ++i) {
+    auto iter = input_names.find(out_info[i].name);
+    if (iter == input_names.end()) {
+      P2OLogger() << "Cannot find output:" << out_info[i].name
+                  << " in input tensors while converting operator 'while', "
+                     "Paddle2ONNX doesn't support this situation now."
+                  << std::endl;
+      return false;
+    }
+  }
+
+  for (size_t i = 0; i < x_info.size(); ++i) {
+    if (x_info[i].is_tensor_array) {
+      P2OLogger() << "LodTensorArray is not supported." << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
 
 bool ModelExporter::IsOpsRegistered(const PaddlePirParser& pir_parser,
                                     bool enable_experimental_op) {
@@ -45,6 +102,15 @@ bool ModelExporter::IsOpsRegistered(const PaddlePirParser& pir_parser,
     if (op->name() == "pd_op.if") {
       continue;
     }
+    if (op->name() == "pd_op.while") {
+      continue;
+    }  
+    // if(op->name() == "pd_op.while" && enable_experimental_op) {
+    //   if (!IsWhileSupported(pir_parser,op)) {
+    //       unsupported_ops.insert("while");
+    //     }
+    //     continue;
+    // }
     std::string op_name = convert_pir_op_name(op->name());
     if (!MapperHelper::Get()->IsRegistered(op_name)) {
       unsupported_ops.insert(op_name);
@@ -62,7 +128,7 @@ bool ModelExporter::IsOpsRegistered(const PaddlePirParser& pir_parser,
   return (unsupported_ops.size() == 0);
 }
 
-bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
+bool ModelExporter::IsOpsRegistered(const PaddleParser &parser,
                                     bool enable_experimental_op) {
   OnnxHelper temp_helper;
   std::set<std::string> unsupported_ops;
@@ -71,24 +137,24 @@ bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
       auto op = parser.GetOpDesc(i, j);
       if (op.type() == "feed" || op.type() == "fetch") {
         continue;
-      }
-
-      if (op.type() == "conditional_block" || op.type() == "select_input") {
+      } else if (op.type() == "conditional_block" ||
+                 op.type() == "select_input") {
+        continue;
+      } else if (op.type() == "while" && enable_experimental_op) {
+        if (!IsWhileSupported(parser, i, j)) {
+          unsupported_ops.insert("while");
+        }
         continue;
       }
-#if 0
-        if (op.type() == "while" && enable_experimental_op) {
-          if (!IsLoopSupported(parser, i, j)) {
-            unsupported_ops.insert("while");
-          }
-          continue;
-        }
-#endif
+
+      if (custom_ops.find(op.type()) != custom_ops.end()) {
+        continue;
+      }
       if (!MapperHelper::Get()->IsRegistered(op.type())) {
         unsupported_ops.insert(op.type());
       } else if (!enable_experimental_op) {
-        auto mapper = MapperHelper::Get()->CreateMapper(
-            op.type(), parser, &temp_helper, i, j);
+        auto mapper = MapperHelper::Get()->CreateMapper(op.type(), parser,
+                                                        &temp_helper, i, j);
         if (mapper->IsExperimentalOp()) {
           unsupported_ops.insert(op.type());
         }
@@ -97,22 +163,29 @@ bool ModelExporter::IsOpsRegistered(const PaddleParser& parser,
     }
   }
 
+  if (unsupported_ops.size() == 0) {
+    return true;
+  }
+
   auto logger = P2OLogger();
   logger << "Oops, there are some operators not supported yet, including ";
-  for (auto& item : unsupported_ops) {
+  for (auto &item : unsupported_ops) {
     logger << item << ",";
   }
   logger << std::endl;
-  return (unsupported_ops.size() == 0);
+  return false;
 }
 
-int32_t ModelExporter::GetMinOpsetVersion(const PaddleParser& parser) {
+int32_t ModelExporter::GetMinOpsetVersion(const PaddleParser &parser) {
   int32_t max_opset = 7;
   std::set<std::string> verbose_log;
   OnnxHelper helper;
   for (auto i = 0; i < parser.NumOfBlocks(); ++i) {
     for (auto j = 0; j < parser.NumOfOps(i); ++j) {
       auto op = parser.GetOpDesc(i, j);
+      if (custom_ops.find(op.type()) != custom_ops.end()) {
+        continue;
+      }
 
       // Skip the input and output nodes.
       if (op.type() == "feed" || op.type() == "fetch" ||
@@ -121,27 +194,23 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddleParser& parser) {
       }
 
       int current_opset = 7;
-
       if (op.type() == "select_input") {
         P2OLogger() << "Detected there's control flow "
                        "op('conditional_block/select_input') in your model, "
                     << "this requires the minimal opset version of 11."
                     << std::endl;
         current_opset = 11;
+      } else if (op.type() == "while") {
+        P2OLogger()
+            << "Detected there's control flow 'while' op in your model, "
+            << "this requires the minimal opset version of 13." << std::endl;
+        current_opset = 13;
       } else {
         auto mapper =
             MapperHelper::Get()->CreateMapper(op.type(), parser, &helper, i, j);
         current_opset = mapper->GetMinOpsetVersion(verbose_);
         delete mapper;
       }
-#if 0
-        if (op.type() == "while") {
-          P2OLogger() << "Detected control flow 'while' op in your model, "
-                      << "this requires the minimal opset version of 13."
-                      << std::endl;
-          current_opset = 13;
-        }
-#endif
 
       if (current_opset > max_opset) {
         max_opset = current_opset;
@@ -383,11 +452,11 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
   if (!pir_parser.sub_blocks_ops.empty()) {
     // get cf.yeild op input
     pir::Operation* cf_yield_op = pir_parser.sub_blocks_ops.back();
-    std::vector<std::string> sub_block_outpus;
+    //std::vector<std::string> sub_block_outpus;
     for (auto oprand : cf_yield_op->operands()) {
       pir::Value value = oprand.source();
       auto cond_info = pir_parser.GetSubBlockValueTensorInfo(value);
-      sub_block_outpus.push_back(cond_info[0].name);
+      //sub_block_outpus.push_back(cond_info[0].name);
       temp_outputs.push_back(std::move(MakeValueInfo(cond_info[0])));
     }
   } else {
@@ -401,41 +470,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
 
   pir::Block* blockPtr = &block;
   return std::move(ExportBlock(
-      pir_parser, blockPtr, temp_parameters, temp_inputs, temp_outputs, true));
-}
-
-ONNX_NAMESPACE::GraphProto ModelExporter::ExportConditionalBlock(
-    const PaddleParser& parser,
-    int32_t block_id,
-    int32_t op_id,
-    const std::string& output_names) {
-  auto op = parser.GetOpDesc(block_id, op_id);
-
-  // Get sub_block_idx
-  int32_t sub_block_idx = -1;
-  for (size_t i = 0; i < op.attrs_size(); ++i) {
-    if (op.attrs(i).name() == "sub_block") {
-      sub_block_idx = op.attrs(i).block_idx();
-      break;
-    }
-  }
-  Assert(sub_block_idx != -1,
-         "Due to the unsupported sub_block_idx, the conversion is aborted.");
-
-  std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> temp_parameters;
-
-  std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> temp_inputs;
-
-  std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> temp_outputs;
-  auto out_info = parser.GetOpOutput(block_id, op_id, "Out");
-  for (int index = 0; index < out_info.size(); index++) {
-    if (out_info[index].name != output_names) {
-      continue;
-    }
-    temp_outputs.push_back(std::move(MakeValueInfo(out_info[index])));
-  }
-  return std::move(ExportBlock(
-      parser, sub_block_idx, temp_parameters, temp_inputs, temp_outputs));
+      pir_parser, blockPtr, temp_parameters, temp_inputs, temp_outputs, true,false));
 }
 
 ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
@@ -444,7 +479,8 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
     std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
     std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
     std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs,
-    bool if_in_subblock) {
+    bool if_in_subblock,
+    bool is_while_block) {
   ONNX_NAMESPACE::GraphProto graph;
   graph.set_name("PaddlePaddle Graph in pir mode");
   OnnxHelper temp_helper;
@@ -459,8 +495,23 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
   temp_helper.Clear();
   for (auto i = 0; i < num_ops; ++i) {
     auto op = block_ops[i];
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.fetch" ||
-        op->name() == "cf.yield") {
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.fetch") {
+      continue;
+    }
+    if(op->name() == "cf.yield"){
+      for (int i=0;i<op->num_operands();i++) {
+        // auto operand = op->operand_source(i);
+        pir::Value value = op->operand_source(i);
+        auto input_name=pir_parser.GetSubBlockOpOutputName(value);
+        std::string output_name;
+        if(i==0){
+          output_name="p2o.pd_op.less_equal.0."+std::to_string(i);
+        }else{
+          output_name="p2o.pd_op.while.0."+std::to_string(i-1);
+        }
+        
+        temp_helper.MakeNode("Identity",{input_name},{output_name});
+      }
       continue;
     }
     if (op->name() == "pd_op.full_int_array") {
@@ -505,9 +556,10 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
       continue;
     }
     if (op->name() == "pd_op.while") {
+      ExportWhile(pir_parser,&temp_helper,op);
       continue;
     }
-
+    std::cout<<"if in sub block:"<<if_in_subblock<<",op name"<<op->name()<<std::endl;
     ExportOp(pir_parser,
              &temp_helper,
              opset_version_,
@@ -516,6 +568,8 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
              if_in_subblock,
              verbose_);
   }
+  ProcessGraphDumplicateNames(parameters, inputs, outputs, temp_helper.nodes,
+                            temp_helper.quantize_info, is_while_block);
   for (auto& item : parameters) {
     *(graph.add_node()) = *(item.get());
   }
@@ -540,17 +594,25 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
 }
 
 ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
-    const PaddleParser& parser,
-    int32_t block_id,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs) {
+    const PaddleParser &parser, int32_t block_id,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &parameters,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> &inputs,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> &outputs,
+    OnnxHelper *helper, bool is_while_block) {
   ONNX_NAMESPACE::GraphProto graph;
   graph.set_name("PaddlePaddle Graph " + std::to_string(block_id));
-  OnnxHelper temp_helper;
   auto num_ops = parser.NumOfOps(block_id);
-  temp_helper.nodes.reserve(num_ops * 3);
-  temp_helper.Clear();
+
+  // Init ONNXHelp
+  OnnxHelper *temp_helper = nullptr;
+  if (helper == nullptr) {
+    temp_helper = new OnnxHelper();
+    temp_helper->nodes.reserve(num_ops * 3);
+    temp_helper->Clear();
+  } else {
+    temp_helper = helper;
+  }
+
   for (auto op_id = 0; op_id < num_ops; ++op_id) {
     auto op = parser.GetOpDesc(block_id, op_id);
     if (op.type() == "feed") {
@@ -564,86 +626,71 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
       }
       continue;
     } else if (op.type() == "select_input") {
-      // 如果找到，则输出对应的值；否则输出错误信息
-      // 遍历输入Tensor
-      auto input_info = parser.GetOpInput(block_id, op_id, "X");
-
-      Assert(input_info.size() == 2,
-             "Only support when number of select_input's input_node is 2.");
-
-      // 构建 else 分支图
-      auto else_node_name = input_info[0].name;
-      auto conditional_block_cood_it = sub_block_map_.find(else_node_name);
-      Assert(conditional_block_cood_it != sub_block_map_.end(),
-             "Don't find select_input else_input node.");
-      auto conditional_block_cood = conditional_block_cood_it->second;
-      auto else_graph = ExportConditionalBlock(parser,
-                                               conditional_block_cood.first,
-                                               conditional_block_cood.second,
-                                               else_node_name);
-
-      // 构建 then 分支图
-      auto then_node_name = input_info[1].name;
-      conditional_block_cood_it = sub_block_map_.find(then_node_name);
-      Assert(conditional_block_cood_it != sub_block_map_.end(),
-             "Don't find select_input then_input node.");
-      conditional_block_cood = conditional_block_cood_it->second;
-      auto then_graph = ExportConditionalBlock(parser,
-                                               conditional_block_cood.first,
-                                               conditional_block_cood.second,
-                                               then_node_name);
-
-      auto cond_info = parser.GetOpInput(block_id, op_id, "Mask");
-      auto output_info = parser.GetOpOutput(block_id, op_id, "Out");
-      auto cond_name = temp_helper.AutoCast(
-          cond_info[0].name, cond_info[0].dtype, P2ODataType::BOOL);
-      auto node =
-          temp_helper.MakeNode("If", {cond_name}, {output_info[0].name});
-      AddAttribute(node, "then_branch", then_graph);
-      AddAttribute(node, "else_branch", else_graph);
+      ExportSelectInput(parser, temp_helper, block_id, op_id);
+      continue;
+    } else if (op.type() == "fill_constant") {
+      auto out_info = parser.GetOpOutput(block_id, op_id, "Out");
+      sub_block_map_[out_info[0].name] = {block_id, op_id};
+    } else if (op.type() == "while") {
+      ExportWhile(parser, temp_helper, block_id, op_id);
       continue;
     }
-    ExportOp(parser, &temp_helper, opset_version_, block_id, op_id, verbose_);
+    ExportOp(parser, temp_helper, opset_version_, block_id, op_id, verbose_);
   }
 
-  ProcessGraphDumplicateNames(parameters,
-                              inputs,
-                              outputs,
-                              temp_helper.nodes,
-                              temp_helper.quantize_info);
+  // ProcessGraphDumplicateNames(parameters, inputs, outputs, temp_helper->nodes,
+  //                             temp_helper->quantize_info, is_while_block);
+
+  // Process the model according to deploy_mackend_
   if (parser.is_quantized_model) {
-    quantize_model_processer.ProcessQuantizeModel(&parameters,
-                                                  &inputs,
-                                                  &outputs,
-                                                  &temp_helper.nodes,
-                                                  &temp_helper,
-                                                  deploy_backend_,
-                                                  parser,
-                                                  calibration_cache_);
+    if (deploy_backend_ == "onnxruntime") {
+      quantize_processer_ = new ORTQuantizeProcessor();
+    } else if (deploy_backend_ == "rknn") {
+      quantize_processer_ = new RKNNQuantizeProcessor();
+    } else if (deploy_backend_ == "tensorrt") {
+      quantize_processer_ = new TensorRTQuantizeProcessor();
+    } else if (deploy_backend_ == "other") {
+      quantize_processer_ = new OtherQuantizeProcessor();
+    } else {
+      Assert(false,
+             "Only support onnxruntime/rknn/tensorrt/other as backend now, but "
+             "now the backend is: " +
+                 deploy_backend_ + ".");
+    }
+    P2OLogger() << "Deploy backend is: " << deploy_backend_ << std::endl;
+    quantize_processer_->ProcessQuantizeModel(
+        &parameters, &inputs, &outputs, &(temp_helper->nodes), temp_helper,
+        parser, calibration_cache_);
+    delete quantize_processer_;
+    quantize_processer_ = nullptr;
+
     // Update int8 weights in quantized OP to float32
-    UpdateParameters(temp_helper.updated_params, parameters);
+    UpdateParameters(temp_helper->updated_params, parameters);
   }
 
-  for (auto& item : parameters) {
+  for (auto &item : parameters) {
     *(graph.add_node()) = *(item.get());
   }
 
-  for (auto& item : inputs) {
+  for (auto &item : inputs) {
     *(graph.add_input()) = *(item.get());
   }
 
-  for (auto& item : outputs) {
+  for (auto &item : outputs) {
     *(graph.add_output()) = (*item.get());
   }
 
-  for (auto& item : temp_helper.nodes) {
+  for (auto &item : temp_helper->nodes) {
     *(graph.add_node()) = (*item.get());
   }
 
-  for (auto& item : temp_helper.value_infos) {
+  for (auto &item : temp_helper->value_infos) {
     *(graph.add_value_info()) = (*item.get());
   }
 
+  if (helper == nullptr) {
+    delete temp_helper;
+  }
   return std::move(graph);
 }
 
@@ -706,31 +753,49 @@ void ModelExporter::ExportOp(const PaddleParser& parser,
 }
 
 void ModelExporter::ProcessGraphDumplicateNames(
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& parameters,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& inputs,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs,
-    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>& nodes,
-    std::map<std::string, QuantizeInfo>& quantize_info) {
-  std::map<std::string, std::string> renamer;
-  for (auto& item : parameters) {
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &parameters,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> &inputs,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> &outputs,
+    std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> &nodes,
+    std::map<std::string, QuantizeInfo> &quantize_info, bool is_while_block) {
+  /********************* Create Tensor Names *********************/
+  for (auto &item : nodes) {
+    for (size_t i = 0; i < item->input_size(); ++i) {
+      if (item->name().find("Loop") != std::string::npos) {
+        P2OLogger() << "nodes item input:" << item->input(i) << std::endl;
+        while_tensor_names_.insert(item->input(i));
+      }
+    }
+    for (size_t i = 0; i < item->output_size(); ++i) {
+      if (item->name().find("Loop") != std::string::npos) {
+        P2OLogger() << "nodes item output:" << item->output(i) << std::endl;
+        while_tensor_names_.insert(item->output(i));
+      }
+    }
+  }
+  // for (const auto& tensor_name : while_tensor_names_) {
+  //   tensor_names_.erase(tensor_name);
+  // }
+  /********************* Create Tensor Names *********************/
+
+  /********************* Rename *********************/
+  for (auto &item : parameters) {
     for (size_t i = 0; i < item->output_size(); ++i) {
       if (tensor_names_.find(item->output(i)) != tensor_names_.end()) {
-        Assert(false, "There's dumplicate names in exported parameters.");
+        P2OLogger()
+            << "[WARNING] There's dumplicate names in exported parameters.";
+        continue;
       }
       tensor_names_.insert(item->output(i));
     }
   }
 
-  for (auto& item : inputs) {
-    if (tensor_names_.find(item->name()) != tensor_names_.end()) {
-      continue;
-      // Assert(false, "There's dumplicate names:" + item->name() + " in
-      // exported parameters and inputs.");
-    }
+  for (auto &item : inputs) {
+    std::cout<<"inputs item name:"<<item->name()<<std::endl;
     tensor_names_.insert(item->name());
   }
-
-  for (auto& item : nodes) {
+  std::map<std::string, std::string> renamer;
+  for (auto &item : nodes) {
     // update node inputs
     for (size_t i = 0; i < item->input_size(); ++i) {
       if (renamer.find(item->input(i)) != renamer.end()) {
@@ -742,19 +807,25 @@ void ModelExporter::ProcessGraphDumplicateNames(
       }
     }
 
-    // if there's dumplicate name , it will generate new name and replace
-    // the dumplicate name
+    // if there's dumplicate name , it will generate new name and replace the
+    // dumplicate name
     for (size_t i = 0; i < item->output_size(); ++i) {
+      std::cout<<"item->output(i):"<<item->output(i)<<std::endl;
       if (tensor_names_.find(item->output(i)) != tensor_names_.end()) {
+        std::cout<<"--561"<<std::endl;
+        if (is_while_block) {
+          if (while_tensor_names_.find(item->output(i)) != while_tensor_names_.end()) {
+            P2OLogger() << "Skip: " << item->output(i) << std::endl;
+            continue;
+          }
+        }
         std::string renamed_tensor_name = item->output(i);
         while (renamer.find(renamed_tensor_name) != renamer.end()) {
           renamed_tensor_name = renamer[renamed_tensor_name];
         }
-        auto new_tensor_name =
-            MapperHelper::Get()->GenName(renamed_tensor_name);
-        P2OLogger() << "Find dumplicate output name '" << renamed_tensor_name
-                    << "', it will rename to '" << new_tensor_name << "'."
-                    << std::endl;
+        std::cout<<"renamed_tensor_name:"<<renamed_tensor_name<<std::endl;
+        auto new_tensor_name = MapperHelper::Get()->GenName(renamed_tensor_name);
+        std::cout<<"new_tensor_name:"<<new_tensor_name<<std::endl;
         if (quantize_info.find(renamed_tensor_name) != quantize_info.end()) {
           quantize_info[new_tensor_name] = quantize_info[renamed_tensor_name];
         }
@@ -765,7 +836,7 @@ void ModelExporter::ProcessGraphDumplicateNames(
     }
   }
 
-  for (auto& item : outputs) {
+  for (auto &item : outputs) {
     if (renamer.find(item->name()) != renamer.end()) {
       auto updated_name = renamer[item->name()];
       while (renamer.find(updated_name) != renamer.end()) {
@@ -774,8 +845,8 @@ void ModelExporter::ProcessGraphDumplicateNames(
       item->set_name(updated_name);
     }
   }
+  /********************* Rename *********************/
 }
-
 void ModelExporter::SaveExternalData(::ONNX_NAMESPACE::GraphProto* graph,
                                      const std::string& external_file_path,
                                      bool* save_external) {
@@ -887,6 +958,7 @@ std::string ModelExporter::Run(PaddlePirParser& pir_parser,
                                  parameters,
                                  inputs,
                                  outputs,
+                                 false,
                                  false);
   *onnx_model_.mutable_graph() = share_graph;
   if (enable_onnx_checker) {
