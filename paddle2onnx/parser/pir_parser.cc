@@ -182,7 +182,7 @@ void PaddlePirParser::GetGlobalBlockOutputValueName() {
     }
   }
 }
-void PaddlePirParser::GetALLSubBlockOpOutputName(
+void PaddlePirParser::GetAllSubBlockOpOutputName(
     std::vector<pir::Operation*> block_op_lists) const {
   // std::unordered_map<pir::Operation *, std::vector<std::string>>
   // block_op_outputs_name_map;
@@ -587,7 +587,7 @@ std::vector<TensorInfo> PaddlePirParser::GetSubBlockValueTensorInfo(
     // }
     std::string name = GetSubBlockOpOutputName(value);
     results.push_back(GetTensorInfo(name, value.type()));
-    
+
   }
   return results;
 }

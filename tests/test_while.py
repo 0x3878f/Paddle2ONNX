@@ -14,7 +14,6 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import randtool
 
 
 class BaseNet1(paddle.nn.Layer):
@@ -72,7 +71,9 @@ def test_while_3():
     op = BaseNet3()
     op.eval()
     obj = APIOnnx(op, "while", [13])
-    obj.set_input_data("input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0))
+    obj.set_input_data(
+        "input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0)
+    )
     obj.run()
 
 
@@ -94,34 +95,14 @@ def test_while_4():
     op = BaseNet4()
     op.eval()
     obj = APIOnnx(op, "while", [13])
-    obj.set_input_data("input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0))
-    obj.run()
-
-
-class BaseNet5(paddle.nn.Layer):
-    def __init__(self):
-        super(BaseNet5, self).__init__()
-
-    def forward(self, i, j, k):
-        while i <= 3:
-            if i < 1:
-                j += 1
-            else:
-                j += 2
-            i += 1
-        return j + k
-
-
-def test_while_4():
-    op = BaseNet4()
-    op.eval()
-    obj = APIOnnx(op, "while", [13])
-    obj.set_input_data("input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0))
+    obj.set_input_data(
+        "input_data", paddle.to_tensor(0), paddle.to_tensor(0), paddle.to_tensor(0)
+    )
     obj.run()
 
 
 if __name__ == "__main__":
-    #test_while_1()
+    test_while_1()
     test_while_2()
-    # test_while_3()
+    test_while_3()
     # test_while_4()

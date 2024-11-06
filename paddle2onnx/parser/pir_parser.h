@@ -44,7 +44,7 @@ class PaddlePirParser {
   TensorInfo GetTensorInfo(const std::string& name,
                            const pir::Type& value_type) const;
   std::vector<TensorInfo> GetTensorInfo(const pir::Value& value) const;
-  std::vector<TensorInfo> GetTensorInfo(const pir::Value& value, 
+  std::vector<TensorInfo> GetTensorInfo(const pir::Value& value,
                                         std::string name) const;
   std::vector<TensorInfo> GetSubBlockValueTensorInfo(
       const pir::Value& value) const;
@@ -96,7 +96,7 @@ class PaddlePirParser {
                                    std::string name,
                                    bool is_input,
                                    bool if_in_subblock) const;
-  void GetALLSubBlockOpOutputName(
+  void GetAllSubBlockOpOutputName(
       std::vector<pir::Operation*> block_op_lists) const;
 
   bool IsConstantTensor(int64_t op_id,
@@ -212,7 +212,7 @@ class PaddlePirParser {
       else {
         Assert(false, "Only support int32/int64/float32/float64 data type now.");
       }
-    } 
+    }
     return true;
   }
 
@@ -230,8 +230,8 @@ class PaddlePirParser {
   void AddOpOutputName(pir::Operation* op,
                        std::string var_name,
                        int64_t output_idx) const;
-  
-  
+
+
 
   void GetOpArgNameMappings();
   mutable std::unordered_map<std::string, int64_t> _name_counter;
