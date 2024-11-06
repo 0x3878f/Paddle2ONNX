@@ -105,4 +105,4 @@ if __name__ == "__main__":
     test_while_1()
     test_while_2()
     test_while_3()
-    # test_while_4()
+    test_while_4()

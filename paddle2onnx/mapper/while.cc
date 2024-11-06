@@ -96,7 +96,7 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,OnnxHelper* temp_hel
   // record input value address
   for(int index = 1; index < while_op.num_operands(); index++){
     const pir::Value& value = while_op.operand_source(index);
-    inputs_info.push_back(pir_parser.GetTensorInfo(pir_parser.GetOpOutputName(value), value.type())); // handle nested loop situations in future.
+    inputs_info.push_back(pir_parser.GetTensorInfo(pir_parser.GetOpOutputName(value), value.type())); 
     while_op_input_value_address.push_back(&(*(value).impl())); // get value address
   }
   // record args value address
@@ -111,7 +111,8 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,OnnxHelper* temp_hel
     pir_parser.while_op_input_value_map[while_op_input_arg_address[index]] = while_op_input_value_address[index];
   }
 
-  pir_parser.sub_blocks_ops.clear(); // handle nested loop situations in future.
+  std::vector<pir::Operation*> sub_blocks_ops_copy(pir_parser.sub_blocks_ops);
+  pir_parser.sub_blocks_ops.clear();
   auto& body_block = while_op.body();
   for (auto& op : body_block.ops()) {
     if (op->name() != "builtin.parameter") {
@@ -161,6 +162,8 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,OnnxHelper* temp_hel
   }
   pir::Block* blockPtr = &body_block;
   graph = ExportBlock(pir_parser, blockPtr, parameters, inputs, outputs, true, true);
+  pir_parser.sub_blocks_ops.clear();
+  pir_parser.sub_blocks_ops = sub_blocks_ops_copy;
 
   // =====================
   //  construct loop node
