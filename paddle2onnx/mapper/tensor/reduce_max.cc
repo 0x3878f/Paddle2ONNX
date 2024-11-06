@@ -16,7 +16,9 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(reduce_max, ReduceMaxMapper)
+REGISTER_PIR_MAPPER(reduce_max, ReduceMaxMapper)
 REGISTER_MAPPER(reduce_any, ReduceMaxMapper)
+REGISTER_PIR_MAPPER(reduce_any, ReduceMaxMapper)
 
 int32_t ReduceMaxMapper::GetMinOpsetVersion(bool verbose) {
   int op_version = 11;
@@ -32,17 +34,20 @@ int32_t ReduceMaxMapper::GetMinOpsetVersion(bool verbose) {
 
 void ReduceMaxMapper::Opset18() {
   GetAttr("keep_dim", &keep_dim_);
-  GetAttr("reduce_all", &reduce_all_);
-  GetAttr("in_dtype", &in_dtype_);
-  GetAttr("out_dtype", &out_dtype_);
-  GetAttr("dim", &dim_);
+  if (!in_pir_mode) {
+    GetAttr("reduce_all", &reduce_all_);
+    GetAttr("in_dtype", &in_dtype_);
+    GetAttr("out_dtype", &out_dtype_);
+    GetAttr("dim", &dim_);
+  }
 
   auto x_info = GetInput("X");
   std::string dims;
   if (!reduce_all_) {
     dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, dim_);
   } else {
-    dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, Arange(0, x_info[0].Rank()));
+    dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                             Arange(0, x_info[0].Rank()));
   }
 
   std::string input_name = x_info[0].name;
@@ -65,26 +70,32 @@ void ReduceMaxMapper::Opset18() {
     out_node_name = helper_->Reshape(out_node_name, {-1});
   }
   auto out_info = GetOutput("Out");
-  helper_->AutoCast(out_node_name, out_info[0].name, input_tpye, out_info[0].dtype);
+  helper_->AutoCast(out_node_name, out_info[0].name,
+                        input_tpye, out_info[0].dtype);
 }
 
 void ReduceMaxMapper::Opset12() {
-  // The implementation logic of Opset12 is the same as that of Opset11, with the difference being that Opset12 supports input data types as double.
+  // The implementation logic of Opset12 is the same as that of Opset11,
+  // with the difference being that Opset12 supports input data types as double.
   Opset11();
 }
 
 void ReduceMaxMapper::Opset11() {
   GetAttr("keep_dim", &keep_dim_);
-  GetAttr("reduce_all", &reduce_all_);
-  GetAttr("in_dtype", &in_dtype_);
-  GetAttr("out_dtype", &out_dtype_);
-  GetAttr("dim", &dim_);
+  if (!in_pir_mode) {
+    GetAttr("reduce_all", &reduce_all_);
+    GetAttr("in_dtype", &in_dtype_);
+    GetAttr("out_dtype", &out_dtype_);
+    GetAttr("dim", &dim_);
+  }
 
   auto x_info = GetInput("X");
   auto input_name = x_info[0].name;
   auto input_tpye = x_info[0].dtype;
   if (x_info[0].dtype == P2ODataType::BOOL) {
-    input_name = helper_->AutoCast(x_info[0].name, x_info[0].dtype, P2ODataType::INT32);
+    input_name = helper_->AutoCast(x_info[0].name,
+                                   x_info[0].dtype,
+                                   P2ODataType::INT32);
     input_tpye = P2ODataType::INT32;
   }
   auto reduce_node = helper_->MakeNode("ReduceMax", {input_name});
@@ -106,6 +117,7 @@ void ReduceMaxMapper::Opset11() {
     out_node_name = helper_->Reshape(out_node_name, {-1});
   }
   auto out_info = GetOutput("Out");
-  helper_->AutoCast(out_node_name, out_info[0].name, input_tpye, out_info[0].dtype);
+  helper_->AutoCast(out_node_name, out_info[0].name,
+                        input_tpye, out_info[0].dtype);
 }
-} // namespace paddle2onnx
+}  //  namespace paddle2onnx

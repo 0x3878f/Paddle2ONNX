@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(unsqueeze2, Unsqueeze2Mapper)
+REGISTER_PIR_MAPPER(unsqueeze2, Unsqueeze2Mapper)
 
 int32_t Unsqueeze2Mapper::GetMinOpsetVersion(bool verbose) {
   if (axes_.size() == 0) {

@@ -27,6 +27,12 @@ class LinspaceMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("dtype", &dtype_);
   }
+  LinspaceMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                 int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("dtype", &dtype_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset9() override;
 

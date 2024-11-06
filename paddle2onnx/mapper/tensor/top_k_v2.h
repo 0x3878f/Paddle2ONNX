@@ -26,6 +26,14 @@ class TopKV2Mapper : public Mapper {
     GetAttr("sorted", &sorted_);
     GetAttr("axis", &axis_);
   }
+  TopKV2Mapper(const PaddlePirParser& p, OnnxHelper* helper,
+               int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("largest", &largest_);
+    GetAttr("sorted", &sorted_);
+    GetAttr("axis", &axis_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 11) << RequireOpset(11) << std::endl;
     return 11;

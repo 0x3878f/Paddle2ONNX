@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(gather_nd, GatherNdMapper)
+REGISTER_PIR_MAPPER(gather_nd, GatherNdMapper)
 
 int32_t GatherNdMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << RequireOpset(11) << std::endl;

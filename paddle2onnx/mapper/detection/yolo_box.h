@@ -35,6 +35,20 @@ class YoloBoxMapper : public Mapper {
     GetAttr("scale_x_y", &scale_x_y_);
     GetAttr("anchors", &anchors_);
   }
+  YoloBoxMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    MarkAsExperimentalOp();
+    GetAttr("clip_bbox", &clip_bbox_);
+    GetAttr("iou_aware", &iou_aware_);
+    GetAttr("conf_thresh", &conf_thresh_);
+    GetAttr("iou_aware_factor", &iou_aware_factor_);
+    GetAttr("class_num", &class_num_);
+    GetAttr("downsample_ratio", &downsample_ratio_);
+    GetAttr("scale_x_y", &scale_x_y_);
+    GetAttr("anchors", &anchors_);
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset11() override;

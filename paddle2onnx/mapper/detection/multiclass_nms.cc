@@ -17,6 +17,7 @@
 namespace paddle2onnx {
 
 REGISTER_MAPPER(multiclass_nms3, NMSMapper);
+REGISTER_PIR_MAPPER(multiclass_nms3, NMSMapper);
 
 int32_t NMSMapper::GetMinOpsetVersion(bool verbose) {
   auto boxes_info = GetInput("BBoxes");
@@ -226,7 +227,8 @@ void NMSMapper::Opset10() {
                       {selected_box_index});
   } else {
     auto value_1 =
-        helper_->Constant({1}, GetOnnxDtype(boxes_info[0].dtype), float(1.0));
+        helper_->Constant({1}, GetOnnxDtype(boxes_info[0].dtype),
+                                            static_cast<float>(1.0));
     auto split_boxes = helper_->Split(boxes_info[0].name,
                                       std::vector<int64_t>(4, 1), int64_t(2));
     auto xmax = helper_->MakeNode("Add", {split_boxes[2], value_1});

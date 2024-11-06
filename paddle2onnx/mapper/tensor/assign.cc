@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(assign, AssignMapper)
+REGISTER_PIR_MAPPER(assign, AssignMapper)
 REGISTER_MAPPER(share_data, AssignMapper)
 
 void AssignMapper::Opset7() {

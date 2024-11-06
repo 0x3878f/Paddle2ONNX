@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(flip, FlipMapper)
+REGISTER_PIR_MAPPER(flip, FlipMapper)
 
 int32_t FlipMapper::GetMinOpsetVersion(bool verbose) {
   auto input_info = parser_->GetOpInput(block_idx_, op_idx_, "X");

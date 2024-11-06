@@ -21,18 +21,21 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(layer_norm, LayerNormMapper)
+REGISTER_PIR_MAPPER(layer_norm, LayerNormMapper)
 
 void LayerNormMapper::Opset17() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Y");
 
-  constexpr std::array<P2ODataType, 3> T = {P2ODataType::FP16, P2ODataType::FP32, P2ODataType::FP64};
+  constexpr std::array<P2ODataType, 3> T =
+          {P2ODataType::FP16, P2ODataType::FP32, P2ODataType::FP64};
 
   auto input_name = input_info[0].name;
   auto input_type = input_info[0].dtype;
   auto input_shape = input_info[0].shape;
   if (std::find(T.begin(), T.end(), input_type) == T.end()) {
-    input_name = helper_->AutoCast(input_name, input_info[0].dtype, P2ODataType::FP32);
+    input_name = helper_->AutoCast(input_name, input_info[0].dtype,
+                                   P2ODataType::FP32);
     input_type = P2ODataType::FP32;
   }
 
@@ -83,7 +86,7 @@ void LayerNormMapper::Opset17() {
   }
 
   std::vector<int64_t> normalized_shape;
-  for (int64_t i = begin_norm_axis_;i < input_shape.size();i++) {
+  for (int64_t i = begin_norm_axis_; i < input_shape.size(); i++) {
     normalized_shape.emplace_back(input_shape[i]);
   }
 
@@ -96,7 +99,9 @@ void LayerNormMapper::Opset17() {
       bias_type = P2ODataType::FP32;
     }
 
-    std::string scale_name = helper_->Constant(normalized_shape, GetOnnxDtype(P2ODataType::FP32), static_cast<float>(1.0));
+    std::string scale_name = helper_->Constant(normalized_shape,
+                                              GetOnnxDtype(P2ODataType::FP32),
+                                              static_cast<float>(1.0));
     auto layer_norm_node = helper_->MakeNode(
       "LayerNormalization",
       {input_name, scale_name, bias_name},
@@ -107,7 +112,9 @@ void LayerNormMapper::Opset17() {
   }
 
   if (!has_input_Bias && !has_input_Scale) {
-    std::string scale_name = helper_->Constant(normalized_shape, GetOnnxDtype(P2ODataType::FP32), static_cast<float>(1.0));
+    std::string scale_name = helper_->Constant(normalized_shape,
+                                               GetOnnxDtype(P2ODataType::FP32),
+                                               static_cast<float>(1.0));
     auto layer_norm_node = helper_->MakeNode(
       "LayerNormalization",
       {input_name, scale_name},
@@ -136,23 +143,30 @@ void LayerNormMapper::Opset7() {
   }
 
   float epsilon = epsilon_;
-  std::string epsilon_node = helper_->Constant({}, GetOnnxDtype(P2ODataType::FP32), epsilon);
-  std::string two_node = helper_->Constant({}, GetOnnxDtype(P2ODataType::FP32), float(2.0));
+  std::string epsilon_node = helper_->Constant({},
+                                               GetOnnxDtype(P2ODataType::FP32),
+                                               epsilon);
+  std::string two_node = helper_->Constant({},
+                                           GetOnnxDtype(P2ODataType::FP32),
+                                           static_cast<float>(2.0));
 
   auto mean_node = helper_->MakeNode("ReduceMean", {input_name});
   AddAttribute(mean_node, "axes", axes);
 
-  auto numerator_node = helper_->MakeNode("Sub", {input_name, mean_node->output(0)});
-  auto pow_num_node = helper_->MakeNode("Pow", {numerator_node->output(0), two_node});
-
-  auto variance_node = helper_->MakeNode("ReduceMean", {pow_num_node->output(0)});
+  auto numerator_node =
+          helper_->MakeNode("Sub", {input_name, mean_node->output(0)});
+  auto pow_num_node =
+          helper_->MakeNode("Pow", {numerator_node->output(0), two_node});
+  auto variance_node =
+          helper_->MakeNode("ReduceMean", {pow_num_node->output(0)});
   AddAttribute(variance_node, "axes", axes);
 
-  auto add_eps_node = helper_->MakeNode("Add", {variance_node->output(0), epsilon_node});
-
-  auto denominator_node = helper_->MakeNode("Sqrt", {add_eps_node->output(0)});
-
-  auto ipt_shape_node = helper_->MakeNode("Shape", {input_name});
+  auto add_eps_node =
+          helper_->MakeNode("Add", {variance_node->output(0), epsilon_node});
+  auto denominator_node =
+          helper_->MakeNode("Sqrt", {add_eps_node->output(0)});
+  auto ipt_shape_node =
+          helper_->MakeNode("Shape", {input_name});
   std::vector<int64_t> slice_axes = {0};
   std::vector<int64_t> start = {
     static_cast<int64_t>(input_shape.size() - axes.size())
@@ -181,14 +195,20 @@ void LayerNormMapper::Opset7() {
       scale_node = helper_->Reshape(scale_name, {-1});
       bias_node = helper_->Reshape(bias_name, {-1});
     } else {
-      scale_node = helper_->MakeNode("Reshape", {scale_name, weight_shape_node})->output(0);
-      bias_node = helper_->MakeNode("Reshape", {bias_name, weight_shape_node})->output(0);
+      scale_node = helper_->MakeNode("Reshape",
+                                    {scale_name, weight_shape_node})->output(0);
+      bias_node = helper_->MakeNode("Reshape",
+                                    {bias_name, weight_shape_node})->output(0);
     }
     auto layer_norm_pre_node = helper_->MakeNode(
       "Div",
       {numerator_node->output(0), denominator_node->output(0)});
-    auto layer_norm_node = helper_->MakeNode("Mul", {layer_norm_pre_node->output(0), scale_node});
-    auto pre_cast_node = helper_->MakeNode("Add", {layer_norm_node->output(0), bias_node});
+    auto layer_norm_node = helper_->MakeNode("Mul",
+                                            {layer_norm_pre_node->output(0),
+                                            scale_node});
+    auto pre_cast_node = helper_->MakeNode("Add",
+                                           {layer_norm_node->output(0),
+                                           bias_node});
     helper_->AutoCast(pre_cast_node->output(0),
                       output_info[0].name,
                       P2ODataType::FP32,
@@ -251,4 +271,4 @@ void LayerNormMapper::Opset7() {
                     P2ODataType::FP32,
                     output_info[0].dtype);
 }
-} // namespace paddle2onnx
+}  // namespace paddle2onnx

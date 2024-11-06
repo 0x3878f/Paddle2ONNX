@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(pad, PadMapper)
+REGISTER_PIR_MAPPER(pad, PadMapper)
 
 std::vector<int64_t> PadMapper::ConvertPaddingParameter(
     const std::vector<int64_t>& paddings) {
@@ -34,6 +35,9 @@ void PadMapper::Opset7() {
   auto output_info = GetOutput("Out");
   auto node =
       helper_->MakeNode("Pad", {input_info[0].name}, {output_info[0].name});
+  if (in_pir_mode) {
+    TryGetInputValue("pad_value", &pad_value_);
+  }
   AddAttribute(node, "mode", "constant");
   AddAttribute(node, "value", pad_value_);
   AddAttribute(node, "pads", ConvertPaddingParameter(paddings_));
@@ -44,6 +48,9 @@ void PadMapper::Opset11() {
   auto output_info = GetOutput("Out");
   auto paddings = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
                                     ConvertPaddingParameter(paddings_));
+  if (in_pir_mode) {
+    TryGetInputValue("pad_value", &pad_value_);
+  }
   auto value =
       helper_->Constant({}, GetOnnxDtype(input_info[0].dtype), pad_value_);
   auto node = helper_->MakeNode("Pad", {input_info[0].name, paddings, value},

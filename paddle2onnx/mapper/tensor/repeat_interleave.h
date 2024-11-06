@@ -18,24 +18,25 @@
 
 #include "paddle2onnx/mapper/mapper.h"
 
-namespace paddle2onnx
-{
+namespace paddle2onnx {
+class RepeatInterleaveMapper : public Mapper {
+ public:
+  RepeatInterleaveMapper(const PaddleParser &p, OnnxHelper *helper,
+                         int64_t block_id, int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
+    GetAttr("dim", &dim_);
+  }
+  RepeatInterleaveMapper(const PaddlePirParser &p, OnnxHelper *helper,
+                          int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("dim", &dim_);
+  }
 
-  class RepeatInterleaveMapper : public Mapper
-  {
-  public:
-    RepeatInterleaveMapper(const PaddleParser &p, OnnxHelper *helper, int64_t block_id,
-                           int64_t op_id)
-        : Mapper(p, helper, block_id, op_id)
-    {
-      GetAttr("dim", &dim_);
-    }
+  void Opset9() override;
+  int32_t GetMinOpsetVersion(bool verbose) override;
 
-    void Opset9() override;
-    int32_t GetMinOpsetVersion(bool verbose) override;
-
-  private:
-    int64_t dim_;
-  };
-
-} // namespace paddle2onnx
+ private:
+  int64_t dim_;
+};
+}  // namespace paddle2onnx

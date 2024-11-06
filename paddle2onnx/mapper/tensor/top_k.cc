@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(top_k, TopKMapper)
+REGISTER_PIR_MAPPER(top_k, TopKMapper)
 
 void TopKMapper::Opset11() {
   auto x_info = GetInput("X");

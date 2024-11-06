@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(cumsum, CumsumMapper)
+REGISTER_PIR_MAPPER(cumsum, CumsumMapper)
 
 int32_t CumsumMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << RequireOpset(11) << std::endl;

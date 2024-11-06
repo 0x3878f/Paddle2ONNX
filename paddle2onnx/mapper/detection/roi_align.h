@@ -30,6 +30,20 @@ class RoiAlignMapper : public Mapper {
     GetAttr("aligned", &aligned_);
   }
 
+  RoiAlignMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t op_id,
+                 bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    MarkAsExperimentalOp();
+    GetAttr("pooled_height", &pooled_height_);
+    GetAttr("pooled_width", &pooled_width_);
+    GetAttr("spatial_scale", &spatial_scale_);
+    GetAttr("sampling_ratio", &sampling_ratio_);
+    GetAttr("aligned", &aligned_);
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 10) << RequireOpset(10) << std::endl;
     return 10;

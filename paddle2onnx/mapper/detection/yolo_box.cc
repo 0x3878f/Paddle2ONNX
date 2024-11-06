@@ -17,6 +17,7 @@
 namespace paddle2onnx {
 
 REGISTER_MAPPER(yolo_box, YoloBoxMapper)
+REGISTER_PIR_MAPPER(yolo_box, YoloBoxMapper)
 
 int32_t YoloBoxMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << RequireOpset(11) << std::endl;
@@ -77,9 +78,11 @@ void YoloBoxMapper::Opset11() {
   // grid_x = np.tile(np.arange(w).reshape((1, w)), (h, 1))
   // grid_y = np.tile(np.arange(h).reshape((h, 1)), (1, w))
   auto float_value_0 =
-      helper_->Constant({}, GetOnnxDtype(x_info[0].dtype), float(0.0));
+      helper_->Constant({}, GetOnnxDtype(x_info[0].dtype),
+                        static_cast<float>(0.0));
   auto float_value_1 =
-      helper_->Constant({}, GetOnnxDtype(x_info[0].dtype), float(1.0));
+      helper_->Constant({}, GetOnnxDtype(x_info[0].dtype),
+                        static_cast<float>(1.0));
   auto scalar_float_w = helper_->Squeeze(float_w, {});
   auto scalar_float_h = helper_->Squeeze(float_h, {});
   auto grid_x_0 = helper_->MakeNode(
@@ -91,7 +94,9 @@ void YoloBoxMapper::Opset11() {
   auto grid_y_1 = helper_->MakeNode(
       "Tile", {grid_y_0->output(0), nchw[3]});  // shape is [h*w]
   auto int_value_1 =
-      helper_->Constant({1}, ONNX_NAMESPACE::TensorProto::INT64, float(1.0));
+      helper_->Constant({1},
+                        ONNX_NAMESPACE::TensorProto::INT64,
+                        static_cast<float>(1.0));
   auto grid_shape_x =
       helper_->MakeNode("Concat", {nchw[2], nchw[3], int_value_1});
   auto grid_shape_y =
@@ -191,7 +196,9 @@ void YoloBoxMapper::Opset11() {
   // pred_score = sigmoid(x[:, :, :, :, 5:]) * pred_conf
   // pred_box = pred_box * (pred_conf > 0.).astype('float32')
   auto value_2 =
-      helper_->Constant({1}, GetOnnxDtype(x_info[0].dtype), float(2.0));
+      helper_->Constant({1},
+                        GetOnnxDtype(x_info[0].dtype),
+                        static_cast<float>(2.0));
   auto center = helper_->MakeNode("Div", {pred_box_wh, value_2})->output(0);
   auto min_xy = helper_->MakeNode("Sub", {pred_box_xy, center})->output(0);
   auto max_xy = helper_->MakeNode("Add", {pred_box_xy, center})->output(0);

@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(roi_align, RoiAlignMapper)
+REGISTER_PIR_MAPPER(roi_align, RoiAlignMapper)
 
 void RoiAlignMapper::Opset10() {
   auto x_info = GetInput("X");

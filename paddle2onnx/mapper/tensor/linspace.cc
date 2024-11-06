@@ -19,11 +19,12 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(linspace, LinspaceMapper)
+REGISTER_PIR_MAPPER(linspace, LinspaceMapper)
 
 int32_t LinspaceMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 9) << RequireOpset(9) << std::endl;
   return 9;
-};
+}
 
 void LinspaceMapper::Opset9() {
   auto start_info = GetInput("Start");

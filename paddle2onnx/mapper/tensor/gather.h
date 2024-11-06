@@ -29,6 +29,14 @@ class GatherMapper : public Mapper {
       GetAttr("axis", &axis_);
     }
   }
+  GatherMapper(const PaddlePirParser& p, OnnxHelper* helper,
+               int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    if (HasAttr("axis")) {
+      GetAttr("axis", &axis_);
+    }
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
