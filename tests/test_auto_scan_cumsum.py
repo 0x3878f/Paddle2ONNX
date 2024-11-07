@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -33,7 +32,8 @@ class Net(BaseNet):
         if axis is not None:
             if self.config["tensor_attr"]:
                 axis = paddle.to_tensor(
-                    self.config["axis"], dtype=self.config["axis_dtype"])
+                    self.config["axis"], dtype=self.config["axis_dtype"]
+                )
             else:
                 axis = self.config["axis"]
         x = paddle.cumsum(inputs, axis=axis, dtype=self.config["dtype"])
@@ -48,17 +48,15 @@ class TestCumsumConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=0, max_size=4)
+        )
 
         if len(input_shape) == 0:
             axis = 0
         else:
             axis = draw(
-                st.integers(
-                    min_value=-len(input_shape), max_value=len(input_shape) -
-                    1))
+                st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
+            )
 
         if draw(st.booleans()):
             axis = None
@@ -79,13 +77,14 @@ class TestCumsumConvert(OPConvertAutoScanTest):
             "dtype": dtype,
             "axis_dtype": axis_dtype,
             "use_gpu": False,
-            "tensor_attr": tensor_attr
+            "tensor_attr": tensor_attr,
         }
 
         models = Net(config)
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

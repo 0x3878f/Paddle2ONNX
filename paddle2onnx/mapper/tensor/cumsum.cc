@@ -38,7 +38,11 @@ void CumsumMapper::Opset11() {
     }
   } else {
     std::string axis_node;
-    if (IsAttrVar("axis")) {
+    if (in_pir_mode) {
+      TryGetInputValue("axis", &axis_);
+      axis_node =
+          helper_->Constant({}, GetOnnxDtype(P2ODataType::INT64), axis_);
+    } else if (IsAttrVar("axis")) {
       auto axis_info = GetAttrVar("axis");
       axis_node = helper_->AutoCast(axis_info[0].name, axis_info[0].dtype,
                                     P2ODataType::INT64);
