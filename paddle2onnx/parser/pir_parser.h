@@ -34,9 +34,9 @@ class PaddlePirParser {
   // recoring set of operators for global block
   std::vector<pir::Operation*> global_blocks_ops;
   // recoring set of operators for sub block
-  std::vector<pir::Operation*> sub_blocks_ops;
+  std::vector<pir::Operation*> sub_blocks_ops; // todo(wangmingkai02): delete sub_blocks_ops
   // recording args of while op body name info
-  std::unordered_map<pir::detail::ValueImpl*,pir::detail::ValueImpl*>while_op_input_value_map;
+  std::unordered_map<pir::detail::ValueImpl*,pir::detail::ValueImpl*> while_op_input_value_map;
   int NumOfBlocks() const;
   // int NumOfOps(int block_idx) const;
   int NumOfProgramOps() const;
@@ -80,8 +80,7 @@ class PaddlePirParser {
                  const std::string& name,
                  std::vector<double>* res) const;
   bool OpHasAttr(pir::Operation* op,
-                 const std::string& name,
-                 bool if_in_sub_block) const;
+                 const std::string& name) const;
   std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
                                      int64_t input_idx,
@@ -106,21 +105,23 @@ class PaddlePirParser {
   template <typename T>
   bool TryGetTensorValue(int64_t op_id,
                          int64_t input_idx,
-                         std::vector<T>* data) const {
+                         std::vector<T>* data,
+                         bool if_in_sub_block = false) const {
     PADDLE_ENFORCE_GT(
         input_idx,
         -1,
         common::errors::InvalidArgument(
             "input_idx should be greater than -1 in TryGetTensorValue."));
+    pir::Operation* temp_op = if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
     TensorInfo tensor_info =
-        GetTensorInfo(global_blocks_ops[op_id]->operand(input_idx).source())[0];
+        GetTensorInfo(temp_op->operand(input_idx).source())[0];
     auto iter = params.find(tensor_info.name);
     if (iter != params.end()) {
       (iter->second).get(data);
       return true;
     }
     std::string attr_name = "value";
-    pir::Operation* op = global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
+    pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
     if(op->name() == "pd_op.assign_value_") {
       attr_name = "values";
     }
@@ -168,16 +169,18 @@ class PaddlePirParser {
   }
 
   template <typename T>
-  bool TryGetTensorValue(int64_t op_id, int64_t input_idx, T* data) const {
+  bool TryGetTensorValue(int64_t op_id, int64_t input_idx, T* data,
+      bool if_in_sub_block = false) const {
     PADDLE_ENFORCE_GT(
         input_idx,
         -1,
         common::errors::InvalidArgument(
             "input_idx should be greater than -1 in TryGetTensorValue."));
+    pir::Operation* temp_op = if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
     TensorInfo tensor_info =
-        GetTensorInfo(global_blocks_ops[op_id]->operand(input_idx).source())[0];
+        GetTensorInfo(temp_op->operand(input_idx).source())[0];
     pir::Operation* op =
-        global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
+        temp_op->operand(input_idx).source().defining_op();
     PADDLE_ENFORCE_EQ(
         op->HasAttribute("value"),
         true,
@@ -237,8 +240,6 @@ class PaddlePirParser {
   mutable std::unordered_map<std::string, int64_t> _name_counter;
   mutable std::unordered_map<pir::Operation*, std::vector<std::string>>
       _op_outputs;
-  mutable std::unordered_map<pir::Operation*, std::vector<std::string>>
-      sub_block_op_outputs;
   std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
       _op_arg_name_mappings;
 

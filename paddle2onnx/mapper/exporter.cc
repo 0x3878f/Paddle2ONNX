@@ -375,6 +375,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
   std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> temp_parameters;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> temp_inputs;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> temp_outputs;
+  std::vector<pir::Operation*> sub_blocks_ops_copy(pir_parser.sub_blocks_ops);
   pir_parser.sub_blocks_ops.clear();
   for (auto& op : block.ops()) {
     if (op->name() != "builtin.parameter") {
@@ -402,8 +403,11 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
   }
 
   pir::Block* blockPtr = &block;
-  return std::move(ExportBlock(
+  auto graph = std::move(ExportBlock(
       pir_parser, blockPtr, temp_parameters, temp_inputs, temp_outputs, true, false));
+  pir_parser.sub_blocks_ops.clear();
+  pir_parser.sub_blocks_ops = sub_blocks_ops_copy;
+  return graph;
 }
 
 ONNX_NAMESPACE::GraphProto ModelExporter::ExportConditionalBlock(
@@ -448,7 +452,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
     std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>& outputs,
     bool if_in_subblock, bool is_while_block) {
   ONNX_NAMESPACE::GraphProto graph;
-  graph.set_name("PaddlePaddle Graph in pir mode");
+  graph.set_name("PaddlePaddle Graph in PIR mode");
   OnnxHelper temp_helper;
   std::vector<pir::Operation*> block_ops;
   for (auto& op : block->ops()) {
