@@ -39,6 +39,8 @@ void ReduceMaxMapper::Opset18() {
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
+  } else {
+    TryGetInputValue("axis", &dim_);
   }
 
   auto x_info = GetInput("X");
@@ -87,6 +89,8 @@ void ReduceMaxMapper::Opset11() {
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
+  } else {
+    TryGetInputValue("axis", &dim_);
   }
 
   auto x_info = GetInput("X");

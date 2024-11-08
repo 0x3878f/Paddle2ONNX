@@ -39,6 +39,8 @@ void ReduceMinMapper::Opset18() {
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
+  } else {
+    TryGetInputValue("axis", &dim_);
   }
 
   auto x_info = GetInput("X");
@@ -88,6 +90,8 @@ if (!in_pir_mode) {
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
+  } else {
+    TryGetInputValue("axis", &dim_);
   }
 
   auto x_info = GetInput("X");
