@@ -40,6 +40,8 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       // {"relu", "relu6"},
       {"batch_norm_", "batch_norm"},
       {"topk", "top_k_v2"},
+      {"repeat_interleave_with_tensor_index", "repeat_interleave"},
+      {"expand", "expand_v2"},
       {"assign_value_", "assign_value"},
       {"flatten", "flatten_contiguous_range"},
       {"unsqueeze", "unsqueeze2"},
