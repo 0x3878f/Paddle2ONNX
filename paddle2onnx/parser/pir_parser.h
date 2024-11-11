@@ -116,17 +116,17 @@ class PaddlePirParser {
     }
     // TODO(qzylalala): Need double-check
     std::string attr_name;
-    std::string value = "value";
-    std::string values = "values";
+    std::string attr_value = "value";
+    std::string attr_values = "values";
     pir::Operation* op =
         global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
-    while(!op->HasAttribute(value) && !op->HasAttribute(values)) {
+    while(!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
       op = op->operand(0).source().defining_op();
     }
-    if (op->HasAttribute(value)) {
-      attr_name = value;
+    if (op->HasAttribute(attr_value)) {
+      attr_name = attr_value;
     } else {
-      attr_name = values;
+      attr_name = attr_values;
     }
     int32_t dtype = tensor_info.dtype;
     PADDLE_ENFORCE_EQ(
@@ -184,14 +184,26 @@ class PaddlePirParser {
             "input_idx should be greater than -1 in TryGetTensorValue."));
     TensorInfo tensor_info =
         GetTensorInfo(global_blocks_ops[op_id]->operand(input_idx).source())[0];
+    // TODO(qzylalala): Need double-check
+    std::string attr_name;
+    std::string attr_value = "value";
+    std::string attr_values = "values";
     pir::Operation* op =
         global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
+    while(!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
+      op = op->operand(0).source().defining_op();
+    }
+    if (op->HasAttribute(attr_value)) {
+      attr_name = attr_value;
+    } else {
+      attr_name = attr_values;
+    }
     PADDLE_ENFORCE_EQ(
-        op->HasAttribute("value"),
+        op->HasAttribute(attr_name),
         true,
         common::errors::InvalidArgument(
-            "Cannot found attribute 'value' in op %s", op->name()));
-    auto value = op->attribute("value");
+            "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+    auto value = op->attribute(attr_name);
     if (value.isa<pir::Int32Attribute>()) {
       *data = value.dyn_cast<::pir::Int32Attribute>().data();
     } else if (value.isa<pir::Int64Attribute>()) {
