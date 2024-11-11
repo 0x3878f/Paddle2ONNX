@@ -30,6 +30,19 @@ class FlipMapper : public Mapper {
       }
     }
   }
+
+  FlipMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+             bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
+    GetAttr("axis", &axes_);
+    auto input_info = GetInput("X");
+    for (auto i = 0; i < axes_.size(); i++) {
+      if (axes_[i] < 0) {
+        axes_[i] += input_info[0].Rank();
+      }
+    }
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 
