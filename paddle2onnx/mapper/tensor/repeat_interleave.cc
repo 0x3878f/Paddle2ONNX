@@ -31,8 +31,17 @@ namespace paddle2onnx {
     int x_shape_size = x_info[0].shape.size();
 
     std::vector<int64_t> repeats;
-    int64_t repeat;
-    GetAttr("Repeats", &repeat);
+    int64_t repeat = 0;
+    if (in_pir_mode) {
+      if (OpType() == "pd_op.repeat_interleave") {
+        GetAttr("repeats", &repeat);
+      } else {
+        TryGetInputValue("repeats", &repeats);
+      }
+    } else {
+      GetAttr("Repeats", &repeat);
+    }
+
     if (repeat != 0) {
         std::vector<int64_t> rp_tmp(n, repeat);
         repeats.assign(rp_tmp.begin(), rp_tmp.end());

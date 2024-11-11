@@ -30,7 +30,7 @@ class RepeatInterleaveMapper : public Mapper {
                           int64_t op_id, bool c)
       : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
-    GetAttr("dim", &dim_);
+    GetAttr("axis", &dim_);
   }
 
   void Opset9() override;
