@@ -37,15 +37,18 @@ class AssignValueMapper : public Mapper {
     }
   }
 
-  AssignValueMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
-                    bool c)
-      : Mapper(p, helper, i, c) {
+  AssignValueMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+                    bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
     in_pir_mode = true;
     // GetAttr("dtype", &dtype_);
     dtype_ = GetOutput("Out")[0].dtype;
     GetAttr("shape", &shape_);
     int32_t dtype = static_cast<int32_t>(dtype_);
-    auto array_list = p.global_blocks_ops[i]->attribute("values").dyn_cast<::pir::ArrayAttribute>().AsVector();;
+    pir::Operation *op = if_in_cf_block ? p.sub_blocks_ops[pir_op_idx_] :
+                        p.global_blocks_ops[pir_op_idx_];
+    auto array_list = op->attribute("values")
+                      .dyn_cast<::pir::ArrayAttribute>().AsVector();;
     if (array_list.size() > 0) {
       if(array_list[0].isa<::pir::FloatAttribute>()) {
         auto res = &fp32_values_;
@@ -56,17 +59,20 @@ class AssignValueMapper : public Mapper {
       } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
         auto res = &fp64_values_;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res->push_back(array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
+          res->push_back(array_list[i]
+                .dyn_cast<::pir::DoubleAttribute>().data());
         }
-      } else if (array_list[0].isa<::pir::Int32Attribute>()){
+      } else if (array_list[0].isa<::pir::Int32Attribute>()) {
         auto res = &int64_values_;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res->push_back(array_list[i].dyn_cast<::pir::Int32Attribute>().data());
+          res->push_back(array_list[i]
+            .dyn_cast<::pir::Int32Attribute>().data());
         }
       } else if (array_list[0].isa<::pir::Int64Attribute>()) {
         auto res = &int64_values_;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res->push_back(array_list[i].dyn_cast<::pir::Int64Attribute>().data());
+          res->push_back(array_list[i]
+            .dyn_cast<::pir::Int64Attribute>().data());
         }
       }
     }

@@ -13,15 +13,21 @@
 // limitations under the License.
 
 #include "paddle2onnx/mapper/tensor/assign.h"
+#include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {
 REGISTER_MAPPER(assign, AssignMapper)
 REGISTER_MAPPER(share_data, AssignMapper)
+REGISTER_PIR_MAPPER(assign, AssignMapper)
+REGISTER_PIR_MAPPER(share_data_, AssignMapper)
 
 void AssignMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
-  if (block_idx_ != 0 && OpType() != "share_data") {
+  bool convert_assign = !in_pir_mode ? block_idx_ != 0
+    && OpType() != "share_data"
+    : convert_pir_op_name(OpType()) != "share_data_";
+  if (convert_assign) {
     // Here's a trick for tensorrt
     // Consider remove this trick
     if (input_info[0].dtype == P2ODataType::BOOL) {
