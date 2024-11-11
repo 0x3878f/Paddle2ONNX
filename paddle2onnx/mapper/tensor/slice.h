@@ -36,6 +36,21 @@ class SliceMapper : public Mapper {
     }
   }
 
+  SliceMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+              bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
+    GetAttr("axes", &axes_);
+    if (HasAttr("strides")) {
+      GetAttr("strides", &strides_);
+    }
+    if(HasAttr("infer_flags")) {
+      GetAttr("infer_flags", &infer_flags_);
+    }
+    if (HasAttr("decrease_axis_")) {
+      GetAttr("decrease_axis", &decrease_axis_);
+    }
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
   void Opset10() override;
@@ -46,6 +61,7 @@ class SliceMapper : public Mapper {
   std::vector<int64_t> starts_;
   std::vector<int64_t> ends_;
   std::vector<int64_t> strides_;
+  std::vector<int64_t> infer_flags_;
   std::vector<int64_t> decrease_axis_;
 };
 
