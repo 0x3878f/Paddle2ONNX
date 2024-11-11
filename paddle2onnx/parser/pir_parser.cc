@@ -939,6 +939,7 @@ bool PaddlePirParser::IsConstantTensor(int64_t op_id,
   } else {
     op = global_blocks_ops[op_id];
   }
-  return op->operand(input_idx).source().defining_op()->num_operands() == 0;
+  return op->operand(input_idx).source().defining_op()->num_operands() == 0
+      || op->operand(input_idx).source().defining_op()->name() == "pd_op.assign_value_";
 }
 }  // namespace paddle2onnx

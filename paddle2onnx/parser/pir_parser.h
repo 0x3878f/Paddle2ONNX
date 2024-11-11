@@ -181,12 +181,16 @@ class PaddlePirParser {
         GetTensorInfo(temp_op->operand(input_idx).source())[0];
     pir::Operation* op =
         temp_op->operand(input_idx).source().defining_op();
+    std::string attr_name = "value";
+    if(op->name() == "pd_op.assign_value_") {
+      attr_name = "values";
+    }
     PADDLE_ENFORCE_EQ(
-        op->HasAttribute("value"),
-        true,
-        common::errors::InvalidArgument(
-            "Cannot found attribute 'value' in op %s", op->name()));
-    auto value = op->attribute("value");
+      op->HasAttribute(attr_name),
+      true,
+      common::errors::InvalidArgument(
+        "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+    auto value = op->attribute(attr_name);
     if (value.isa<pir::Int32Attribute>()) {
       *data = value.dyn_cast<::pir::Int32Attribute>().data();
     } else if (value.isa<pir::Int64Attribute>()) {

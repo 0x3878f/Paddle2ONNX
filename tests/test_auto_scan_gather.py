@@ -13,13 +13,12 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-from onnxbase import randtool
 import numpy as np
 import unittest
 import paddle
 from random import sample
+from onnxbase import _test_only_pir
 
 
 class Net0(BaseNet):
@@ -60,9 +59,8 @@ class TestGatherConvert0(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=2, max_value=20), min_size=1, max_size=4))
+            st.lists(st.integers(min_value=2, max_value=20), min_size=1, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["int32", "int64", "float32", "float64"]))
         index_dtype = draw(st.sampled_from(["int32", "int64"]))
@@ -87,6 +85,7 @@ class TestGatherConvert0(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -99,9 +98,8 @@ class TestGatherConvert1(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=2, max_value=20), min_size=1, max_size=4))
+            st.lists(st.integers(min_value=2, max_value=20), min_size=1, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["int32", "int64", "float32", "float64"]))
         index_dtype = draw(st.sampled_from(["int32", "int64"]))
@@ -126,6 +124,7 @@ class TestGatherConvert1(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

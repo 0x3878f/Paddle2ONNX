@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(gather, GatherMapper)
+REGISTER_PIR_MAPPER(gather, GatherMapper)
 
 int32_t GatherMapper::GetMinOpsetVersion(bool verbose) {
   if (HasInput("Axis")) {
@@ -51,11 +52,18 @@ void GatherMapper::Opset7() {
   bool has_input_axis = HasInput("Axis");
   auto axis = axis_;
   if (has_input_axis) {
-    std::vector<int64_t> axes;
-    Assert(TryGetInputValue("Axis", &axes),
+    if(in_pir_mode) {
+      Assert(TryGetInputValue("Axis", &axis),
            "Paddle2ONNX does not support axis as input tensor for operator: "
            "gather.");
-    axis = axes[0];
+    }
+    else {
+      std::vector<int64_t> axes;
+      Assert(TryGetInputValue("Axis", &axes),
+             "Paddle2ONNX does not support axis as input tensor for operator: "
+             "gather.");
+      axis = axes[0];
+    }
   }
   Assert(index_info[0].shape.size() == 1,
          "Paddle2ONNX: While rank of index > 1, opset must >= 11 for operator: "
@@ -73,11 +81,18 @@ void GatherMapper::Opset11() {
   bool has_input_axis = HasInput("Axis");
   auto axis = axis_;
   if (has_input_axis) {
-    std::vector<int64_t> axes;
-    Assert(TryGetInputValue("Axis", &axes),
+    if(in_pir_mode) {
+      Assert(TryGetInputValue("Axis", &axis),
            "Paddle2ONNX does not support axis as input tensor for operator: "
            "gather.");
-    axis = axes[0];
+    }
+    else {
+      std::vector<int64_t> axes;
+      Assert(TryGetInputValue("Axis", &axes),
+             "Paddle2ONNX does not support axis as input tensor for operator: "
+             "gather.");
+      axis = axes[0];
+    }
   }
   //If index.shape = [d_0, 1], squeeze the last dim to reshape index.shape = [d_0].
   std::string index_name = index_info[0].name;
