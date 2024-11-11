@@ -21,6 +21,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(layer_norm, LayerNormMapper)
+REGISTER_PIR_MAPPER(layer_norm, LayerNormMapper)
 
 void LayerNormMapper::Opset17() {
   auto input_info = GetInput("X");
