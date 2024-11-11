@@ -16,6 +16,7 @@ from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
 import unittest
 import paddle
+from onnxbase import _test_only_pir
 
 
 class Net(BaseNet):
@@ -111,7 +112,7 @@ class TestRollConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
-    # @_test_with_pir
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=80)
 
