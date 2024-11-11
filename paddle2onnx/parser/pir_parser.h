@@ -114,10 +114,19 @@ class PaddlePirParser {
       (iter->second).get(data);
       return true;
     }
-    std::string attr_name = "value";
-    pir::Operation* op = global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
-    if(op->name() == "pd_op.assign_value_") {
-      attr_name = "values";
+    // TODO(qzylalala): Need double-check
+    std::string attr_name;
+    std::string value = "value";
+    std::string values = "values";
+    pir::Operation* op =
+        global_blocks_ops[op_id]->operand(input_idx).source().defining_op();
+    while(!op->HasAttribute(value) && !op->HasAttribute(values)) {
+      op = op->operand(0).source().defining_op();
+    }
+    if (op->HasAttribute(value)) {
+      attr_name = value;
+    } else {
+      attr_name = values;
     }
     int32_t dtype = tensor_info.dtype;
     PADDLE_ENFORCE_EQ(
@@ -126,7 +135,8 @@ class PaddlePirParser {
       common::errors::InvalidArgument(
         "Cannot found attribute '%s' in op %s", attr_name, op->name()));
 
-    auto array_list = op->attribute(attr_name).dyn_cast<::pir::ArrayAttribute>().AsVector();
+    auto array_list =
+        op->attribute(attr_name).dyn_cast<::pir::ArrayAttribute>().AsVector();
     if (array_list.size() > 0) {
       if(array_list[0].isa<::pir::FloatAttribute>()) {
         std::vector<float> res;
@@ -138,13 +148,15 @@ class PaddlePirParser {
       } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
         std::vector<double> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res.push_back(array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
+          res.push_back(
+              array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
         }
         data->assign(res.begin(), res.end());
-      } else if (array_list[0].isa<::pir::Int32Attribute>()){
+      } else if (array_list[0].isa<::pir::Int32Attribute>()) {
         std::vector<int32_t> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res.push_back(array_list[i].dyn_cast<::pir::Int32Attribute>().data());
+          res.push_back(
+              array_list[i].dyn_cast<::pir::Int32Attribute>().data());
         }
         data->assign(res.begin(), res.end());
       } else if (array_list[0].isa<::pir::Int64Attribute>()) {
@@ -154,7 +166,8 @@ class PaddlePirParser {
         }
         data->assign(res.begin(), res.end());
       } else {
-        Assert(false, "Only support int32/int64/float32/float64 data type now.");
+        Assert(false,
+          "Only support int32/int64/float32/float64 data type now.");
       }
     } else {
       return false;
@@ -195,7 +208,7 @@ class PaddlePirParser {
             *data = array_list[0].dyn_cast<::pir::FloatAttribute>().data();
           } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
             *data = array_list[0].dyn_cast<::pir::DoubleAttribute>().data();
-          } else if (array_list[0].isa<::pir::Int32Attribute>()){
+          } else if (array_list[0].isa<::pir::Int32Attribute>()) {
             *data = array_list[0].dyn_cast<::pir::Int32Attribute>().data();
           } else if (array_list[0].isa<::pir::Int64Attribute>()) {
             *data = array_list[0].dyn_cast<::pir::Int64Attribute>().data();
@@ -203,11 +216,11 @@ class PaddlePirParser {
         } else {
           return false;
         }
+      } else {
+        Assert(false,
+          "Only support int32/int64/float32/float64 data type now.");
       }
-      else {
-        Assert(false, "Only support int32/int64/float32/float64 data type now.");
-      }
-    } 
+    }
     return true;
   }
 
