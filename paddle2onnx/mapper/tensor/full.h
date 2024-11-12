@@ -26,8 +26,8 @@ class FullMapper : public Mapper {
   FullMapper(const PaddlePirParser& p,
              OnnxHelper* helper,
              int64_t op_id,
-             bool c)
-      : Mapper(p, helper, op_id, c) {
+             bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
     GetAttr("dtype", &dtype_);
     GetAttr("value", &value_);
     GetAttr("shape", &shape_);
@@ -36,7 +36,7 @@ class FullMapper : public Mapper {
   void Opset7() override;
 
  private:
-  std::string dtype_;
+  int64_t dtype_;
   double value_;
   std::vector<int64_t> shape_;
 };

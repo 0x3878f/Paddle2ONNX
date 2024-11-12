@@ -31,6 +31,7 @@
 #include "paddle/pir/include/core/builtin_op.h"
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
+#include "paddle/fluid/pir/dialect/operator/ir/op_attribute.h"
 
 std::unordered_map<phi::DataType, paddle2onnx::framework::proto::VarType_Type>
     pir_dtype_to_onnx_dtype = {
@@ -530,7 +531,7 @@ std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(
 }
 
 std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(
-    const pir::Value& value,std::string name) const {
+    const pir::Value& value, std::string name) const {
   std::vector<TensorInfo> results;
   if (value.type().isa<pir::VectorType>()) {
     auto vec_type = value.type().cast<pir::VectorType>();
@@ -624,7 +625,8 @@ bool PaddlePirParser::OpHasInput(int64_t op_id,
 
   int64_t input_idx = GetOpInputOutputName2Idx(
                  op_id, input_name, true, if_in_sub_block);
-  return input_idx != -1 && input_idx < op->num_operands() && op->operand(input_idx);
+  return input_idx != -1 && input_idx < op->num_operands()
+          && op->operand(input_idx);
 }
 
 bool PaddlePirParser::OpHasOutput(int64_t op_id,
@@ -655,10 +657,9 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
         *res = pair.second.dyn_cast<::pir::Int32Attribute>().data();
       } else if (pair.second.isa<pir::Int64Attribute>()) {
         *res = pair.second.dyn_cast<::pir::Int64Attribute>().data();
-      } else if (pair.second.isa<pir::Attribute>()) {
-        // a_dtype
-        auto type = op->result(0).type().cast<pir::DenseTensorType>().dtype();
-        auto data_type = TransToPhiDataType(type);
+      } else if (pair.second.isa<paddle::dialect::DataTypeAttribute>()) {
+        phi::DataType data_type = pair.second
+            .dyn_cast<paddle::dialect::DataTypeAttribute>().data();
         auto it = pir_dtype_to_onnx_dtype.find(data_type);
         if (it == pir_dtype_to_onnx_dtype.end()) {
           std::cerr << "data_type not found" << std::endl;
@@ -783,9 +784,11 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
             }
           }
         }
-
-        break;
+      } else if(pair.second.isa<paddle::dialect::IntArrayAttribute>()) {
+          *res = pair.second.dyn_cast<paddle::dialect::IntArrayAttribute>()
+            .data().GetData();
       }
+      break;
     }
   }
   PADDLE_ENFORCE_EQ(
@@ -943,6 +946,7 @@ bool PaddlePirParser::IsConstantTensor(int64_t op_id,
     op = global_blocks_ops[op_id];
   }
   return op->operand(input_idx).source().defining_op()->num_operands() == 0
-      || op->operand(input_idx).source().defining_op()->name() == "pd_op.assign_value_";
+      || op->operand(input_idx).source().defining_op()
+          ->name() == "pd_op.assign_value_";
 }
 }  // namespace paddle2onnx

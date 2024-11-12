@@ -41,8 +41,7 @@ class AssignValueMapper : public Mapper {
                     bool in_cf_block)
       : Mapper(p, helper, op_id, in_cf_block) {
     in_pir_mode = true;
-    // GetAttr("dtype", &dtype_);
-    dtype_ = GetOutput("Out")[0].dtype;
+    GetAttr("dtype", &dtype_);
     GetAttr("shape", &shape_);
     int32_t dtype = static_cast<int32_t>(dtype_);
     pir::Operation *op = if_in_cf_block ? p.sub_blocks_ops[pir_op_idx_] :
