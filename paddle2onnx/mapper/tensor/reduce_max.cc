@@ -40,7 +40,17 @@ void ReduceMaxMapper::Opset18() {
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
   } else {
-    TryGetInputValue("axis", &dim_);
+    if (OpType() == "pd_op.any") {
+      GetAttr("axis", &dim_);
+      P2OLogger() << "dim_.size() : " << dim_.size() << std::endl;
+    } else {
+      TryGetInputValue("axis", &dim_);
+    }
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");
@@ -90,7 +100,16 @@ void ReduceMaxMapper::Opset11() {
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
   } else {
-    TryGetInputValue("axis", &dim_);
+    if (OpType() == "pd_op.any") {
+      GetAttr("axis", &dim_);
+    } else {
+      TryGetInputValue("axis", &dim_);
+    }
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");

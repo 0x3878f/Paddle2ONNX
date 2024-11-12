@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
 import random
+from onnxbase import _test_with_pir
 
 op_api_map = {
     "reduce_all": paddle.all,
@@ -40,9 +39,9 @@ class Net(BaseNet):
         """
         forward
         """
-        x = op_api_map[self.config["op_names"]](inputs,
-                                                axis=self.config["dim"],
-                                                keepdim=self.config["keep_dim"])
+        x = op_api_map[self.config["op_names"]](
+            inputs, axis=self.config["dim"], keepdim=self.config["keep_dim"]
+        )
         x = paddle.unsqueeze(x, axis=0)
         x = x.astype("int32")
         return x
@@ -56,22 +55,22 @@ class TestReduceAllConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=2, max_value=20), min_size=1, max_size=5))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=2, max_value=20), min_size=1, max_size=5)
+        )
 
         dtype = draw(st.sampled_from(["bool"]))
-        axis_type = draw(st.sampled_from([
-            "list",
-            "int",
-        ]))
+        axis_type = draw(
+            st.sampled_from(
+                [
+                    "list",
+                    "int",
+                ]
+            )
+        )
         if axis_type == "int":
             dim = draw(
-                st.integers(
-                    min_value=-len(input_shape), max_value=len(input_shape) -
-                    1))
+                st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
+            )
         elif axis_type == "list":
             lenSize = random.randint(1, len(input_shape))
             dim = []
@@ -86,7 +85,7 @@ class TestReduceAllConvert(OPConvertAutoScanTest):
             "opset_version": [7, 13, 18],
             "dim": dim,
             "keep_dim": keep_dim,
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = list()
@@ -101,6 +100,7 @@ class TestReduceAllConvert(OPConvertAutoScanTest):
         config["opset_version"] = opset_versions
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30, max_duration=-1)
 

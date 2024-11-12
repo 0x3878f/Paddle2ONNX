@@ -40,7 +40,16 @@ void ReduceMinMapper::Opset18() {
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
   } else {
-    TryGetInputValue("axis", &dim_);
+    if (OpType() == "pd_op.all") {
+      GetAttr("axis", &dim_);
+    } else {
+      TryGetInputValue("axis", &dim_);
+    }
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");
@@ -91,7 +100,16 @@ if (!in_pir_mode) {
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
   } else {
-    TryGetInputValue("axis", &dim_);
+    if (OpType() == "pd_op.all") {
+      GetAttr("axis", &dim_);
+    } else {
+      TryGetInputValue("axis", &dim_);
+    }
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");
