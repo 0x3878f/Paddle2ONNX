@@ -28,7 +28,6 @@ class InterpolateMapper : public Mapper {
     GetAttr("out_d", &out_d_);
     GetAttr("out_h", &out_h_);
     GetAttr("out_w", &out_w_);
-    method_ = OpType();
 
     resize_mapper_["bilinear_interp"] = "linear";
     resize_mapper_["bilinear_interp_v2"] = "linear";
@@ -42,21 +41,19 @@ class InterpolateMapper : public Mapper {
                     int64_t op_id, bool c)
       : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
-    GetAttr("data_layout", &data_layout_);
+    GetAttr("data_format", &data_layout_);
     GetAttr("align_corners", &align_corners_);
     GetAttr("align_mode", &align_mode_);
     GetAttr("out_d", &out_d_);
     GetAttr("out_h", &out_h_);
     GetAttr("out_w", &out_w_);
-    method_ = OpType();
+    GetAttr("interp_method", &method_);
 
-    resize_mapper_["bilinear_interp"] = "linear";
-    resize_mapper_["bilinear_interp_v2"] = "linear";
-    resize_mapper_["nearest_interp"] = "nearest";
-    resize_mapper_["nearest_interp_v2"] = "nearest";
-    resize_mapper_["bicubic_interp_v2"] = "cubic";
-    resize_mapper_["linear_interp_v2"] = "linear";
-    resize_mapper_["trilinear_interp_v2"] = "linear";
+    resize_mapper_["bilinear"] = "linear";
+    resize_mapper_["nearest"] = "nearest";
+    resize_mapper_["bicubic"] = "cubic";
+    resize_mapper_["linear"] = "linear";
+    resize_mapper_["trilinear"] = "linear";
   }
 
 

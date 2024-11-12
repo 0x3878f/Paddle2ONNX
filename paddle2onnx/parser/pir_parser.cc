@@ -31,6 +31,7 @@
 #include "paddle/pir/include/core/builtin_op.h"
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
+#include "paddle/fluid/pir/dialect/operator/ir/op_attribute.h"
 
 std::unordered_map<phi::DataType, paddle2onnx::framework::proto::VarType_Type>
     pir_dtype_to_onnx_dtype = {
@@ -606,7 +607,7 @@ bool PaddlePirParser::OpIsAttrVar(int64_t op_id,
 }
 
 bool PaddlePirParser::OpHasInput(int64_t op_id,
-                                 int64_t input_idx,
+                                 const std::string& input_name,
                                  bool if_in_sub_block) const {
   pir::Operation* op;
   if (if_in_sub_block) {
@@ -614,7 +615,11 @@ bool PaddlePirParser::OpHasInput(int64_t op_id,
   } else {
     op = global_blocks_ops[op_id];
   }
-  return input_idx < op->num_operands();
+
+  int64_t input_idx = GetOpInputOutputName2Idx(
+                 op_id, input_name, true, if_in_sub_block);
+  return input_idx != -1 && input_idx < op->num_operands()
+          && op->operand(input_idx);
 }
 
 bool PaddlePirParser::OpHasOutput(int64_t op_id,
@@ -774,9 +779,11 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
             }
           }
         }
-
-        break;
+      } else if(pair.second.isa<paddle::dialect::IntArrayAttribute>()) {
+          *res = pair.second.dyn_cast<paddle::dialect::IntArrayAttribute>()
+            .data().GetData();
       }
+      break;
     }
   }
   PADDLE_ENFORCE_EQ(

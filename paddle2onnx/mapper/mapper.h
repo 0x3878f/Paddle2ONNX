@@ -199,8 +199,7 @@ class Mapper {
 
   bool HasInput(const std::string& name) const {
     if (in_pir_mode) {
-      return pir_parser_->GetOpInputOutputName2Idx(
-                 pir_op_idx_, name, true, if_in_cf_block) != -1;
+      return pir_parser_->OpHasInput(pir_op_idx_, name, if_in_cf_block);
     }
     return parser_->OpHasInput(block_idx_, op_idx_, name);
   }

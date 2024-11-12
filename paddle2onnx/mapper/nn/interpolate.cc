@@ -17,14 +17,16 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(bilinear_interp, InterpolateMapper)
 REGISTER_MAPPER(bilinear_interp_v2, InterpolateMapper)
-REGISTER_PIR_MAPPER(bilinear_interp_v2, InterpolateMapper)
+REGISTER_PIR_MAPPER(bilinear_interp, InterpolateMapper)
 REGISTER_MAPPER(nearest_interp, InterpolateMapper)
 REGISTER_MAPPER(nearest_interp_v2, InterpolateMapper)
-REGISTER_PIR_MAPPER(nearest_interp_v2, InterpolateMapper)
+REGISTER_PIR_MAPPER(nearest_interp, InterpolateMapper)
 REGISTER_MAPPER(bicubic_interp_v2, InterpolateMapper)
-REGISTER_PIR_MAPPER(bicubic_interp_v2, InterpolateMapper)
+REGISTER_PIR_MAPPER(bicubic_interp, InterpolateMapper)
 REGISTER_MAPPER(linear_interp_v2, InterpolateMapper)
+REGISTER_PIR_MAPPER(linear_interp, InterpolateMapper)
 REGISTER_MAPPER(trilinear_interp_v2, InterpolateMapper)
+REGISTER_PIR_MAPPER(trilinear_interp, InterpolateMapper)
 
 int32_t InterpolateMapper::GetMinOpsetVersion(bool verbose) {
   if (data_layout_ == "NHWC") {
@@ -137,12 +139,12 @@ void InterpolateMapper::Opset11() {
     node = helper_->MakeNode("Resize", {x_info[0].name, roi, scale},
                              {out_info[0].name});
   }
-  Assert(resize_mapper_.find(OpType()) != resize_mapper_.end(),
-         "Cannot find " + OpType() + " in resize_mapper.");
-  AddAttribute(node, "mode", resize_mapper_[OpType()]);
+  Assert(resize_mapper_.find(method_) != resize_mapper_.end(),
+         "Cannot find " + method_ + " in resize_mapper.");
+  AddAttribute(node, "mode", resize_mapper_[method_]);
   AddAttribute(node, "coordinate_transformation_mode",
                coordinate_transformation_mode);
-  if (resize_mapper_[OpType()] == "nearest" &&
+  if (resize_mapper_[method_] == "nearest" &&
       coordinate_transformation_mode == "asymmetric") {
     AddAttribute(node, "nearest_mode", "floor");
   }

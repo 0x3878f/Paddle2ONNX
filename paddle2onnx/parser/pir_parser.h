@@ -47,7 +47,9 @@ class PaddlePirParser {
   bool OpIsAttrVar(int64_t op_id,
                    const std::string& name,
                    bool if_in_sub_block) const;
-  bool OpHasInput(int64_t op_id, int64_t input_idx, bool if_in_sub_block) const;
+  bool OpHasInput(int64_t op_id,
+                  const std::string& input_name,
+                  bool if_in_sub_block) const;
   bool OpHasOutput(int64_t op_id,
                    int64_t output_idx,
                    bool if_in_sub_block) const;
