@@ -34,9 +34,11 @@ class PaddlePirParser {
   // recoring set of operators for global block
   std::vector<pir::Operation*> global_blocks_ops;
   // recoring set of operators for sub block
-  std::vector<pir::Operation*> sub_blocks_ops; // todo(wangmingkai02): delete sub_blocks_ops
+  std::vector<pir::Operation*>
+      sub_blocks_ops;  // todo(wangmingkai02): delete sub_blocks_ops
   // recording args of while op body name info
-  std::unordered_map<pir::detail::ValueImpl*,pir::detail::ValueImpl*> while_op_input_value_map;
+  std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
+      while_op_input_value_map;
   int NumOfBlocks() const;
   // int NumOfOps(int block_idx) const;
   int NumOfProgramOps() const;
@@ -51,7 +53,9 @@ class PaddlePirParser {
   bool OpIsAttrVar(int64_t op_id,
                    const std::string& name,
                    bool if_in_sub_block) const;
-  bool OpHasInput(int64_t op_id, const std::string& input_name, bool if_in_sub_block) const;
+  bool OpHasInput(int64_t op_id,
+                  const std::string& input_name,
+                  bool if_in_sub_block) const;
   bool OpHasOutput(int64_t op_id,
                    int64_t output_idx,
                    bool if_in_sub_block) const;
@@ -79,8 +83,7 @@ class PaddlePirParser {
   void GetOpAttr(const pir::Operation* op,
                  const std::string& name,
                  std::vector<double>* res) const;
-  bool OpHasAttr(pir::Operation* op,
-                 const std::string& name) const;
+  bool OpHasAttr(pir::Operation* op, const std::string& name) const;
   std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
                                      int64_t input_idx,
@@ -112,7 +115,8 @@ class PaddlePirParser {
         -1,
         common::errors::InvalidArgument(
             "input_idx should be greater than -1 in TryGetTensorValue."));
-    pir::Operation* temp_op = if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+    pir::Operation* temp_op =
+        if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
     TensorInfo tensor_info =
         GetTensorInfo(temp_op->operand(input_idx).source())[0];
     auto iter = params.find(tensor_info.name);
@@ -122,32 +126,33 @@ class PaddlePirParser {
     }
     std::string attr_name = "value";
     pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
-    if(op->name() == "pd_op.assign_value_") {
+    if (op->name() == "pd_op.assign_value_") {
       attr_name = "values";
     }
     int32_t dtype = tensor_info.dtype;
     PADDLE_ENFORCE_EQ(
-      op->HasAttribute(attr_name),
-      true,
-      common::errors::InvalidArgument(
-        "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+        op->HasAttribute(attr_name),
+        true,
+        common::errors::InvalidArgument(
+            "Cannot found attribute '%s' in op %s", attr_name, op->name()));
 
-    auto array_list = op->attribute(attr_name).dyn_cast<::pir::ArrayAttribute>().AsVector();
+    auto array_list =
+        op->attribute(attr_name).dyn_cast<::pir::ArrayAttribute>().AsVector();
     if (array_list.size() > 0) {
-      if(array_list[0].isa<::pir::FloatAttribute>()) {
+      if (array_list[0].isa<::pir::FloatAttribute>()) {
         std::vector<float> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res.push_back(
-            array_list[i].dyn_cast<::pir::FloatAttribute>().data());
+          res.push_back(array_list[i].dyn_cast<::pir::FloatAttribute>().data());
         }
         data->assign(res.begin(), res.end());
       } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
         std::vector<double> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res.push_back(array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
+          res.push_back(
+              array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
         }
         data->assign(res.begin(), res.end());
-      } else if (array_list[0].isa<::pir::Int32Attribute>()){
+      } else if (array_list[0].isa<::pir::Int32Attribute>()) {
         std::vector<int32_t> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
           res.push_back(array_list[i].dyn_cast<::pir::Int32Attribute>().data());
@@ -160,7 +165,8 @@ class PaddlePirParser {
         }
         data->assign(res.begin(), res.end());
       } else {
-        Assert(false, "Only support int32/int64/float32/float64 data type now.");
+        Assert(false,
+               "Only support int32/int64/float32/float64 data type now.");
       }
     } else {
       return false;
@@ -169,27 +175,30 @@ class PaddlePirParser {
   }
 
   template <typename T>
-  bool TryGetTensorValue(int64_t op_id, int64_t input_idx, T* data,
-      bool if_in_sub_block = false) const {
+  bool TryGetTensorValue(int64_t op_id,
+                         int64_t input_idx,
+                         T* data,
+                         bool if_in_sub_block = false) const {
     PADDLE_ENFORCE_GT(
         input_idx,
         -1,
         common::errors::InvalidArgument(
             "input_idx should be greater than -1 in TryGetTensorValue."));
-    pir::Operation* temp_op = if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+    pir::Operation* temp_op =
+        if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
     TensorInfo tensor_info =
         GetTensorInfo(temp_op->operand(input_idx).source())[0];
-    pir::Operation* op =
-        temp_op->operand(input_idx).source().defining_op();
+    pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
     std::string attr_name = "value";
-    if(op->name() == "pd_op.assign_value_") {
+    if (op->name() == "pd_op.assign_value_") {
       attr_name = "values";
     }
-    PADDLE_ENFORCE_EQ(
-      op->HasAttribute(attr_name),
-      true,
-      common::errors::InvalidArgument(
-        "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+    if (!op->HasAttribute(attr_name)) return false;
+    // PADDLE_ENFORCE_EQ(
+    //   op->HasAttribute(attr_name),
+    //   true,
+    //   common::errors::InvalidArgument(
+    //     "Cannot found attribute '%s' in op %s", attr_name, op->name()));
     auto value = op->attribute(attr_name);
     if (value.isa<pir::Int32Attribute>()) {
       *data = value.dyn_cast<::pir::Int32Attribute>().data();
@@ -203,11 +212,11 @@ class PaddlePirParser {
       if (value.isa<pir::ArrayAttribute>()) {
         auto array_list = value.dyn_cast<::pir::ArrayAttribute>().AsVector();
         if (array_list.size() > 0) {
-          if(array_list[0].isa<::pir::FloatAttribute>()) {
+          if (array_list[0].isa<::pir::FloatAttribute>()) {
             *data = array_list[0].dyn_cast<::pir::FloatAttribute>().data();
           } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
             *data = array_list[0].dyn_cast<::pir::DoubleAttribute>().data();
-          } else if (array_list[0].isa<::pir::Int32Attribute>()){
+          } else if (array_list[0].isa<::pir::Int32Attribute>()) {
             *data = array_list[0].dyn_cast<::pir::Int32Attribute>().data();
           } else if (array_list[0].isa<::pir::Int64Attribute>()) {
             *data = array_list[0].dyn_cast<::pir::Int64Attribute>().data();
@@ -215,9 +224,9 @@ class PaddlePirParser {
         } else {
           return false;
         }
-      }
-      else {
-        Assert(false, "Only support int32/int64/float32/float64 data type now.");
+      } else {
+        Assert(false,
+               "Only support int32/int64/float32/float64 data type now.");
       }
     }
     return true;
@@ -237,8 +246,6 @@ class PaddlePirParser {
   void AddOpOutputName(pir::Operation* op,
                        std::string var_name,
                        int64_t output_idx) const;
-
-
 
   void GetOpArgNameMappings();
   mutable std::unordered_map<std::string, int64_t> _name_counter;
