@@ -19,24 +19,24 @@ namespace paddle2onnx {
 REGISTER_MAPPER(assign, AssignMapper)
 REGISTER_MAPPER(share_data, AssignMapper)
 REGISTER_PIR_MAPPER(assign, AssignMapper)
-REGISTER_PIR_MAPPER(share_data_, AssignMapper)
 
 void AssignMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
-  bool convert_assign = !in_pir_mode ? block_idx_ != 0
-    && OpType() != "share_data"
-    : convert_pir_op_name(OpType()) != "share_data_";
+  bool convert_assign =
+      !in_pir_mode ? block_idx_ != 0 && OpType() != "share_data" : true;
   if (convert_assign) {
     // Here's a trick for tensorrt
     // Consider remove this trick
     if (input_info[0].dtype == P2ODataType::BOOL) {
       auto zero = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
                                     std::vector<int64_t>(1, 0));
-      auto cast_input = helper_->AutoCast(input_info[0].name, P2ODataType::BOOL,
-                                          P2ODataType::INT64);
+      auto cast_input = helper_->AutoCast(
+          input_info[0].name, P2ODataType::BOOL, P2ODataType::INT64);
       auto result = helper_->MakeNode("Add", {cast_input, zero})->output(0);
-      helper_->AutoCast(result, output_info[0].name, P2ODataType::INT64,
+      helper_->AutoCast(result,
+                        output_info[0].name,
+                        P2ODataType::INT64,
                         output_info[0].dtype);
     } else {
       auto zero = helper_->Constant(GetOnnxDtype(input_info[0].dtype),
