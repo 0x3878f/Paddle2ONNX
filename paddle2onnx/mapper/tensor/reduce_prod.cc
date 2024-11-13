@@ -31,12 +31,15 @@ if (!in_pir_mode) {
     GetAttr("reduce_all", &reduce_all_);
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
-  }
-  if (IsAttrVar(axis_name_)) {
-    auto info = GetAttrVar(axis_name_);
-    TryGetValue(info[0], &dim_);
+    if (IsAttrVar(axis_name_)) {
+      auto info = GetAttrVar(axis_name_);
+      TryGetValue(info[0], &dim_);
+    } else {
+      GetAttr(axis_name_, &dim_);
+    }
   } else {
-    GetAttr(axis_name_, &dim_);
+    TryGetInputValue("axis", &dim_);
+    GetAttr("reduce_all", &reduce_all_);
   }
 
   auto x_info = GetInput("X");
@@ -78,12 +81,15 @@ if (!in_pir_mode) {
     GetAttr("reduce_all", &reduce_all_);
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
-  }
-  if (IsAttrVar(axis_name_)) {
-    auto info = GetAttrVar(axis_name_);
-    TryGetValue(info[0], &dim_);
+    if (IsAttrVar(axis_name_)) {
+      auto info = GetAttrVar(axis_name_);
+      TryGetValue(info[0], &dim_);
+    } else {
+      GetAttr(axis_name_, &dim_);
+    }
   } else {
-    GetAttr(axis_name_, &dim_);
+    TryGetInputValue("axis", &dim_);
+    GetAttr("reduce_all", &reduce_all_);
   }
 
   auto x_info = GetInput("X");
