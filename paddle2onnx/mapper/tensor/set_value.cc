@@ -16,8 +16,13 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(set_value, SetValueMapper)
+REGISTER_PIR_MAPPER(set_value, SetValueMapper)
+REGISTER_PIR_MAPPER(set_value_, SetValueMapper)
+REGISTER_PIR_MAPPER(set_value_with_tensor, SetValueMapper)
+REGISTER_PIR_MAPPER(set_value_with_tensor_, SetValueMapper)
 
 int32_t SetValueMapper::GetMinOpsetVersion(bool verbose) {
+  // TODO(wangmingkai02): update set_value mapper to support following features
   if (none_axes_.size() > 0) {
     Error() << "Attribute none_axes is not supported." << std::endl;
     return -1;
@@ -60,8 +65,8 @@ void SetValueMapper::Opset12() {
   }
 
   auto input_tensor = input_info[0].name;
-  std::string axes = helper_->Constant({1}, ONNX_NAMESPACE::TensorProto::INT64,
-                                       int64_t(axes_[0]));
+  std::string axes = helper_->Constant(
+      {1}, ONNX_NAMESPACE::TensorProto::INT64, int64_t(axes_[0]));
   // process out of range ends
   auto input_shape = helper_->MakeNode("Shape", {input_tensor})->output(0);
   auto gather_end_bound = helper_->MakeNode("Gather", {input_shape, axes});
@@ -81,18 +86,22 @@ void SetValueMapper::Opset12() {
     auto value_info = GetInput("ValueTensor");
     value = value_info[0].name;
     value_rank = value_info[0].Rank();
+  } else if (HasInput("values")) {
+    auto value_info = GetInput("values");
+    value = value_info[0].name;
+    value_rank = value_info[0].Rank();
   } else {
     value_rank = shape_.size();
     int in_dtype = input_info[0].dtype;
-    if (in_dtype == P2ODataType::INT32 || in_dtype == P2ODataType::INT64) {
-      value = helper_->Assign(GetOnnxDtype(output_info[0].dtype), shape_,
-                              int_values_);
-    } else if (in_dtype == P2ODataType::FP32) {
-      value = helper_->Assign(GetOnnxDtype(output_info[0].dtype), shape_,
-                              fp32_values_);
-    } else if (in_dtype == P2ODataType::FP64) {
-      value = helper_->Assign(GetOnnxDtype(output_info[0].dtype), shape_,
-                              fp64_values_);
+    if (int_values_.size() > 0) {
+      value = helper_->Assign(
+          GetOnnxDtype(output_info[0].dtype), shape_, int_values_);
+    } else if (fp32_values_.size() > 0) {
+      value = helper_->Assign(
+          GetOnnxDtype(output_info[0].dtype), shape_, fp32_values_);
+    } else if (fp64_values_.size() > 0) {
+      value = helper_->Assign(
+          GetOnnxDtype(output_info[0].dtype), shape_, fp64_values_);
     }
   }
 
@@ -108,13 +117,15 @@ void SetValueMapper::Opset12() {
       helper_->MakeNode("Expand", {value, sliced_shape})->output(0);
 
   auto indices = helper_
-                     ->MakeNode("Range", {helper_->Squeeze(starts, {}),
-                                          helper_->Squeeze(ends, {}),
-                                          helper_->Squeeze(steps, {})})
+                     ->MakeNode("Range",
+                                {helper_->Squeeze(starts, {}),
+                                 helper_->Squeeze(ends, {}),
+                                 helper_->Squeeze(steps, {})})
                      ->output(0);
   if (axes_[0] == 0) {
     indices = helper_->Unsqueeze(indices, {1});
-    helper_->MakeNode("ScatterND", {input_tensor, indices, expand_value},
+    helper_->MakeNode("ScatterND",
+                      {input_tensor, indices, expand_value},
                       {output_info[0].name});
   } else {
     std::vector<int64_t> indices_shape(input_info[0].Rank(), 1);
@@ -128,8 +139,8 @@ void SetValueMapper::Opset12() {
       indices = helper_->MakeNode("Tile", {indices, tiled_shape})->output(0);
     } else {
       auto part_0_shape = helper_->Slice(sliced_shape, {0}, {0}, {axes_[0]});
-      auto part_1_shape = helper_->Slice(sliced_shape, {0}, {axes_[0] + 1},
-                                         {input_info[0].Rank()});
+      auto part_1_shape = helper_->Slice(
+          sliced_shape, {0}, {axes_[0] + 1}, {input_info[0].Rank()});
       auto tiled_shape = helper_->Concat({part_0_shape, one, part_1_shape}, 0);
       indices = helper_->MakeNode("Tile", {indices, tiled_shape})->output(0);
     }
