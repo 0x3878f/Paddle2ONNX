@@ -21,6 +21,7 @@
 
 #include "paddle/common/ddim.h"
 #include "paddle/fluid/ir_adaptor/translator/op_compat_info.h"
+#include "paddle/fluid/pir/dialect/operator/ir/op_attribute.h"
 #include "paddle/fluid/pir/dialect/operator/ir/op_dialect.h"
 #include "paddle/fluid/pir/dialect/operator/ir/op_type.h"
 #include "paddle/fluid/pir/dialect/operator/utils/op_yaml_info_parser.h"
@@ -31,33 +32,6 @@
 #include "paddle/pir/include/core/builtin_op.h"
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
-#include "paddle/fluid/pir/dialect/operator/ir/op_attribute.h"
-
-std::unordered_map<phi::DataType, paddle2onnx::framework::proto::VarType_Type>
-    pir_dtype_to_onnx_dtype = {
-        {phi::DataType::FLOAT32,
-         paddle2onnx::framework::proto::VarType_Type_FP32},
-        {phi::DataType::INT64,
-         paddle2onnx::framework::proto::VarType_Type_INT64},
-        {phi::DataType::BOOL, paddle2onnx::framework::proto::VarType_Type_BOOL},
-        {phi::DataType::FLOAT16,
-         paddle2onnx::framework::proto::VarType_Type_FP16},
-        {phi::DataType::BFLOAT16,
-         paddle2onnx::framework::proto::VarType_Type_BF16},
-        {phi::DataType::FLOAT64,
-         paddle2onnx::framework::proto::VarType_Type_FP64},
-        {phi::DataType::UINT8,
-         paddle2onnx::framework::proto::VarType_Type_UINT8},
-        {phi::DataType::INT32,
-         paddle2onnx::framework::proto::VarType_Type_INT32},
-        {phi::DataType::COMPLEX64,
-         paddle2onnx::framework::proto::VarType_Type_COMPLEX64},
-        {phi::DataType::COMPLEX128,
-         paddle2onnx::framework::proto::VarType_Type_COMPLEX128},
-        {phi::DataType::INT8, paddle2onnx::framework::proto::VarType_Type_INT8},
-        {phi::DataType::INT16,
-         paddle2onnx::framework::proto::VarType_Type_INT16},
-};
 
 phi::DataType TransToPhiDataType(pir::Type dtype) {
   if (dtype.isa<pir::BFloat16Type>()) {
@@ -496,21 +470,22 @@ TensorInfo PaddlePirParser::GetTensorInfo(const std::string& name,
     // get info.dtype
     auto type = value_type.cast<pir::DenseTensorType>().dtype();
     auto data_type = TransToPhiDataType(type);
-    auto it = pir_dtype_to_onnx_dtype.find(data_type);
-    if (it != pir_dtype_to_onnx_dtype.end()) {
-      info.dtype = it->second;
-    } else {
-      std::cerr << "data_type not found" << std::endl;
-    }
+    info.dtype = TransPirDataType2OldIrDataType(data_type);
     // get info.shape
     std::vector<int64_t> dims =
         common::vectorize(value_type.cast<pir::DenseTensorType>().dims());
     info.shape = dims;
-    return info;
+  } else if (value_type.isa<paddle::dialect::DenseTensorArrayType>()) {
+    info.name = name;
+    info.is_tensor_array = true;
+    auto type =
+        value_type.cast<paddle::dialect::DenseTensorArrayType>().dtype();
+    auto data_type = TransToPhiDataType(type);
+    info.dtype = TransPirDataType2OldIrDataType(data_type);
   } else {
     std::cerr << "only support dense tensor type" << std::endl;
-    return info;
   }
+  return info;
 }
 
 std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(
@@ -530,8 +505,8 @@ std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(
   return results;
 }
 
-std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(
-    const pir::Value& value, std::string name) const {
+std::vector<TensorInfo> PaddlePirParser::GetTensorInfo(const pir::Value& value,
+                                                       std::string name) const {
   std::vector<TensorInfo> results;
   if (value.type().isa<pir::VectorType>()) {
     auto vec_type = value.type().cast<pir::VectorType>();
@@ -584,8 +559,8 @@ void PaddlePirParser::GetGlobalBlockInputOutputInfo() {
   }
 }
 
-bool PaddlePirParser::IsAttrVar(const pir::Operation *op,
-                                const int64_t &attr_id) const {
+bool PaddlePirParser::IsAttrVar(const pir::Operation* op,
+                                const int64_t& attr_id) const {
   // TODO(qzylalala): For Resnet50, this interface always return false.
   return false;
 }
@@ -623,10 +598,10 @@ bool PaddlePirParser::OpHasInput(int64_t op_id,
     op = global_blocks_ops[op_id];
   }
 
-  int64_t input_idx = GetOpInputOutputName2Idx(
-                 op_id, input_name, true, if_in_sub_block);
-  return input_idx != -1 && input_idx < op->num_operands()
-          && op->operand(input_idx);
+  int64_t input_idx =
+      GetOpInputOutputName2Idx(op_id, input_name, true, if_in_sub_block);
+  return input_idx != -1 && input_idx < op->num_operands() &&
+         op->operand(input_idx);
 }
 
 bool PaddlePirParser::OpHasOutput(int64_t op_id,
@@ -658,13 +633,9 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
       } else if (pair.second.isa<pir::Int64Attribute>()) {
         *res = pair.second.dyn_cast<::pir::Int64Attribute>().data();
       } else if (pair.second.isa<paddle::dialect::DataTypeAttribute>()) {
-        phi::DataType data_type = pair.second
-            .dyn_cast<paddle::dialect::DataTypeAttribute>().data();
-        auto it = pir_dtype_to_onnx_dtype.find(data_type);
-        if (it == pir_dtype_to_onnx_dtype.end()) {
-          std::cerr << "data_type not found" << std::endl;
-        }
-        *res = it->second;
+        phi::DataType data_type =
+            pair.second.dyn_cast<paddle::dialect::DataTypeAttribute>().data();
+        *res = TransPirDataType2OldIrDataType(data_type);
       }
       break;
     }
@@ -784,9 +755,10 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
             }
           }
         }
-      } else if(pair.second.isa<paddle::dialect::IntArrayAttribute>()) {
-          *res = pair.second.dyn_cast<paddle::dialect::IntArrayAttribute>()
-            .data().GetData();
+      } else if (pair.second.isa<paddle::dialect::IntArrayAttribute>()) {
+        *res = pair.second.dyn_cast<paddle::dialect::IntArrayAttribute>()
+                   .data()
+                   .GetData();
       }
       break;
     }
@@ -896,12 +868,8 @@ std::vector<TensorInfo> PaddlePirParser::GetOpOutput(
       -1,
       common::errors::InvalidArgument(
           "output_idx should be greater than -1 in GetOpOutput."));
-  pir::Operation* op;
-  if (if_in_sub_block) {
-    op = sub_blocks_ops[op_id];
-  } else {
-    op = global_blocks_ops[op_id];
-  }
+  pir::Operation* op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
   PADDLE_ENFORCE_LT(
       output_idx,
       op->num_results(),
@@ -909,11 +877,8 @@ std::vector<TensorInfo> PaddlePirParser::GetOpOutput(
           "output index %d is out of range, the output size is %d",
           output_idx,
           op->num_results()));
-  if (if_in_sub_block) {
-    return GetSubBlockValueTensorInfo(op->result(output_idx));
-  } else {
-    return GetTensorInfo(op->result(output_idx));
-  }
+  return if_in_sub_block ? GetSubBlockValueTensorInfo(op->result(output_idx))
+                         : GetTensorInfo(op->result(output_idx));
 }
 
 /**
@@ -939,14 +904,67 @@ bool PaddlePirParser::IsConstantTensor(int64_t op_id,
       common::errors::InvalidArgument(
           "input_idx should be greater than -1 in IsConstantTensor."));
   // todo(wangmingkai02): need to check
-  pir::Operation* op;
-  if (if_in_sub_block) {
-    op = sub_blocks_ops[op_id];
-  } else {
-    op = global_blocks_ops[op_id];
+  pir::Operation* op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+  return op->operand(input_idx).source().defining_op()->num_operands() == 0 ||
+         op->operand(input_idx).source().defining_op()->name() ==
+             "pd_op.assign_value_";
+}
+
+void PaddlePirParser::SetTensorArrayName(int64_t op_id,
+                                         bool if_in_sub_block,
+                                         std::string tensor_arr_name) const {
+  pir::Operation* op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+  if (op->num_operands() > 0) {
+    op = op->operand(0).source().defining_op();
   }
-  return op->operand(input_idx).source().defining_op()->num_operands() == 0
-      || op->operand(input_idx).source().defining_op()
-          ->name() == "pd_op.assign_value_";
+  _tensor_arr_mappings[op] = tensor_arr_name;
+}
+std::string PaddlePirParser::GetTensorArrayName(int64_t op_id,
+                                                bool if_in_sub_block) const {
+  pir::Operation* temp_op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+  pir::Operation* op = temp_op->operand(0).source().defining_op();
+  PADDLE_ENFORCE_EQ(
+      _tensor_arr_mappings.count(op) > 0,
+      true,
+      common::errors::InvalidArgument(
+          "Cannot find the tensor array used by op %s.", temp_op->name()));
+  return _tensor_arr_mappings.at(op);
+}
+
+P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
+    phi::DataType dtype) const {
+  // TODO(wangmingkai02): This is for compatibility with conversions under the
+  // old IR, where P2ODataType is stored in TensorInfo.dtype. In the mapper,
+  // GetOnnxDtype is called to obtain TensorProto_DataType in ONNX.
+  // Add more type mappings if necessary.
+  if (dtype == phi::DataType::BOOL) {
+    return P2ODataType::BOOL;
+  } else if (dtype == phi::DataType::UINT8) {
+    return P2ODataType::UINT8;
+  } else if (dtype == phi::DataType::INT8) {
+    return P2ODataType::INT8;
+  } else if (dtype == phi::DataType::UINT16) {
+    return P2ODataType::INT16;
+  } else if (dtype == phi::DataType::INT32) {
+    return P2ODataType::INT32;
+  } else if (dtype == phi::DataType::INT64) {
+    return P2ODataType::INT64;
+  } else if (dtype == phi::DataType::FLOAT32) {
+    return P2ODataType::FP32;
+  } else if (dtype == phi::DataType::FLOAT64) {
+    return P2ODataType::FP64;
+    // } else if (dtype == phi::DataType::COMPLEX64) {
+    // } else if (dtype == phi::DataType::COMPLEX128) {
+  } else if (dtype == phi::DataType::FLOAT16) {
+    return P2ODataType::FP16;
+    // } else if (dtype == phi::DataType::BFLOAT16) {
+  } else {
+    Assert(false,
+           "Unsupported data type exists in "
+           "PaddlePirParser::TransPirDataType2OnnxDataType.");
+  }
 }
 }  // namespace paddle2onnx

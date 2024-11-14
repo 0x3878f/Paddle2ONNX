@@ -15,6 +15,7 @@
 #include <map>
 
 #include "paddle/common/errors.h"
+#include "paddle/phi/common/data_type.h"
 #include "paddle/phi/core/enforce.h"
 #include "paddle/pir/include/core/operation_utils.h"
 #include "paddle/pir/include/core/program.h"
@@ -232,6 +233,11 @@ class PaddlePirParser {
     return true;
   }
 
+  void SetTensorArrayName(int64_t op_id,
+                          bool if_in_sub_block,
+                          std::string tensor_arr_name) const;
+  std::string GetTensorArrayName(int64_t op_id, bool if_in_sub_block) const;
+
  private:
   bool IsAttrVar(const pir::Operation* op, const int64_t& attr_id) const;
   bool LoadProgram(const std::string& model);
@@ -248,13 +254,12 @@ class PaddlePirParser {
                        int64_t output_idx) const;
 
   void GetOpArgNameMappings();
+  P2ODataType TransPirDataType2OldIrDataType(phi::DataType dtype) const;
   mutable std::unordered_map<std::string, int64_t> _name_counter;
   mutable std::unordered_map<pir::Operation*, std::vector<std::string>>
       _op_outputs;
   std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
       _op_arg_name_mappings;
-
-  // mutable std::unordered_map<pir::Operation *, std::vector<std::string>>
-  // _op_outputs;
+  mutable std::unordered_map<pir::Operation*, std::string> _tensor_arr_mappings;
 };
 }  // namespace paddle2onnx

@@ -61,7 +61,8 @@ class Mapper {
     std::string output_name = "";
     std::string op_type = "";
     if (in_pir_mode) {
-      auto& op = pir_parser_->global_blocks_ops[pir_op_idx_];
+      auto& op = if_in_cf_block ? pir_parser_->sub_blocks_ops[pir_op_idx_]
+                                : pir_parser_->global_blocks_ops[pir_op_idx_];
       output_name = GetOutput(0)[0].name;
       op_type = op->name();
     } else {
