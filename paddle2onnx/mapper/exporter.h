@@ -56,7 +56,7 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"maximum", "elementwise_max"},
       {"min", "reduce_min"},
       {"max", "reduce_max"},
-      {"mean", "reduce_min"},
+      {"mean", "reduce_mean"},
       {"sum", "reduce_sum"},
       {"prod", "reduce_prod"},
       {"any", "reduce_any"},
