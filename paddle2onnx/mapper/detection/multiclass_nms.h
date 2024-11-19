@@ -38,6 +38,7 @@ class NMSMapper : public Mapper {
     // a post process for Detection, we are not going to export it with exactly
     // same result. We will make a precision performance in COCO or Pascal VOC
     // data later.
+       
     GetAttr("nms_top_k", &nms_top_k_);
     GetAttr("background_label", &background_label_);
     GetAttr("keep_top_k", &keep_top_k_);
