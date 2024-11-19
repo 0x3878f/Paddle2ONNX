@@ -26,13 +26,17 @@ class ReduceMeanMapper : public Mapper {
                int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
   }
+  ReduceMeanMapper(const PaddlePirParser& p, OnnxHelper* helper,
+               int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+  }
 
   void Opset18() override;
   void Opset11() override;
   int32_t GetMinOpsetVersion(bool verbose) override;
 
  private:
-
   bool keep_dim_;
   bool reduce_all_;
   int64_t in_dtype_;

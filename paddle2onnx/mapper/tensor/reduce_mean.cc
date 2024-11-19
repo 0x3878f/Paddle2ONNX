@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(reduce_mean, ReduceMeanMapper)
+REGISTER_PIR_MAPPER(reduce_mean, ReduceMeanMapper)
 
 int32_t ReduceMeanMapper::GetMinOpsetVersion(bool verbose) {
   constexpr int op_version = 11;
@@ -26,14 +27,23 @@ int32_t ReduceMeanMapper::GetMinOpsetVersion(bool verbose) {
 void ReduceMeanMapper::Opset18() {
   auto axis_name_ = "dim";
   GetAttr("keep_dim", &keep_dim_);
-  GetAttr("reduce_all", &reduce_all_);
-  GetAttr("in_dtype", &in_dtype_);
-  GetAttr("out_dtype", &out_dtype_);
-  if (IsAttrVar(axis_name_)) {
-    auto info = GetAttrVar(axis_name_);
-    TryGetValue(info[0], &dim_);
+  if (!in_pir_mode) {
+    GetAttr("reduce_all", &reduce_all_);
+    GetAttr("in_dtype", &in_dtype_);
+    GetAttr("out_dtype", &out_dtype_);
+    if (IsAttrVar(axis_name_)) {
+      auto info = GetAttrVar(axis_name_);
+      TryGetValue(info[0], &dim_);
+    } else {
+      GetAttr(axis_name_, &dim_);
+    }
   } else {
-    GetAttr(axis_name_, &dim_);
+    GetAttr("axis", &dim_);
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");
@@ -45,7 +55,8 @@ void ReduceMeanMapper::Opset18() {
     if (!reduce_all_) {
       dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, dim_);
     } else {
-      dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, Arange(0, x_info[0].Rank()));
+      dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                               Arange(0, x_info[0].Rank()));
     }
   }
 
@@ -62,27 +73,38 @@ void ReduceMeanMapper::Opset18() {
     out_node_name = helper_->Reshape(out_node_name, {-1});
   }
   auto out_info = GetOutput("Out");
-  helper_->AutoCast(out_node_name, out_info[0].name, x_info[0].dtype, out_info[0].dtype);
+  helper_->AutoCast(out_node_name, out_info[0].name,
+                    x_info[0].dtype, out_info[0].dtype);
 }
 
 
 void ReduceMeanMapper::Opset11() {
   auto axis_name_ = "dim";
   GetAttr("keep_dim", &keep_dim_);
-  GetAttr("reduce_all", &reduce_all_);
-  GetAttr("in_dtype", &in_dtype_);
-  GetAttr("out_dtype", &out_dtype_);
-  if (IsAttrVar(axis_name_)) {
-    auto info = GetAttrVar(axis_name_);
-    TryGetValue(info[0], &dim_);
+  if (!in_pir_mode) {
+    GetAttr("reduce_all", &reduce_all_);
+    GetAttr("in_dtype", &in_dtype_);
+    GetAttr("out_dtype", &out_dtype_);
+    if (IsAttrVar(axis_name_)) {
+      auto info = GetAttrVar(axis_name_);
+      TryGetValue(info[0], &dim_);
+    } else {
+      GetAttr(axis_name_, &dim_);
+    }
   } else {
-    GetAttr(axis_name_, &dim_);
+    GetAttr("axis", &dim_);
+    if (dim_.size() == 0) {
+      reduce_all_ = true;
+    } else {
+      reduce_all_ = false;
+    }
   }
 
   auto x_info = GetInput("X");
   std::string input_name = x_info[0].name;
   if (x_info[0].dtype == P2ODataType::FP64) {
-    input_name = helper_->AutoCast(x_info[0].name, P2ODataType::FP64, P2ODataType::FP32);
+    input_name = helper_->AutoCast(x_info[0].name, P2ODataType::FP64,
+                                   P2ODataType::FP32);
   }
   auto reduce_node = helper_->MakeNode("ReduceMean", {input_name});
 
@@ -95,7 +117,8 @@ void ReduceMeanMapper::Opset11() {
 
   auto out_node_name = reduce_node->output(0);
   if (x_info[0].dtype == P2ODataType::FP64) {
-    out_node_name = helper_->AutoCast(reduce_node->output(0), P2ODataType::FP32, P2ODataType::FP64);
+    out_node_name = helper_->AutoCast(reduce_node->output(0), P2ODataType::FP32,
+                                      P2ODataType::FP64);
   }
 
   bool reduce_all_axes = dim_.size() == x_info[0].Rank();
@@ -106,6 +129,7 @@ void ReduceMeanMapper::Opset11() {
     out_node_name = helper_->Reshape(out_node_name, {-1});
   }
   auto out_info = GetOutput("Out");
-  helper_->AutoCast(out_node_name, out_info[0].name, x_info[0].dtype, out_info[0].dtype);
+  helper_->AutoCast(out_node_name, out_info[0].name,
+                    x_info[0].dtype, out_info[0].dtype);
 }
 }  // namespace paddle2onnx

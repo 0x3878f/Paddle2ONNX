@@ -27,6 +27,12 @@ class CumsumMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("flatten", &flatten_);
   }
+  CumsumMapper(const PaddlePirParser& p, OnnxHelper* helper,
+               int64_t op_id, bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("flatten", &flatten_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset11() override;
 

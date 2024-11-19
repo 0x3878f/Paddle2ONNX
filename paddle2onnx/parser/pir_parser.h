@@ -125,17 +125,27 @@ class PaddlePirParser {
       (iter->second).get(data);
       return true;
     }
-    std::string attr_name = "value";
+    // TODO(qzylalala): Need double-check
+    std::string attr_name;
+    std::string attr_value = "value";
+    std::string attr_values = "values";
     pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
-    if (op->name() == "pd_op.assign_value_") {
-      attr_name = "values";
+    while (!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
+      op = op->operand(0).source().defining_op();
+    }
+    if (op->HasAttribute(attr_value)) {
+      attr_name = attr_value;
+    } else if (op->HasAttribute(attr_values)) {
+      attr_name = attr_values;
+    } else {
+      return false;
     }
     int32_t dtype = tensor_info.dtype;
-    PADDLE_ENFORCE_EQ(
-        op->HasAttribute(attr_name),
-        true,
-        common::errors::InvalidArgument(
-            "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+    // PADDLE_ENFORCE_EQ(
+    //     op->HasAttribute(attr_name),
+    //     true,
+    //     common::errors::InvalidArgument(
+    //         "Cannot found attribute '%s' in op %s", attr_name, op->name()));
 
     auto array_list =
         op->attribute(attr_name).dyn_cast<::pir::ArrayAttribute>().AsVector();
@@ -156,7 +166,8 @@ class PaddlePirParser {
       } else if (array_list[0].isa<::pir::Int32Attribute>()) {
         std::vector<int32_t> res;
         for (size_t i = 0; i < array_list.size(); ++i) {
-          res.push_back(array_list[i].dyn_cast<::pir::Int32Attribute>().data());
+          res.push_back(
+              array_list[i].dyn_cast<::pir::Int32Attribute>().data());
         }
         data->assign(res.begin(), res.end());
       } else if (array_list[0].isa<::pir::Int64Attribute>()) {
@@ -190,16 +201,25 @@ class PaddlePirParser {
     TensorInfo tensor_info =
         GetTensorInfo(temp_op->operand(input_idx).source())[0];
     pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
-    std::string attr_name = "value";
-    if (op->name() == "pd_op.assign_value_") {
-      attr_name = "values";
-    }
-    if (!op->HasAttribute(attr_name)) return false;
     // PADDLE_ENFORCE_EQ(
     //   op->HasAttribute(attr_name),
     //   true,
     //   common::errors::InvalidArgument(
     //     "Cannot found attribute '%s' in op %s", attr_name, op->name()));
+    // TODO(qzylalala): Need double-check
+    std::string attr_name;
+    std::string attr_value = "value";
+    std::string attr_values = "values";
+    while(!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
+      op = op->operand(0).source().defining_op();
+    }
+    if (op->HasAttribute(attr_value)) {
+      attr_name = attr_value;
+    } else if (op->HasAttribute(attr_values)) {
+      attr_name = attr_values;
+    } else {
+      return false;
+    }
     auto value = op->attribute(attr_name);
     if (value.isa<pir::Int32Attribute>()) {
       *data = value.dyn_cast<::pir::Int32Attribute>().data();

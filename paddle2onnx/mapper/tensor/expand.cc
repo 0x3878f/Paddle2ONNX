@@ -16,20 +16,27 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(expand, ExpandMapper)
+// REGISTER_PIR_MAPPER(expand, ExpandMapper)
 
 void ExpandMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
   std::string expand_times = "";
-  if (HasInput("expand_times_tensor")) {
+  if (in_pir_mode) {
+    auto info = GetInput("shape");
+    expand_times = helper_->ConcatIndices(info);
+  } else if (HasInput("expand_times_tensor")) {
     auto info = GetInput("expand_times_tensor");
     expand_times = helper_->ConcatIndices(info);
   } else if (HasInput("ExpandTimes")) {
     auto info = GetInput("ExpandTimes");
-    expand_times = helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+    expand_times = helper_->AutoCast(info[0].name,
+                                     info[0].dtype,
+                                     P2ODataType::INT64);
   } else {
-    expand_times = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, expand_times_);
+    expand_times = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                     expand_times_);
   }
 
   helper_->MakeNode("Tile",
