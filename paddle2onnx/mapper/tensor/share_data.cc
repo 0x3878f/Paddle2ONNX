@@ -12,32 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include "paddle2onnx/mapper/tensor/share_data.h"
+#include <iostream>
 #include <string>
 #include <vector>
-
-#include "paddle2onnx/mapper/mapper.h"
+#include "paddle2onnx/proto/p2o_paddle.pb.h"
 
 namespace paddle2onnx {
+REGISTER_PIR_MAPPER(share_data, ShareDataMapper)
+REGISTER_PIR_MAPPER(share_data_, ShareDataMapper)
 
-class Unsqueeze2Mapper : public Mapper {
- public:
-  Unsqueeze2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                   int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("axes", &axes_);
-  }
+int32_t ShareDataMapper::GetMinOpsetVersion(bool verbose) { return 7; }
 
-  Unsqueeze2Mapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
-                   bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-  }
-  int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-  void Opset13() override;
-
- private:
-  std::vector<int64_t> axes_;
-};
+void ShareDataMapper::Opset7() {
+  auto input_info = GetInput("x");
+  auto output_info = GetOutput("out");
+  helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+}
 
 }  // namespace paddle2onnx

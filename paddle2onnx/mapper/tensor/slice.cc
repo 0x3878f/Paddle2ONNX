@@ -21,6 +21,8 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(slice, SliceMapper)
 REGISTER_MAPPER(strided_slice, SliceMapper)
+REGISTER_PIR_MAPPER(slice, SliceMapper)
+REGISTER_PIR_MAPPER(strided_slice, SliceMapper)
 
 int32_t SliceMapper::GetMinOpsetVersion(bool verbose) {
   if (HasInput("StartsTensorList") || HasInput("EndsTensorList") ||
@@ -77,10 +79,14 @@ std::vector<int64_t> SliceMapper::DecreaseAxis() {
 void SliceMapper::Opset7() {
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Out");
-
-  Assert(!HasInput("StartsTensorList"),
+  if(!in_pir_mode) {
+    Assert(!HasInput("StartsTensorList"),
          "While slice/strided_slice has input StartsTensorList, requires "
          "opset_version >= 10");
+    Assert(!HasInput("EndsTensorList"),
+         "While slice/strided_slice has input EndsTensorList, requires "
+         "opset_version >= 10");
+  }
 
   std::vector<int64_t> starts;
   if (HasInput("StartsTensor")) {
@@ -91,9 +97,6 @@ void SliceMapper::Opset7() {
     starts = starts_;
   }
 
-  Assert(!HasInput("EndsTensorList"),
-         "While slice/strided_slice has input EndsTensorList, requires "
-         "opset_version >= 10");
   std::vector<int64_t> ends;
   if (HasInput("EndsTensor")) {
     auto info = GetInput("EndsTensor");

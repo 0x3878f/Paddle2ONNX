@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
 import random
 from random import shuffle
+from onnxbase import _test_only_pir
 
 
 class Net(BaseNet):
@@ -31,15 +31,16 @@ class Net(BaseNet):
         """
         forward
         """
-        k = self.config['k']
-        if self.config['isTensor']:
-            k = paddle.to_tensor(k, dtype=self.config['k_dtype'])
+        k = self.config["k"]
+        if self.config["isTensor"]:
+            k = paddle.to_tensor(k, dtype=self.config["k_dtype"])
         x = paddle.topk(
             input,
             k=k,
-            axis=self.config['axis'],
-            largest=self.config['largest'],
-            sorted=self.config['sorted'])
+            axis=self.config["axis"],
+            largest=self.config["largest"],
+            sorted=self.config["sorted"],
+        )
         return x
 
 
@@ -51,15 +52,13 @@ class TestTopkv2Convert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=1, max_value=3), min_size=0, max_size=5))
+            st.lists(st.integers(min_value=1, max_value=3), min_size=0, max_size=5)
+        )
         axis = None
         if draw(st.booleans()) and len(input_shape) > 0:
             axis = draw(
-                st.integers(
-                    min_value=-len(input_shape), max_value=len(input_shape) -
-                    1))
+                st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
+            )
 
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
         k_dtype = draw(st.sampled_from(["int32", "int64"]))
@@ -100,13 +99,14 @@ class TestTopkv2Convert(OPConvertAutoScanTest):
             "k_dtype": k_dtype,
             "rtol": 200,
             "delta": 200,
-            "input_shape": input_shape
+            "input_shape": input_shape,
         }
 
         models = Net(config)
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=80)
 

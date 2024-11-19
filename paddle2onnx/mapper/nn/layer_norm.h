@@ -29,6 +29,13 @@ class LayerNormMapper : public Mapper {
     GetAttr("epsilon", &epsilon_);
   }
 
+  LayerNormMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+                  bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("begin_norm_axis", &begin_norm_axis_);
+    GetAttr("epsilon", &epsilon_);
+  }
+
   void Opset17() override;
 
   void Opset7() override;

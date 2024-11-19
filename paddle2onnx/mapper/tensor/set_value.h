@@ -22,7 +22,9 @@ namespace paddle2onnx {
 
 class SetValueMapper : public Mapper {
  public:
-  SetValueMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  SetValueMapper(const PaddleParser& p,
+                 OnnxHelper* helper,
+                 int64_t block_id,
                  int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
     MarkAsExperimentalOp();
@@ -46,6 +48,59 @@ class SetValueMapper : public Mapper {
       }
     }
   }
+  SetValueMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t op_id,
+                 bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    MarkAsExperimentalOp();
+    GetAttr("axes", &axes_);
+    GetAttr("decrease_axes", &decrease_axes_);
+    GetAttr("none_axes", &none_axes_);
+    if (HasAttr("shape")) GetAttr("shape", &shape_);
+    if (HasAttr("values")) {
+      pir::Operation* op = if_in_cf_block ? p.sub_blocks_ops[pir_op_idx_]
+                                          : p.global_blocks_ops[pir_op_idx_];
+
+      PADDLE_ENFORCE_EQ(
+          op->attribute("values").isa<::pir::ArrayAttribute>(),
+          true,
+          ::common::errors::InvalidArgument(
+              "The type of attribute 'values' in %s op is not ArrayAttribute.",
+              op->name()));
+      auto array_list =
+          op->attribute("values").dyn_cast<::pir::ArrayAttribute>().AsVector();
+
+      if (array_list.size() > 0) {
+        if (array_list[0].isa<::pir::FloatAttribute>()) {
+          auto res = &fp32_values_;
+          for (size_t i = 0; i < array_list.size(); ++i) {
+            res->push_back(
+                array_list[i].dyn_cast<::pir::FloatAttribute>().data());
+          }
+        } else if (array_list[0].isa<::pir::DoubleAttribute>()) {
+          auto res = &fp64_values_;
+          for (size_t i = 0; i < array_list.size(); ++i) {
+            res->push_back(
+                array_list[i].dyn_cast<::pir::DoubleAttribute>().data());
+          }
+        } else if (array_list[0].isa<::pir::Int32Attribute>()) {
+          auto res = &int_values_;
+          for (size_t i = 0; i < array_list.size(); ++i) {
+            res->push_back(
+                array_list[i].dyn_cast<::pir::Int32Attribute>().data());
+          }
+        } else if (array_list[0].isa<::pir::Int64Attribute>()) {
+          auto res = &int_values_;
+          for (size_t i = 0; i < array_list.size(); ++i) {
+            res->push_back(
+                array_list[i].dyn_cast<::pir::Int64Attribute>().data());
+          }
+        }
+      }
+    }
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset12() override;
 

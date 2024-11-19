@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(unsqueeze2, Unsqueeze2Mapper)
+REGISTER_PIR_MAPPER(unsqueeze2, Unsqueeze2Mapper)
 
 int32_t Unsqueeze2Mapper::GetMinOpsetVersion(bool verbose) {
   if (axes_.size() == 0) {
@@ -62,6 +63,22 @@ void Unsqueeze2Mapper::Opset13() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
+  std::string axes_node = "";
+  if (HasInput("AxesTensorList")) {
+    auto info = GetInput("AxesTensorList");
+    axes_node = helper_->ConcatIndices(info);
+    helper_->MakeNode("Unsqueeze", {input_info[0].name, axes_node},
+                      {output_info[0].name});
+    return;
+  } else if (HasInput("AxesTensor")) {
+    auto info = GetInput("AxesTensor");
+    axes_node =
+        helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+    helper_->MakeNode("Unsqueeze", {input_info[0].name, axes_node},
+                      {output_info[0].name});
+    return;
+  }
+
   std::vector<int64_t> axes;
   if (axes_.empty()) {
     TryGetInputValue("AxesTensor", &axes);
@@ -73,22 +90,7 @@ void Unsqueeze2Mapper::Opset13() {
       axes[i] = axes[i] + input_info[0].Rank() + i + 1;
     }
   }
-
-  if (axes.size() > 0) {
-    helper_->Unsqueeze(input_info[0].name, output_info[0].name, axes);
-  } else {
-    std::string axes_node = "";
-    if (HasInput("AxesTensorList")) {
-      auto info = GetInput("AxesTensorList");
-      axes_node = helper_->ConcatIndices(info);
-    } else {
-      auto info = GetInput("AxesTensor");
-      axes_node =
-          helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
-    }
-    helper_->MakeNode("Unsqueeze", {input_info[0].name, axes_node},
-                      {output_info[0].name});
-  }
+  helper_->Unsqueeze(input_info[0].name, output_info[0].name, axes);
 }
 
 }  // namespace paddle2onnx

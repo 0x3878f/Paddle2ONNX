@@ -13,31 +13,20 @@
 // limitations under the License.
 
 #pragma once
-#include <string>
-#include <vector>
-
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
-class Unsqueeze2Mapper : public Mapper {
+class ShareDataMapper : public Mapper {
  public:
-  Unsqueeze2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                   int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("axes", &axes_);
-  }
+  ShareDataMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t op_id,
+                  bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {}
 
-  Unsqueeze2Mapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
-                   bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
-  void Opset13() override;
-
- private:
-  std::vector<int64_t> axes_;
 };
 
 }  // namespace paddle2onnx

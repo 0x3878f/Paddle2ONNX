@@ -166,6 +166,7 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser) {
   int32_t max_opset = 7;
   std::set<std::string> verbose_log;
   OnnxHelper helper;
+  // TODO(wangmingkai02): consider the case of cf op
   for (auto i = 0; i < pir_parser.global_blocks_ops.size(); i++) {
     std::string op_name = pir_parser.global_blocks_ops[i]->name();
     if (op_name == "pd_op.data" || op_name == "pd_op.fetch") {
@@ -180,16 +181,15 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser) {
     current_opset = mapper->GetMinOpsetVersion(verbose_);
     delete mapper;
 
-    // TODO : some bugs will appear, not solved yet
-    // if (current_opset > max_opset) {
-    //   max_opset = current_opset;
-    //   if (current_opset > opset_version_) {
-    //     verbose_log.insert("Due to the operator: " +
-    //                         pir_parser.global_blocks_ops[i]->name() + ",
-    //                         " + "requires opset_version >= " +
-    //                         std::to_string(current_opset) + ".");
-    //   }
-    // }
+    if (current_opset > max_opset) {
+      max_opset = current_opset;
+      if (current_opset > opset_version_) {
+        verbose_log.insert("Due to the operator: " +
+                            pir_parser.global_blocks_ops[i]->name() +
+                            " " + "requires opset_version >= " +
+                            std::to_string(current_opset) + ".");
+      }
+    }
   }
 
   for (auto iter = verbose_log.begin(); iter != verbose_log.end(); ++iter) {
@@ -403,8 +403,13 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
   }
 
   pir::Block* blockPtr = &block;
-  auto graph = std::move(ExportBlock(
-      pir_parser, blockPtr, temp_parameters, temp_inputs, temp_outputs, true, false));
+  auto graph = std::move(ExportBlock(pir_parser,
+                                     blockPtr,
+                                     temp_parameters,
+                                     temp_inputs,
+                                     temp_outputs,
+                                     true,
+                                     false));
   pir_parser.sub_blocks_ops.clear();
   pir_parser.sub_blocks_ops = sub_blocks_ops_copy;
   return graph;
@@ -465,10 +470,12 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
   temp_helper.Clear();
   for (auto i = 0; i < num_ops; ++i) {
     auto op = block_ops[i];
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.fetch" || op->name() == "cf.yield") {
+    if (op->name() == "pd_op.data" ||
+        op->name() == "pd_op.fetch" ||
+        op->name() == "cf.yield") {
       continue;
     }
-    if (op->name() == "pd_op.full_int_array") { // this is a trick
+    if (op->name() == "pd_op.full_int_array") {
       bool needExport = false;
       for (auto it = op->result(0).use_begin(); it != op->result(0).use_end();
            ++it) {
@@ -505,7 +512,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
       continue;
     }
     if (op->name() == "pd_op.while") {
-      ExportWhile(pir_parser,&temp_helper,op);
+      ExportWhile(pir_parser, &temp_helper, op);
       continue;
     }
 
@@ -694,9 +701,9 @@ void ModelExporter::ExportOp(const PaddleParser& parser,
                              bool verbose) {
   auto op = parser.GetOpDesc(block_id, op_id);
 #if 0
-    if (op.type() == "while")
-    {
-      return ExportLoop(parser, helper, opset_version, block_id, op_id, verbose);
+    if (op.type() == "while") {
+      return ExportLoop(parser, helper,
+       opset_version, block_id, op_id, verbose);
     }
 #endif
   auto mapper = MapperHelper::Get()->CreateMapper(

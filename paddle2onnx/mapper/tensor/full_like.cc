@@ -11,33 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#pragma once
-#include <string>
-#include <vector>
-
-#include "paddle2onnx/mapper/mapper.h"
+#include "paddle2onnx/mapper/tensor/full_like.h"
 
 namespace paddle2onnx {
 
-class Unsqueeze2Mapper : public Mapper {
- public:
-  Unsqueeze2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                   int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("axes", &axes_);
-  }
+REGISTER_PIR_MAPPER(full_like, FullLikeMapper)
 
-  Unsqueeze2Mapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
-                   bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-  }
-  int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-  void Opset13() override;
+void FullLikeMapper::Opset8() {
+  auto input_info = GetInput("X");
+  auto value_info = GetInput("value");
+  auto output_info = GetOutput("Out");
 
- private:
-  std::vector<int64_t> axes_;
-};
+  auto shape_node = helper_->MakeNode("Shape", {input_info[0].name});
+  auto expand_node =
+      helper_->MakeNode("Expand", {value_info[0].name, shape_node->output(0)});
+  helper_->AutoCast(expand_node->output(0),
+                    output_info[0].name,
+                    value_info[0].dtype,
+                    output_info[0].dtype);
+}
 
 }  // namespace paddle2onnx

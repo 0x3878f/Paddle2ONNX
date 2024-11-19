@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_only_pir
 
 
 class Net(BaseNet):
@@ -31,12 +31,14 @@ class Net(BaseNet):
         """
         np.random.seed(13)
         # float64 has a bug
-        x1 = np.random.random(self.config['input_shape']).astype("float32")
-        if self.config['input_dtype'] == "ndarray":
+        x1 = np.random.random(self.config["input_shape"]).astype("float32")
+        if self.config["data_type"].count("int") > 0:
+            x1 = x1.astype(self.config["data_type"])
+        if self.config["input_dtype"] == "ndarray":
             x = x1
-        elif self.config['input_dtype'] == "list":
+        elif self.config["input_dtype"] == "list":
             x = x1.tolist()
-        elif self.config['input_dtype'] == "tensor":
+        elif self.config["input_dtype"] == "tensor":
             x = paddle.to_tensor(x1)
         x = paddle.assign(x)
         return x + inputs
@@ -50,13 +52,12 @@ class TestAssignConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=4, max_value=8), min_size=0, max_size=5))
+            st.lists(st.integers(min_value=4, max_value=8), min_size=0, max_size=5)
+        )
 
         dtype = draw(
-            st.sampled_from(
-                ["float16", "float32", "float64", "int32", "int64"]))
+            st.sampled_from(["float16", "float32", "float64", "int32", "int64"])
+        )
         # "list" has a bug
         input_dtype = draw(st.sampled_from(["tensor", "ndarray"]))
 
@@ -69,12 +70,14 @@ class TestAssignConvert(OPConvertAutoScanTest):
             "dtype": dtype,
             "input_dtype": input_dtype,
             "input_shape": input_shape,
+            "data_type": dtype,
         }
 
         models = Net(config)
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

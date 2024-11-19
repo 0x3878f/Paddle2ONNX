@@ -14,12 +14,14 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import randtool
+from onnxbase import _test_only_pir
 
+
+@_test_only_pir
 def test_einsum_sum():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -34,21 +36,22 @@ def test_einsum_sum():
             """
             forward
             """
-            x = paddle.einsum('i->', input)
+            x = paddle.einsum("i->", input)
             return x
 
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_sum', [12])
+    obj = APIOnnx(op, "einsum_sum", [13])
     obj.set_input_data("input_data", paddle.rand([4]))
     obj.run()
 
 
+@_test_only_pir
 def test_einsum_dot():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -69,16 +72,17 @@ def test_einsum_dot():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([4])
     obj.set_input_data("input_data", input_x, input_x)
     obj.run()
 
 
+@_test_only_pir
 def test_einsum_outer():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -99,17 +103,18 @@ def test_einsum_outer():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([4])
     input_y = paddle.rand([5])
     obj.set_input_data("input_data", input_x, input_y)
     obj.run()
 
 
+@_test_only_pir
 def test_einsum_transpose():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -130,16 +135,17 @@ def test_einsum_transpose():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([2, 3, 2])
     obj.set_input_data("input_data", input_x)
     obj.run()
-    
 
+
+@_test_only_pir
 def test_einsum_batch_matrix_multiplication():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -160,17 +166,18 @@ def test_einsum_batch_matrix_multiplication():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([2, 3, 2])
     input_y = paddle.rand([2, 2, 3])
     obj.set_input_data("input_data", input_x, input_y)
     obj.run()
 
 
+@_test_only_pir
 def test_einsum_ellipsis_transpose():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -191,16 +198,17 @@ def test_einsum_ellipsis_transpose():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([2, 3, 2])
     obj.set_input_data("input_data", input_x)
     obj.run()
 
 
+@_test_only_pir
 def test_einsum_ellipsis_batch_matrix_multiplication():
     """
     api: paddle.einsum
-    op version: 12
+    op version: 13
     """
 
     class Net(paddle.nn.Layer):
@@ -221,7 +229,7 @@ def test_einsum_ellipsis_batch_matrix_multiplication():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'einsum_dot', [12])
+    obj = APIOnnx(op, "einsum_dot", [13])
     input_x = paddle.rand([2, 3, 2])
     input_y = paddle.rand([2, 2, 3])
     obj.set_input_data("input_data", input_x, input_y)

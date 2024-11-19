@@ -20,24 +20,22 @@
 
 namespace paddle2onnx {
 
-class Unsqueeze2Mapper : public Mapper {
+class ArrayToTensorMapper : public Mapper {
  public:
-  Unsqueeze2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                   int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("axes", &axes_);
+  ArrayToTensorMapper(const PaddlePirParser& p,
+                      OnnxHelper* helper,
+                      int64_t op_id,
+                      bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("axis", &axis_);
+    GetAttr("use_stack", &use_stack_);
   }
 
-  Unsqueeze2Mapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
-                   bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-  }
   int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-  void Opset13() override;
+  void Opset17() override;
 
  private:
-  std::vector<int64_t> axes_;
+  int64_t axis_;
+  bool use_stack_;
 };
-
 }  // namespace paddle2onnx

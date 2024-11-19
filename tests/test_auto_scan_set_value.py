@@ -13,14 +13,13 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
-import paddle
 import copy
+from onnxbase import _test_only_pir
 
 
+# TODO(wangmingkai02): add test for set_value which none_axes_ > 0
 class Net(BaseNet):
     """
     simple Net
@@ -39,14 +38,13 @@ class Net(BaseNet):
 class TestSetValueConvert(OPConvertAutoScanTest):
     """
     api: set_value
-    OPset version: 11, 13, 15
+    OPset version: 12, 13, 15
     """
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=5, max_value=20), min_size=1, max_size=4))
+            st.lists(st.integers(min_value=5, max_value=20), min_size=1, max_size=4)
+        )
 
         update_input_shape = copy.copy(input_shape)
         update_input_shape[0] = update_input_shape[0] - 2
@@ -56,7 +54,7 @@ class TestSetValueConvert(OPConvertAutoScanTest):
             "op_names": ["set_value"],
             "test_data_shapes": [input_shape, update_input_shape],
             "test_data_types": [[dtype], [dtype]],
-            "opset_version": [11, 12, 13, 14, 15],
+            "opset_version": [12, 13, 14, 15],
             "input_spec_shape": [],
         }
 
@@ -64,6 +62,7 @@ class TestSetValueConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

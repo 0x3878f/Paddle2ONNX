@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_only_pir
 
 
 class Net(BaseNet):
@@ -29,18 +29,19 @@ class Net(BaseNet):
         """
         forward
         """
-        axes = self.config['axes']
-        starts = self.config['starts']
-        ends = self.config['ends']
-        strides = self.config['strides']
-        if self.config['isStartsTensor']:
-            starts = paddle.to_tensor(np.array(starts).astype('int32'))
-        if self.config['isEndsTensor']:
-            ends = paddle.to_tensor(np.array(ends).astype('int32'))
-        if self.config['isStridesTensor']:
-            strides = paddle.to_tensor(np.array(strides).astype('int32'))
+        axes = self.config["axes"]
+        starts = self.config["starts"]
+        ends = self.config["ends"]
+        strides = self.config["strides"]
+        if self.config["isStartsTensor"]:
+            starts = paddle.to_tensor(np.array(starts).astype("int32"))
+        if self.config["isEndsTensor"]:
+            ends = paddle.to_tensor(np.array(ends).astype("int32"))
+        if self.config["isStridesTensor"]:
+            strides = paddle.to_tensor(np.array(strides).astype("int32"))
         x = paddle.strided_slice(
-            inputs, axes=axes, starts=starts, ends=ends, strides=strides)
+            inputs, axes=axes, starts=starts, ends=ends, strides=strides
+        )
         return x
 
 
@@ -52,9 +53,8 @@ class TestStridedsliceConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=4, max_value=10), min_size=4, max_size=6))
+            st.lists(st.integers(min_value=4, max_value=10), min_size=4, max_size=6)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
         isStartsTensor = draw(st.booleans())
@@ -102,6 +102,7 @@ class TestStridedsliceConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -115,15 +116,16 @@ class Net1(BaseNet):
         """
         forward
         """
-        axes = self.config['axes']
-        starts = self.config['starts']
-        ends = self.config['ends']
-        # strides = self.config['strides']
+        axes = self.config["axes"]
+        starts = self.config["starts"]
+        ends = self.config["ends"]
+        strides = self.config["strides"]
         # strides = [1, paddle.to_tensor(1).astype('int32'), 1]
         # strides = [1, paddle.to_tensor(1, dtype='int32'), 1]
-        strides = [1, paddle.to_tensor(np.array(1).astype("int32")), 1]
+        # strides = [1, paddle.to_tensor(np.array(1).astype("int32")), 1]
         x = paddle.strided_slice(
-            inputs, axes=axes, starts=starts, ends=ends, strides=strides)
+            inputs, axes=axes, starts=starts, ends=ends, strides=strides
+        )
         return x
 
 
@@ -135,14 +137,13 @@ class TestStridedsliceConvert1(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=4, max_value=10), min_size=4, max_size=6))
+            st.lists(st.integers(min_value=4, max_value=10), min_size=4, max_size=6)
+        )
         input_shape = [4, 4, 4, 4]
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
         isStartsTensor = False  # draw(st.booleans())
-        isEndsTensor = False  #draw(st.booleans())
-        isStridesTensor = False  #draw(st.booleans())
+        isEndsTensor = False  # draw(st.booleans())
+        isStridesTensor = False  # draw(st.booleans())
 
         axes = [1, 2, 3]
         if draw(st.booleans()):
@@ -185,6 +186,7 @@ class TestStridedsliceConvert1(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
