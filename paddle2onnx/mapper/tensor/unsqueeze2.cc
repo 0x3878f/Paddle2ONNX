@@ -20,13 +20,9 @@ REGISTER_PIR_MAPPER(unsqueeze2, Unsqueeze2Mapper)
 
 int32_t Unsqueeze2Mapper::GetMinOpsetVersion(bool verbose) {
   if (axes_.size() == 0) {
-    if (HasInput("AxesTensorList")) {
-      Logger(verbose, 13) << "While AxisTensorList as input, "
-                          << RequireOpset(13) << std::endl;
-      return 13;
-    } else if (HasInput("AxesTensor")) {
-      auto info = GetInput("AxesTensor");
-      if (!IsConstantInput("AxesTensor")) {
+    if (HasInput("AxesTensor")) {
+      std::vector<int64_t> axes;
+      if (!TryGetInputValue("AxesTensor", &axes)) {
         Logger(verbose, 13)
             << "While AxesTensor as input, and it's not a constant tensor, "
             << RequireOpset(13) << std::endl;
@@ -34,6 +30,11 @@ int32_t Unsqueeze2Mapper::GetMinOpsetVersion(bool verbose) {
       } else {
         return 7;
       }
+    } else if (HasInput("AxesTensorList")) {
+      Logger(verbose, 13) << "While AxisTensorList as input, "
+                          << RequireOpset(13) << std::endl;
+      return 13;
+      // if (!IsConstantInput("AxesTensor") ) {
     }
   }
   return 7;
