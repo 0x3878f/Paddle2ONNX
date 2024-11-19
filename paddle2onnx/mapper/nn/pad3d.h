@@ -30,12 +30,23 @@ class Pad3DMapper : public Mapper {
     GetAttr("value", &value_);
     GetAttr("paddings", &paddings_);
   }
+  Pad3DMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t op_id,
+              bool c)
+      : Mapper(p, helper, op_id, c) {
+    in_pir_mode = true;
+    GetAttr("data_format", &data_format_);
+    GetAttr("mode", &mode_);
+    GetAttr("value", &value_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
   void Opset11() override;
 
  private:
-  std::vector<int64_t> ConvertPaddingParameter(const std::vector<int64_t>& paddings);
+  std::vector<int64_t>
+      ConvertPaddingParameter(const std::vector<int64_t>& paddings);
   std::string data_format_;
   std::string mode_;
   std::vector<int64_t> paddings_;

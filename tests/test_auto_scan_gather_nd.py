@@ -14,11 +14,10 @@
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
 from onnxbase import randtool
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -42,23 +41,21 @@ class TestGatherNDConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=2, max_size=5))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=2, max_size=5)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
 
         dtype2 = draw(st.sampled_from(["int32", "int64"]))
 
         input2_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=2, max_size=4))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=2, max_size=4)
+        )
 
         if draw(st.booleans()):
             input2_shape[-1] = draw(
-                st.integers(
-                    min_value=1, max_value=len(input_shape)))
+                st.integers(min_value=1, max_value=len(input_shape))
+            )
         else:
             input2_shape = [len(input_shape)]
 
@@ -71,13 +68,14 @@ class TestGatherNDConvert(OPConvertAutoScanTest):
             "test_data_shapes": [input_shape, generator_data],
             "test_data_types": [[dtype], [dtype2]],
             "opset_version": [11, 15],
-            "input_spec_shape": []
+            "input_spec_shape": [],
         }
 
         models = Net(config)
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

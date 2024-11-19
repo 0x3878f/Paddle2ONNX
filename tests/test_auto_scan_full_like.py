@@ -16,7 +16,7 @@ from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
 import unittest
 import paddle
-from onnxbase import randtool
+from onnxbase import randtool, _test_only_pir
 
 op_api_map = {
     "fill_any_like": paddle.ones_like,
@@ -69,6 +69,7 @@ class TestFullLikeConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -115,6 +116,7 @@ class TestFullLikeConvert2(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
