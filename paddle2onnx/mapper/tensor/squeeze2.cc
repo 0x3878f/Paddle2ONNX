@@ -20,9 +20,9 @@ REGISTER_PIR_MAPPER(squeeze, Squeeze2Mapper)
 
 int32_t Squeeze2Mapper::GetMinOpsetVersion(bool verbose) {
   if (in_pir_mode) {
-    if (HasInput("axis")) {
-      return 13;
-    }
+    // if (HasInput("axis")) {
+    //   return 13;
+    // }
     return 7;
   }
 
