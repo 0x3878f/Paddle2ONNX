@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(argsort, ArgsortMapper)
+REGISTER_PIR_MAPPER(argsort, ArgsortMapper)
 
 int32_t ArgsortMapper::GetMinOpsetVersion(bool verbose) {
   if (!descending_) {

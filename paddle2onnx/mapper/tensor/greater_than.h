@@ -26,7 +26,7 @@ class GreaterThanMapper : public Mapper {
                     OnnxHelper* helper,
                     int64_t op_id,
                     bool c)
-      : Mapper(p, helper, op_id) {
+      : Mapper(p, helper, op_id, c) {
     in_pir_mode = true;
   }
   void Opset7() override;
