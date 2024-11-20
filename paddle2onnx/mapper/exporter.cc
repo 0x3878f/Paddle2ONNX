@@ -203,9 +203,9 @@ void ModelExporter::SetOpsetVersion(const PaddlePirParser& pir_parser,
   bool opset_is_legal = true;
   // here
   int32_t min_opset = GetMinOpsetVersion(pir_parser);
-  if (min_opset < 7 || min_opset >= MAX_ONNX_OPSET_VERSION) {
+  if (min_opset < 7 || min_opset > MAX_ONNX_OPSET_VERSION) {
     P2OLogger(verbose_) << "The Opset Version must be between 7 and "
-                        << MAX_ONNX_OPSET_VERSION - 1 << std::endl;
+                        << MAX_ONNX_OPSET_VERSION << std::endl;
     opset_is_legal = false;
   }
   if (!auto_upgrade_opset) {

@@ -43,6 +43,7 @@ class Pad3DMapper : public Mapper {
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
   void Opset11() override;
+  void Opset19() override;
 
  private:
   std::vector<int64_t>

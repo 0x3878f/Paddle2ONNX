@@ -116,7 +116,15 @@ class Mapper {
            "[Paddle2ONNX] Only support opset_version in range of [7, " +
                std::to_string(MAX_ONNX_OPSET_VERSION) + "].");
 
-    if (opset_version == 19) {
+    if (opset_version == 23) {
+      Opset23();
+    } else if (opset_version == 22) {
+      Opset22();
+    } else if (opset_version == 21) {
+      Opset21();
+    } else if (opset_version == 20) {
+      Opset20();
+    } else if (opset_version == 19) {
       Opset19();
     } else if (opset_version == 18) {
       Opset18();
@@ -145,6 +153,10 @@ class Mapper {
     }
   }
 
+  virtual void Opset23() { Opset22(); }
+  virtual void Opset22() { Opset21(); }
+  virtual void Opset21() { Opset20(); }
+  virtual void Opset20() { Opset19(); }
   virtual void Opset19() { Opset18(); }
   virtual void Opset18() { Opset17(); }
   virtual void Opset17() { Opset16(); }
