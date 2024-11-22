@@ -22,14 +22,16 @@ namespace paddle2onnx {
 
 class WhereMapper : public Mapper {
  public:
-  WhereMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  WhereMapper(const PaddleParser& p,
+              OnnxHelper* helper,
+              int64_t block_id,
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
   WhereMapper(const PaddlePirParser& p,
               OnnxHelper* helper,
               int64_t op_id,
-              bool c)
-      : Mapper(p, helper, op_id) {
+              bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
     in_pir_mode = true;
   }
 
