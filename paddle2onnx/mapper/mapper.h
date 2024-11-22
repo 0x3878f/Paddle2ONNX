@@ -77,24 +77,38 @@ class Mapper {
   }
 
   P2OLogger Error() {
-    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     std::string output_name = "";
-    if (op.outputs(0).arguments_size() > 0) {
-      output_name = op.outputs(0).arguments(0);
+    std::string op_type = "";
+    if (in_pir_mode) {
+      auto& op = if_in_cf_block ? pir_parser_->sub_blocks_ops[pir_op_idx_]
+                                : pir_parser_->global_blocks_ops[pir_op_idx_];
+      op_type = op->name();
+    } else {
+      auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+      if (op.outputs(0).arguments_size() > 0) {
+        output_name = op.outputs(0).arguments(0);
+      }
+      op_type = op.type();
     }
-    std::string op_type = op.type();
     std::string prefix =
         "[ERROR][Paddle2ONNX] [" + op_type + ": " + output_name + "]";
     return P2OLogger(true, prefix);
   }
 
   P2OLogger Warn() {
-    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     std::string output_name = "";
-    if (op.outputs(0).arguments_size() > 0) {
-      output_name = op.outputs(0).arguments(0);
+    std::string op_type = "";
+    if (in_pir_mode) {
+      auto& op = if_in_cf_block ? pir_parser_->sub_blocks_ops[pir_op_idx_]
+                                : pir_parser_->global_blocks_ops[pir_op_idx_];
+      op_type = op->name();
+    } else {
+      auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+      if (op.outputs(0).arguments_size() > 0) {
+        output_name = op.outputs(0).arguments(0);
+      }
+      op_type = op.type();
     }
-    std::string op_type = op.type();
     std::string prefix =
         "[WARN][Paddle2ONNX] [" + op_type + ": " + output_name + "]";
     return P2OLogger(true, prefix);
@@ -438,7 +452,7 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data);
+          data, if_in_cf_block);
     } else {
       auto input_info = GetInput(input_key);
       return parser_->TryGetTensorValue(block_idx_, input_info[0].name, data);
@@ -452,7 +466,7 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data);
+          data, if_in_cf_block);
     } else {
       Assert(false, "Not support in old IR.");
     }

@@ -130,7 +130,8 @@ class PaddlePirParser {
     std::string attr_value = "value";
     std::string attr_values = "values";
     pir::Operation* op = temp_op->operand(input_idx).source().defining_op();
-    while (!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
+    while (op->num_operands() > 0 && !op->HasAttribute(attr_value) &&
+           !op->HasAttribute(attr_values)) {
       op = op->operand(0).source().defining_op();
     }
     if (op->HasAttribute(attr_value)) {
@@ -210,7 +211,8 @@ class PaddlePirParser {
     std::string attr_name;
     std::string attr_value = "value";
     std::string attr_values = "values";
-    while(!op->HasAttribute(attr_value) && !op->HasAttribute(attr_values)) {
+    while (op->num_operands() > 0 && !op->HasAttribute(attr_value) &&
+           !op->HasAttribute(attr_values)) {
       op = op->operand(0).source().defining_op();
     }
     if (op->HasAttribute(attr_value)) {
@@ -257,6 +259,7 @@ class PaddlePirParser {
                           bool if_in_sub_block,
                           std::string tensor_arr_name) const;
   std::string GetTensorArrayName(int64_t op_id, bool if_in_sub_block) const;
+  std::string GenOpInputOutputName(const std::string& name) const;
 
  private:
   bool IsAttrVar(const pir::Operation* op, const int64_t& attr_id) const;
@@ -268,7 +271,6 @@ class PaddlePirParser {
   void GetGlobalBlockInputValueName();
   void GetGlobalBlockOutputValueName();
   void GetAllOpOutputName();
-  std::string GenOpInputOutputName(const std::string& name) const;
   void AddOpOutputName(pir::Operation* op,
                        std::string var_name,
                        int64_t output_idx) const;
