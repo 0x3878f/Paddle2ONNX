@@ -21,6 +21,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(lookup_table, LookupTableMapper)
 REGISTER_MAPPER(lookup_table_v2, LookupTableMapper)
+REGISTER_PIR_MAPPER(embedding, LookupTableMapper)
 
 int32_t LookupTableMapper::GetMinOpsetVersion(bool verbose) {
   auto input_w_info = GetInput("W");
@@ -67,11 +68,11 @@ void LookupTableMapper::Opset7() {
         input_shape, GetOnnxDtype(input_w_info[0].dtype), data);
     auto weight_node =
         helper_->MakeNode("Mul", {input_w_info[0].name, constant});
-    helper_->MakeNode("Gather", {weight_node->output(0), ids_node},
-                      {output_info[0].name});
+    helper_->MakeNode(
+        "Gather", {weight_node->output(0), ids_node}, {output_info[0].name});
   } else {
-    helper_->MakeNode("Gather", {input_w_info[0].name, ids_node},
-                      {output_info[0].name});
+    helper_->MakeNode(
+        "Gather", {input_w_info[0].name, ids_node}, {output_info[0].name});
   }
 }
 
@@ -109,8 +110,8 @@ void LookupTableMapper::Opset11() {
           {1}, ONNX_NAMESPACE::TensorProto::INT64, padding_idx_);
       auto scatter_node = helper_->MakeNode(
           "ScatterND", {input_w_info[0].name, index, replace_data});
-      helper_->MakeNode("Gather", {scatter_node->output(0), ids_node},
-                        {output_info[0].name});
+      helper_->MakeNode(
+          "Gather", {scatter_node->output(0), ids_node}, {output_info[0].name});
     } else {
       std::vector<int64_t> data(sum_val, 1);
       for (auto i = 0; i < interval; i++) {
@@ -120,12 +121,12 @@ void LookupTableMapper::Opset11() {
           input_shape, GetOnnxDtype(input_w_info[0].dtype), data);
       auto weight_node =
           helper_->MakeNode("Mul", {input_w_info[0].name, constant});
-      helper_->MakeNode("Gather", {weight_node->output(0), ids_node},
-                        {output_info[0].name});
+      helper_->MakeNode(
+          "Gather", {weight_node->output(0), ids_node}, {output_info[0].name});
     }
   } else {
-    helper_->MakeNode("Gather", {input_w_info[0].name, ids_node},
-                      {output_info[0].name});
+    helper_->MakeNode(
+        "Gather", {input_w_info[0].name, ids_node}, {output_info[0].name});
   }
 }
 
