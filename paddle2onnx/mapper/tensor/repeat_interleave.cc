@@ -35,8 +35,6 @@ namespace paddle2onnx {
     if (in_pir_mode) {
       if (OpType() == "pd_op.repeat_interleave") {
         GetAttr("repeats", &repeat);
-      } else {
-        TryGetInputValue("repeats", &repeats);
       }
     } else {
       GetAttr("Repeats", &repeat);
