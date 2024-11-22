@@ -17,6 +17,7 @@
 namespace paddle2onnx {
 
 REGISTER_MAPPER(multiclass_nms3, NMSMapper);
+REGISTER_PIR_MAPPER(multiclass_nms3, NMSMapper);
 
 int32_t NMSMapper::GetMinOpsetVersion(bool verbose) {
   auto boxes_info = GetInput("BBoxes");
@@ -133,9 +134,18 @@ void NMSMapper::KeepTopK(const std::string& selected_indices) {
         helper_->Constant({1}, ONNX_NAMESPACE::TensorProto::INT64, keep_top_k_);
     auto ensemble_value = helper_->MakeNode("Concat", {num_of_boxes, top_k});
     AddAttribute(ensemble_value, "axis", int64_t(0));
-    auto new_top_k =
-        helper_->MakeNode("ReduceMin", {ensemble_value->output(0)});
-    AddAttribute(new_top_k, "axes", std::vector<int64_t>(1, 0));
+
+    std::shared_ptr<ONNX_NAMESPACE::NodeProto> new_top_k;
+    if (OnnxHelper::GetOpsetVersion() > 13) {
+      std::string reduce_min_axis = helper_->Constant(
+          {1}, ONNX_NAMESPACE::TensorProto::INT64, static_cast<int64_t>(0));
+      new_top_k = helper_->MakeNode(
+          "ReduceMin", {ensemble_value->output(0), reduce_min_axis});
+
+    } else {
+      new_top_k = helper_->MakeNode("ReduceMin", {ensemble_value->output(0)});
+      AddAttribute(new_top_k, "axes", std::vector<int64_t>(1, 0));
+    }
     AddAttribute(new_top_k, "keepdims", int64_t(1));
 
     // the output is topk_scores, topk_score_indices
