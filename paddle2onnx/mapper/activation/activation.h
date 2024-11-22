@@ -90,6 +90,12 @@ class PReluMapper : public Mapper {
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
 
+  PReluMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t op_id,
+              bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {}
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 };

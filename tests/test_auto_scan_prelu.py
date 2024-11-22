@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -41,9 +40,8 @@ class TestPreluConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=5, max_value=20), min_size=0, max_size=4))
+            st.lists(st.integers(min_value=5, max_value=20), min_size=0, max_size=4)
+        )
         if len(input_shape) == 0:
             weight_shape = []
         else:
@@ -63,6 +61,7 @@ class TestPreluConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
