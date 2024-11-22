@@ -33,6 +33,7 @@ class BuiltinSplitMapper : public Mapper {
 
  private:
   int64_t GetOutputNum();
+  bool IsEinsumOut();
 };
 
 }  // namespace paddle2onnx
