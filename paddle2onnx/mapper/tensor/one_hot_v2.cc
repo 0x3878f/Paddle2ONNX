@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(one_hot_v2, OneHotV2Mapper)
+REGISTER_PIR_MAPPER(one_hot, OneHotV2Mapper)
 
 int32_t OneHotV2Mapper::GetMinOpsetVersion(bool verbose) {
   if (allow_out_of_range_) {
@@ -24,7 +25,7 @@ int32_t OneHotV2Mapper::GetMinOpsetVersion(bool verbose) {
     return -1;
   }
   auto output_info = GetOutput("Out");
-  if (output_info[0].dtype != dtype_) {
+  if (!in_pir_mode && output_info[0].dtype != dtype_) {
     Error() << "dtype attribute and output dtype do not match." << std::endl;
     return -1;
   }
@@ -46,6 +47,9 @@ void OneHotV2Mapper::Opset9() {
   std::string depth_node = "";
   if (HasInput("depth_tensor")) {
     auto input_depth_info = GetInput("depth_tensor");
+    depth_node = input_depth_info[0].name;
+  } else if (HasInput("num_classes")) {
+    auto input_depth_info = GetInput("num_classes");
     depth_node = input_depth_info[0].name;
   } else {
     depth_node =

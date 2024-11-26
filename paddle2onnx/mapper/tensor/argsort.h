@@ -25,6 +25,13 @@ class ArgsortMapper : public Mapper {
     GetAttr("descending", &descending_);
     GetAttr("axis", &axis_);
   }
+
+  ArgsortMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+                bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("descending", &descending_);
+    GetAttr("axis", &axis_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset10() override;
   void Opset7() override;

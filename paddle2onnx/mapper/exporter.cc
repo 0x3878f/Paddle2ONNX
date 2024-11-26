@@ -203,9 +203,9 @@ void ModelExporter::SetOpsetVersion(const PaddlePirParser& pir_parser,
   bool opset_is_legal = true;
   // here
   int32_t min_opset = GetMinOpsetVersion(pir_parser);
-  if (min_opset < 7 || min_opset >= MAX_ONNX_OPSET_VERSION) {
+  if (min_opset < 7 || min_opset > MAX_ONNX_OPSET_VERSION) {
     P2OLogger(verbose_) << "The Opset Version must be between 7 and "
-                        << MAX_ONNX_OPSET_VERSION - 1 << std::endl;
+                        << MAX_ONNX_OPSET_VERSION << std::endl;
     opset_is_legal = false;
   }
   if (!auto_upgrade_opset) {
@@ -387,11 +387,18 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
     // get cf.yeild op input
     pir::Operation* cf_yield_op = pir_parser.sub_blocks_ops.back();
     // std::vector<std::string> sub_block_outpus;
-    for (auto oprand : cf_yield_op->operands()) {
-      pir::Value value = oprand.source();
+    for(int32_t idx = 0; idx < cf_yield_op->num_operands(); ++idx) {
+      pir::Value value = cf_yield_op->operand(idx).source();
       auto cond_info = pir_parser.GetSubBlockValueTensorInfo(value);
       // sub_block_outpus.push_back(cond_info[0].name);
       temp_outputs.push_back(std::move(MakeValueInfo(cond_info[0])));
+      if (value.defining_op() == nullptr) {
+        value =
+            pir::Value(pir_parser.while_op_input_value_map[&(*(value.impl()))]);
+      }
+      if(value.defining_op()->GetParent() != &block) {
+        temp_inputs.push_back(std::move(MakeValueInfo(cond_info[0])));
+      }
     }
   } else {
     // sub_blocks_ops is empty
@@ -523,6 +530,20 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
              i,
              if_in_subblock,
              verbose_);
+  }
+  if(if_in_subblock && !is_while_block) {
+    for (auto& input_item : inputs) {
+      for(int32_t idx = 0; idx < outputs.size(); ++idx) {
+        auto output_item = outputs[idx];
+        if(output_item->name() == input_item->name()) {
+          output_item->set_name(pir_parser.GenOpInputOutputName("yeild"));
+          temp_helper.MakeNode("Identity", {input_item->name()},
+                             {output_item->name()});
+          outputs[idx] = std::move(output_item);
+        }
+      }
+    }
+    inputs.clear();
   }
   for (auto& item : parameters) {
     *(graph.add_node()) = *(item.get());

@@ -23,17 +23,38 @@ REGISTER_PIR_MAPPER(batch_norm, BatchNormMapper)
 
 void BatchNormMapper::Opset7() {
   auto input_info = GetInput("X");
-  auto scale_info = GetInput("Scale");
-  auto bias_info  = GetInput("Bias");
-  auto mean_info  = GetInput("Mean");
+  auto mean_info = GetInput("Mean");
   auto variance_info = GetInput("Variance");
   auto output_info = GetOutput("Y");
 
-  auto node = helper_->MakeNode(
-      "BatchNormalization",
-      {input_info[0].name, scale_info[0].name, bias_info[0].name,
-       mean_info[0].name, variance_info[0].name},
-      {output_info[0].name});
+  std::string scale_name, bias_name;
+  int64_t numel = 1;
+  for (auto s : mean_info[0].shape) {
+    numel *= s;
+  }
+  if (HasInput("Scale")) {
+    scale_name = GetInput("Scale")[0].name;
+  } else {
+    std::vector<int64_t> values(numel, 1);
+    scale_name = helper_->Constant(
+        mean_info[0].shape, GetOnnxDtype(mean_info[0].dtype), values);
+  }
+
+  if (HasInput("Bias")) {
+    bias_name = GetInput("Bias")[0].name;
+  } else {
+    std::vector<int64_t> values(numel, 0);
+    bias_name = helper_->Constant(
+        mean_info[0].shape, GetOnnxDtype(mean_info[0].dtype), values);
+  }
+
+  auto node = helper_->MakeNode("BatchNormalization",
+                                {input_info[0].name,
+                                 scale_name,
+                                 bias_name,
+                                 mean_info[0].name,
+                                 variance_info[0].name},
+                                {output_info[0].name});
   if (helper_->GetOpsetVersion() < 9) {
     int64_t spatial = 1;
     AddAttribute(node, "spatial", spatial);

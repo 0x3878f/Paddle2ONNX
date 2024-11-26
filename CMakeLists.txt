@@ -19,7 +19,7 @@ endif()
 
 # Set max opset version for onnx if you build from other version of onnx this
 # should be modified.
-add_definitions(-DMAX_ONNX_OPSET_VERSION=19)
+add_definitions(-DMAX_ONNX_OPSET_VERSION=23)
 add_definitions(-DPADDLE2ONNX_LIB)
 
 # Internal flags for convert.h.in
@@ -95,8 +95,7 @@ else()
   message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
 
   # set(PADDLE_LIB ${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so)
-  set(PADDLE_LIB
-      "${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so")
+  set(PADDLE_LIB "${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so")
   if(EXISTS ${PADDLE_LIB})
     message(STATUS "found libpaddle.so : ${PADDLE_LIB}")
   else()

@@ -147,7 +147,7 @@ void PaddlePirParser::GetGlobalBlockOutputValueName() {
 void PaddlePirParser::GetAllSubBlockOpOutputName(
     std::vector<pir::Operation*> block_op_lists) const {
   for (auto op : block_op_lists) {
-    std::string new_name = "p2o.sub_block" + op->name();
+    std::string new_name = "p2o.sub_block." + op->name();
     if (_name_counter.find(new_name) != _name_counter.end()) {
       _name_counter[new_name] += 1;
     } else {

@@ -77,24 +77,38 @@ class Mapper {
   }
 
   P2OLogger Error() {
-    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     std::string output_name = "";
-    if (op.outputs(0).arguments_size() > 0) {
-      output_name = op.outputs(0).arguments(0);
+    std::string op_type = "";
+    if (in_pir_mode) {
+      auto& op = if_in_cf_block ? pir_parser_->sub_blocks_ops[pir_op_idx_]
+                                : pir_parser_->global_blocks_ops[pir_op_idx_];
+      op_type = op->name();
+    } else {
+      auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+      if (op.outputs(0).arguments_size() > 0) {
+        output_name = op.outputs(0).arguments(0);
+      }
+      op_type = op.type();
     }
-    std::string op_type = op.type();
     std::string prefix =
         "[ERROR][Paddle2ONNX] [" + op_type + ": " + output_name + "]";
     return P2OLogger(true, prefix);
   }
 
   P2OLogger Warn() {
-    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     std::string output_name = "";
-    if (op.outputs(0).arguments_size() > 0) {
-      output_name = op.outputs(0).arguments(0);
+    std::string op_type = "";
+    if (in_pir_mode) {
+      auto& op = if_in_cf_block ? pir_parser_->sub_blocks_ops[pir_op_idx_]
+                                : pir_parser_->global_blocks_ops[pir_op_idx_];
+      op_type = op->name();
+    } else {
+      auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+      if (op.outputs(0).arguments_size() > 0) {
+        output_name = op.outputs(0).arguments(0);
+      }
+      op_type = op.type();
     }
-    std::string op_type = op.type();
     std::string prefix =
         "[WARN][Paddle2ONNX] [" + op_type + ": " + output_name + "]";
     return P2OLogger(true, prefix);
@@ -116,7 +130,15 @@ class Mapper {
            "[Paddle2ONNX] Only support opset_version in range of [7, " +
                std::to_string(MAX_ONNX_OPSET_VERSION) + "].");
 
-    if (opset_version == 19) {
+    if (opset_version == 23) {
+      Opset23();
+    } else if (opset_version == 22) {
+      Opset22();
+    } else if (opset_version == 21) {
+      Opset21();
+    } else if (opset_version == 20) {
+      Opset20();
+    } else if (opset_version == 19) {
       Opset19();
     } else if (opset_version == 18) {
       Opset18();
@@ -145,6 +167,10 @@ class Mapper {
     }
   }
 
+  virtual void Opset23() { Opset22(); }
+  virtual void Opset22() { Opset21(); }
+  virtual void Opset21() { Opset20(); }
+  virtual void Opset20() { Opset19(); }
   virtual void Opset19() { Opset18(); }
   virtual void Opset18() { Opset17(); }
   virtual void Opset17() { Opset16(); }
@@ -426,7 +452,7 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data);
+          data, if_in_cf_block);
     } else {
       auto input_info = GetInput(input_key);
       return parser_->TryGetTensorValue(block_idx_, input_info[0].name, data);
@@ -440,7 +466,7 @@ class Mapper {
           pir_op_idx_,
           pir_parser_->GetOpInputOutputName2Idx(
               pir_op_idx_, input_key, true, if_in_cf_block),
-          data);
+          data, if_in_cf_block);
     } else {
       Assert(false, "Not support in old IR.");
     }

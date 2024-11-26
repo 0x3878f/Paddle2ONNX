@@ -14,10 +14,9 @@
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
-from onnxbase import _test_with_pir
+from onnxbase import _test_only_pir, randtool
 
 
 class Net(BaseNet):
@@ -25,64 +24,61 @@ class Net(BaseNet):
     simple Net
     """
 
-    def forward(self, input):
+    def forward(self, arr, indices, values):
         """
         forward
         """
-
-        x = paddle.argsort(
-            input, axis=self.config["axis"], descending=self.config["descending"]
+        x = paddle.put_along_axis(
+            arr, indices, values, axis=self.config["axis"], reduce=self.config["reduce"]
         )
         return x
 
 
-class TestArgsortConvert(OPConvertAutoScanTest):
+class TestPutAlongAxisConvert(OPConvertAutoScanTest):
     """
-    api: paddle.argsort
-    OPset version: 11, 15
+    api: paddle.put_along_axis
+    OPset version: 11, 16, 18
     """
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(st.integers(min_value=2, max_value=5), min_size=2, max_size=5)
+            st.lists(st.integers(min_value=1, max_value=20), min_size=2, max_size=5)
         )
-
-        axis = draw(
-            st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
-        )
-
         dtype = draw(st.sampled_from(["float32", "float64"]))
-        descending = draw(st.booleans())
+        dtype2 = draw(st.sampled_from(["int32", "int64"]))
+        # dtype3 = draw(st.sampled_from(["float32", "float64"]))
+        axis = draw(st.integers(min_value=0, max_value=len(input_shape) - 1))
+        reduce = draw(st.sampled_from(["assign", "add", "multiply", "amin", "amax"]))
+
+        opset_version = []
+        if reduce == "add" or reduce == "multiply":
+            opset_version.append(16)
+        elif reduce == "amin" or reduce == "amax":
+            opset_version.append(18)
+        else:
+            opset_version.append(11)
 
         def generator_data():
-            import random
-
-            t = 1
-            for i in range(len(input_shape)):
-                t = t * input_shape[i]
-            input_data = np.array(random.sample(range(-5000, 5000), t))
-            input_data = input_data.reshape(input_shape)
+            input_data = randtool("int", 0, input_shape[axis], input_shape)
+            print("wmk" * 10)
+            print(input_data.shape)
             return input_data
 
-        if descending:
-            opset_version = [7, 10, 11, 15]
-        else:
-            opset_version = [11, 15]
         config = {
-            "op_names": ["argsort"],
-            "test_data_shapes": [generator_data],
-            "test_data_types": [[dtype]],
+            "op_names": ["put_along_axis"],
+            "test_data_shapes": [input_shape, generator_data, input_shape],
+            "test_data_types": [[dtype], [dtype2], [dtype]],
             "opset_version": opset_version,
             "input_spec_shape": [],
             "axis": axis,
-            "descending": descending,
+            "reduce": reduce,
         }
 
         models = Net(config)
 
         return (config, models)
 
-    @_test_with_pir
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

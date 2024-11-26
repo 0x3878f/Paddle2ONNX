@@ -20,32 +20,20 @@
 
 namespace paddle2onnx {
 
-class OneHotV2Mapper : public Mapper {
+class MultinomialMapper : public Mapper {
  public:
-  OneHotV2Mapper(const PaddleParser& p,
-                 OnnxHelper* helper,
-                 int64_t block_id,
-                 int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("allow_out_of_range", &allow_out_of_range_);
-    GetAttr("depth", &depth_);
-    GetAttr("dtype", &dtype_);
+  MultinomialMapper(const PaddlePirParser& p,
+                    OnnxHelper* helper,
+                    int64_t op_id,
+                    bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("replacement", &replacement_);
   }
 
-  OneHotV2Mapper(const PaddlePirParser& p,
-                 OnnxHelper* helper,
-                 int64_t op_id,
-                 bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-    allow_out_of_range_ = false;
-  }
   int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset9() override;
+  void Opset7() override;
 
  private:
-  bool allow_out_of_range_;
-  int64_t depth_;
-  int64_t dtype_;
+  bool replacement_;
 };
-
 }  // namespace paddle2onnx
