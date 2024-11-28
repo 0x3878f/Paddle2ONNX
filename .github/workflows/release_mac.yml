@@ -1,19 +1,23 @@
-name: WindowsRelease_amd64
+name: MacRelease
 
 on:
   release:
     types: [published]
+
+# Use MACOSX_DEPLOYMENT_TARGET=12.0 to produce compatible wheel
+env:
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: macos-latest
     strategy:
       matrix:
         python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
-        architecture: [ 'x64' ]
+        architecture: [ 'arm64' ]
 
     steps:
       # Checkout the latest branch of Paddle2ONNX.
@@ -22,26 +26,33 @@ jobs:
         with:
           submodules: true
 
-      # Download and extract protobuf
-      - name: Download and extract protobuf
-        run: |
-          curl -L -o protobuf.zip https://bj.bcebos.com/fastdeploy/third_libs/protobuf-win-x64-3.16.0.zip
-          powershell -Command "Expand-Archive -Path protobuf.zip -DestinationPath $PWD/protobuf"
+      # Checkout the latest branch of Paddle2ONNX.
+      - name: Checkout Paddle2ONNX
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
       # Setup Python
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
+
+      # Download protobuf
+      - name: Download protobuf
+        run: |
+          source .github/workflows/scripts/download_protobuf.sh
+
       # Install Python dependencies
       - name: Install Python dependencies
         run: |
           python -m pip install -q --upgrade pip
-          python -m pip install setuptools wheel auditwheel auditwheel-symbols build twine
+          python -m pip install setuptools wheel build twine
 
+      # Build package
       - name: Build package
         run: |
-          $Env:PATH = "${{ github.workspace }}\protobuf\bin;" + $Env:PATH
+          export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
           python -m build --wheel
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
