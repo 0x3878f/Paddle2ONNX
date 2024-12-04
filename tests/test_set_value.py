@@ -63,6 +63,7 @@ def test_set_value_1():
     obj.run()
 
 
+@_test_only_pir
 def test_set_value_2():
     config = {
         "starts": [-3, 0],
