@@ -68,6 +68,9 @@ void ReduceMaxMapper::Opset18() {
     input_name = helper_->AutoCast(input_name, input_tpye, P2ODataType::INT32);
     input_tpye = P2ODataType::INT32;
   }
+  if(x_info[0].Rank() == 0) {
+    input_name = helper_->Unsqueeze(input_name, {0});
+  }
   auto reduce_node = helper_->MakeNode("ReduceMax", {input_name, dims});
 
   // Add attribute

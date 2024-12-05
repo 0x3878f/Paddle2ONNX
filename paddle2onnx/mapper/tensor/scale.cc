@@ -70,8 +70,22 @@ void ScaleMapper::Opset7() {
         }
       }
     }
-    std::string reshape_out = helper_->Reshape(out, output_info[0].shape);
-    helper_->AutoCast(reshape_out, output_info[0].name, P2ODataType::FP32,
+    int32_t cnt = 0;
+    for (auto i : output_info[0].shape) {
+      if (i == -1) cnt++;
+    }
+    std::string reshape_out;
+    if (cnt > 1) {
+      auto input_shape =
+          helper_->MakeNode("Shape", {input_info[0].name})->output(0);
+      reshape_out = helper_->MakeNode("Reshape", {out, input_shape})->output(0);
+    } else {
+      reshape_out = helper_->Reshape(out, output_info[0].shape);
+    }
+
+    helper_->AutoCast(reshape_out,
+                      output_info[0].name,
+                      P2ODataType::FP32,
                       output_info[0].dtype);
   }
 }
