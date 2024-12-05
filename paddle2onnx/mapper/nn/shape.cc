@@ -17,6 +17,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(shape, ShapeMapper)
 REGISTER_PIR_MAPPER(shape, ShapeMapper)
+REGISTER_PIR_MAPPER(shape64, Shape64Mapper)
 
 void ShapeMapper::Opset7() {
   auto input_info = GetInput("Input");
@@ -27,4 +28,12 @@ void ShapeMapper::Opset7() {
                     output_info[0].dtype);
 }
 
+void Shape64Mapper::Opset7() {
+  auto input_info = GetInput("input");
+  auto output_info = GetOutput("out");
+
+  auto shape_out = helper_->MakeNode("Shape", {input_info[0].name})->output(0);
+  helper_->AutoCast(shape_out, output_info[0].name, P2ODataType::INT64,
+                    output_info[0].dtype);
+}
 }  // namespace paddle2onnx

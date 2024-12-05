@@ -30,7 +30,7 @@ class Net(paddle.nn.Layer):
         """
         forward
         """
-        x = paddle.shape(inputs)
+        x = paddle.shape(inputs).astype("int32")
         return x
 
 

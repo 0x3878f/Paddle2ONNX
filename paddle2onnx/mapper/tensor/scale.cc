@@ -70,7 +70,8 @@ void ScaleMapper::Opset7() {
         }
       }
     }
-    helper_->AutoCast(out, output_info[0].name, P2ODataType::FP32,
+    std::string reshape_out = helper_->Reshape(out, output_info[0].shape);
+    helper_->AutoCast(reshape_out, output_info[0].name, P2ODataType::FP32,
                       output_info[0].dtype);
   }
 }
