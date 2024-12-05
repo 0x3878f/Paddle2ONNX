@@ -356,7 +356,7 @@ const framework::proto::OpDesc& PaddleParser::GetOpDesc(int32_t block_idx,
 }
 
 void PaddleParser::InitBlock() {
-  //  if (ExistsDumplicateTensorName()) {
+  //  if (ExistsDuplicateTensorName()) {
   //    return false;
   //  }
   GetBlocksVarName2Id();
@@ -489,7 +489,7 @@ TensorInfo PaddleParser::GetTensorInfo(
     return info;
   }
 
-  auto tensor = prog->blocks(block_idx).vars(var_idx).type().lod_tensor();
+  auto tensor = prog->blocks(block_idx).vars(var_idx).type().dense_tensor();
   TensorInfo info;
   info.name = name;
   info.dtype = tensor.tensor().data_type();
