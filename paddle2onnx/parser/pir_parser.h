@@ -84,6 +84,9 @@ class PaddlePirParser {
   void GetOpAttr(const pir::Operation* op,
                  const std::string& name,
                  std::vector<double>* res) const;
+  void GetOpAttr(const pir::Operation* op,
+                 const std::string& name,
+                 std::vector<bool>* res) const;
   bool OpHasAttr(pir::Operation* op, const std::string& name) const;
   std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
