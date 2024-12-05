@@ -46,8 +46,8 @@ namespace paddle2onnx {
     }
 
     std::string repeat_info_name = "";
-    if (HasInput("RepeatsTensor")) {
-        auto tmp_info = GetInput("RepeatsTensor");
+    if (HasInput("RepeatTensor")) {
+        auto tmp_info = GetInput("RepeatTensor");
         repeat_info_name = helper_->AutoCast(tmp_info[0].name,
                                               tmp_info[0].dtype,
                                               P2ODataType::INT64);
