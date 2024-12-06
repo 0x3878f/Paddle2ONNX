@@ -52,7 +52,7 @@ bool ModelExporter::IsOpsRegistered(const PaddlePirParser& pir_parser,
       continue;
     }
     std::string op_name = convert_pir_op_name(op->name());
-    if (!MapperHelper::Get()->IsRegistered(op_name)) {
+    if (!MapperHelper::Get()->IsRegisteredInPir(op_name)) {
       unsupported_ops.insert(op_name);
     }
   }
