@@ -98,10 +98,16 @@ class MapperHelper {
     return helper;
   }
 
-  std::vector<std::string> GetAllOps() {
+  std::vector<std::string> GetAllOps(bool isPir) {
     std::vector<std::string> operators;
-    for (auto iter = mappers.begin(); iter != mappers.end(); iter++) {
-      operators.push_back(iter->first);
+    if (isPir) {
+      for (auto iter = pir_mappers.begin(); iter != pir_mappers.end(); iter++) {
+        operators.push_back(iter->first);
+      }
+    } else {
+      for (auto iter = mappers.begin(); iter != mappers.end(); iter++) {
+        operators.push_back(iter->first);
+      }
     }
     return operators;
   }

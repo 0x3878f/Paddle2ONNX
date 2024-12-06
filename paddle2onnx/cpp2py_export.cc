@@ -157,7 +157,11 @@ PYBIND11_MODULE(paddle2onnx_cpp2py_export, m) {
                                                               fp16_model_path);
         });
   m.def("get_all_supported_operators", []() {
-    auto operators = MapperHelper::Get()->GetAllOps();
+    auto operators = MapperHelper::Get()->GetAllOps(false);
+    return operators;
+  });
+  m.def("get_all_supported_operators_pir", []() {
+    auto operators = MapperHelper::Get()->GetAllOps(true);
     return operators;
   });
 }

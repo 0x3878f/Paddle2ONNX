@@ -24,6 +24,10 @@ def get_all_supported_operators():
     return c_p2o.get_all_supported_operators()
 
 
+def get_all_supported_operators_pir():
+    return c_p2o.get_all_supported_operators_pir()
+
+
 def try_import(module_name):
     """Try importing a module, with an informative error message on failure."""
     install_name = module_name
