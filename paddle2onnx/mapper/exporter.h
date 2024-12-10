@@ -47,6 +47,7 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"unsqueeze", "unsqueeze2"},
       {"arange", "range"},
       {"argmax", "arg_max"},
+      {"argmin", "arg_min"},
       {"floor_divide", "elementwise_floordiv"},
       {"subtract", "elementwise_sub"},
       {"multiply", "elementwise_mul"},

@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(eye, EyeMapper)
+REGISTER_PIR_MAPPER(eye, EyeMapper)
 
 void EyeMapper::ParseValue(const TensorInfo& tensor_info, int64_t* num_val) {
   std::vector<int64_t> value;
@@ -24,33 +25,44 @@ void EyeMapper::ParseValue(const TensorInfo& tensor_info, int64_t* num_val) {
 }
 
 int32_t EyeMapper::GetMinOpsetVersion(bool verbose) {
-  if (IsAttrVar("num_rows")) {
-    if (!IsConstant(GetAttrVar("num_rows")[0])) {
-      Error()
-          << "While Attribute(num_rows)'s type is Tensor, it's not supported "
-             "unless it's a constant tensor."
-          << std::endl;
-      return -1;
+  if (in_pir_mode) {
+    if (IsConstantInput("num_rows") && IsConstantInput("num_columns")) {
+      TryGetInputValue("num_rows", &num_rows_);
+      TryGetInputValue("num_columns", &num_columns_);
     } else {
-      auto info = GetAttrVar("num_rows");
-      ParseValue(info[0], &num_rows_);
+      Error() << "Only constant inputs (num_rows and num_columns) are "
+                 "supported in PIR mode.";
+      return -1;
     }
   } else {
-    GetAttr("num_rows", &num_rows_);
-  }
-  if (IsAttrVar("num_columns")) {
-    if (!IsConstant(GetAttrVar("num_columns")[0])) {
-      Error() << "While Attribute(num_columns)'s type is Tensor, it's not "
-                 "supported "
-                 "unless it's a constant tensor."
-              << std::endl;
-      return -1;
+    if (IsAttrVar("num_rows")) {
+      if (!IsConstant(GetAttrVar("num_rows")[0])) {
+        Error()
+            << "While Attribute(num_rows)'s type is Tensor, it's not supported "
+               "unless it's a constant tensor."
+            << std::endl;
+        return -1;
+      } else {
+        auto info = GetAttrVar("num_rows");
+        ParseValue(info[0], &num_rows_);
+      }
     } else {
-      auto info = GetAttrVar("num_columns");
-      ParseValue(info[0], &num_columns_);
+      GetAttr("num_rows", &num_rows_);
     }
-  } else {
-    GetAttr("num_columns", &num_columns_);
+    if (IsAttrVar("num_columns")) {
+      if (!IsConstant(GetAttrVar("num_columns")[0])) {
+        Error() << "While Attribute(num_columns)'s type is Tensor, it's not "
+                   "supported "
+                   "unless it's a constant tensor."
+                << std::endl;
+        return -1;
+      } else {
+        auto info = GetAttrVar("num_columns");
+        ParseValue(info[0], &num_columns_);
+      }
+    } else {
+      GetAttr("num_columns", &num_columns_);
+    }
   }
 
   if (num_rows_ <= 0 || num_columns_ <= 0) {
@@ -64,17 +76,23 @@ int32_t EyeMapper::GetMinOpsetVersion(bool verbose) {
 
 void EyeMapper::Opset9() {
   auto output_info = GetOutput("Out");
-  if (IsAttrVar("num_rows")) {
-    auto info = GetAttrVar("num_rows");
-    ParseValue(info[0], &num_rows_);
+  if (in_pir_mode) {
+    Assert(TryGetInputValue("num_rows", &num_rows_) &&
+               TryGetInputValue("num_columns", &num_columns_),
+           "num_rows and num_columns must be constant in PIR mode.");
   } else {
-    GetAttr("num_rows", &num_rows_);
-  }
-  if (IsAttrVar("num_columns")) {
-    auto info = GetAttrVar("num_columns");
-    ParseValue(info[0], &num_columns_);
-  } else {
-    GetAttr("num_columns", &num_columns_);
+    if (IsAttrVar("num_rows")) {
+      auto info = GetAttrVar("num_rows");
+      ParseValue(info[0], &num_rows_);
+    } else {
+      GetAttr("num_rows", &num_rows_);
+    }
+    if (IsAttrVar("num_columns")) {
+      auto info = GetAttrVar("num_columns");
+      ParseValue(info[0], &num_columns_);
+    } else {
+      GetAttr("num_columns", &num_columns_);
+    }
   }
 
   std::string constant_node = helper_->Constant(

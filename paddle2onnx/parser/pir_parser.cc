@@ -605,7 +605,7 @@ bool PaddlePirParser::OpHasInput(int64_t op_id,
 }
 
 bool PaddlePirParser::OpHasOutput(int64_t op_id,
-                                  int64_t output_idx,
+                                  const std::string& output_name,
                                   bool if_in_sub_block) const {
   pir::Operation* op;
   if (if_in_sub_block) {
@@ -613,7 +613,10 @@ bool PaddlePirParser::OpHasOutput(int64_t op_id,
   } else {
     op = global_blocks_ops[op_id];
   }
-  return output_idx < op->num_results();
+  int64_t output_idx =
+      GetOpInputOutputName2Idx(op_id, output_name, false, if_in_sub_block);
+  return output_idx != -1 && output_idx < op->num_results() &&
+         op->result(output_idx);
 }
 
 bool PaddlePirParser::OpHasAttr(pir::Operation* op,

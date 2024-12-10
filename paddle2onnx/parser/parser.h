@@ -147,15 +147,15 @@ bool PaddleParser::TryGetTensorValue(const int64_t& block_id,
   GetOpAttr(*op, "dtype", &dtype);
   if (dtype == P2ODataType::INT64) {
     std::vector<int64_t> value;
-    GetOpAttr(*op, "int64_values", &value);
+    GetOpAttr(*op, "values", &value);
     data->assign(value.begin(), value.end());
   } else if (dtype == P2ODataType::INT32) {
     std::vector<int64_t> value;
-    GetOpAttr(*op, "int32_values", &value);
+    GetOpAttr(*op, "values", &value);
     data->assign(value.begin(), value.end());
   } else if (dtype == P2ODataType::FP32) {
     std::vector<float> value;
-    GetOpAttr(*op, "fp32_values", &value);
+    GetOpAttr(*op, "values", &value);
     data->assign(value.begin(), value.end());
   } else {
     Assert(

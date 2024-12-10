@@ -25,12 +25,15 @@ REGISTER_PIR_MAPPER(slice, SliceMapper)
 REGISTER_PIR_MAPPER(strided_slice, SliceMapper)
 
 int32_t SliceMapper::GetMinOpsetVersion(bool verbose) {
-  if (HasInput("StartsTensorList") || HasInput("EndsTensorList") ||
-      HasInput("StridesTensorList")) {
-    Logger(verbose, 10)
-        << "While has input StartsTensorList/EndsTensorListStridesTensorList, "
-        << RequireOpset(10) << std::endl;
-    return 10;
+  if (!in_pir_mode) {
+    if (HasInput("StartsTensorList") || HasInput("EndsTensorList") ||
+        HasInput("StridesTensorList")) {
+      Logger(verbose, 10)
+          << "While has input "
+             "StartsTensorList/EndsTensorListStridesTensorList, "
+          << RequireOpset(10) << std::endl;
+      return 10;
+    }
   }
   if (HasInput("StartsTensor")) {
     auto info = GetInput("StartsTensor");

@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -35,6 +36,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_unique_11():
     """
     api: paddle.unique
@@ -43,13 +45,15 @@ def test_unique_11():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [11])
+    obj = APIOnnx(op, "unique", [11])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_12():
     """
     api: paddle.unique
@@ -58,13 +62,15 @@ def test_unique_12():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_axis():
     """
     api: paddle.unique
@@ -73,10 +79,11 @@ def test_unique_axis():
     op = Net(axis=1)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
@@ -85,11 +92,9 @@ class Net_mult_2(paddle.nn.Layer):
     simple Net
     """
 
-    def __init__(self,
-                 return_index=False,
-                 return_inverse=False,
-                 return_counts=False,
-                 axis=None):
+    def __init__(
+        self, return_index=False, return_inverse=False, return_counts=False, axis=None
+    ):
         super(Net_mult_2, self).__init__()
         self.return_index = return_index
         self.return_inverse = return_inverse
@@ -105,11 +110,13 @@ class Net_mult_2(paddle.nn.Layer):
             axis=self.axis,
             return_index=self.return_index,
             return_inverse=self.return_inverse,
-            return_counts=self.return_counts)
+            return_counts=self.return_counts,
+        )
 
-        return x + y
+        return x, y.astype("int64")
 
 
+@_test_with_pir
 def test_unique_return_index():
     """
     api: paddle.unique
@@ -118,13 +125,15 @@ def test_unique_return_index():
     op = Net_mult_2(return_index=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_return_inverse():
     """
     api: paddle.unique
@@ -133,13 +142,15 @@ def test_unique_return_inverse():
     op = Net_mult_2(return_inverse=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_return_counts():
     """
     api: paddle.unique
@@ -148,10 +159,11 @@ def test_unique_return_counts():
     op = Net_mult_2(return_counts=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
@@ -160,11 +172,9 @@ class Net_mult_3(paddle.nn.Layer):
     simple Net
     """
 
-    def __init__(self,
-                 return_index=False,
-                 return_inverse=False,
-                 return_counts=False,
-                 axis=None):
+    def __init__(
+        self, return_index=False, return_inverse=False, return_counts=False, axis=None
+    ):
         super(Net_mult_3, self).__init__()
         self.return_index = return_index
         self.return_inverse = return_inverse
@@ -180,11 +190,13 @@ class Net_mult_3(paddle.nn.Layer):
             axis=self.axis,
             return_index=self.return_index,
             return_inverse=self.return_inverse,
-            return_counts=self.return_counts)
+            return_counts=self.return_counts,
+        )
 
-        return x + y + z
+        return x, y.astype("int64"), z.astype("int64")
 
 
+@_test_with_pir
 def test_unique_return_index_inverse():
     """
     api: paddle.unique
@@ -193,13 +205,15 @@ def test_unique_return_index_inverse():
     op = Net_mult_3(return_index=True, return_inverse=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_return_index_counts():
     """
     api: paddle.unique
@@ -208,13 +222,15 @@ def test_unique_return_index_counts():
     op = Net_mult_3(return_index=True, return_counts=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_unique_return_inverse_counts():
     """
     api: paddle.unique
@@ -223,10 +239,11 @@ def test_unique_return_inverse_counts():
     op = Net_mult_3(return_inverse=True, return_counts=True)
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()
 
 
@@ -248,11 +265,12 @@ class Net_mult_all(paddle.nn.Layer):
             axis=self.axis,
             return_index=True,
             return_inverse=True,
-            return_counts=True)
+            return_counts=True,
+        )
+        return x, y, z.astype("int64"), w
 
-        return x + y + z + w
 
-
+@_test_with_pir
 def test_unique_return_all():
     """
     api: paddle.unique
@@ -261,8 +279,9 @@ def test_unique_return_all():
     op = Net_mult_all()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'unique', [12])
+    obj = APIOnnx(op, "unique", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 10]).astype("float32")),
+    )
     obj.run()

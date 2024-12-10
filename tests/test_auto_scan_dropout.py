@@ -13,13 +13,11 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
 import random
-from onnxbase import _test_with_pir
+from onnxbase import _test_only_pir
 
 
 class Net(BaseNet):
@@ -31,17 +29,14 @@ class Net(BaseNet):
         """
         forward
         """
-        if (self.config["tensor_attr"]):
+        if self.config["tensor_attr"]:
             p = paddle.to_tensor(self.config["p"], dtype="float32")
         else:
             p = self.config["p"]
         # when training is true, has diff
         x = paddle.nn.functional.dropout(
-            x,
-            training=False,
-            p=p,
-            axis=self.config["axis"],
-            mode=self.config["mode"])
+            x, training=False, p=p, axis=self.config["axis"], mode=self.config["mode"]
+        )
         return x
 
 
@@ -53,9 +48,8 @@ class TestDropoutConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=2, max_value=8), min_size=0, max_size=5))
+            st.lists(st.integers(min_value=2, max_value=8), min_size=0, max_size=5)
+        )
         # "float64" has a bug
         dtype = draw(st.sampled_from(["float32"]))
         p = random.random()
@@ -64,9 +58,7 @@ class TestDropoutConvert(OPConvertAutoScanTest):
         if draw(st.booleans()) or len(input_shape) == 0:
             axis = None
         else:
-            axis = draw(
-                st.integers(
-                    min_value=0, max_value=len(input_shape) - 1))
+            axis = draw(st.integers(min_value=0, max_value=len(input_shape) - 1))
 
         tensor_attr = draw(st.booleans())
 
@@ -86,18 +78,18 @@ class TestDropoutConvert(OPConvertAutoScanTest):
             "axis": axis,
             "mode": mode,
             "p": p,
-            "tensor_attr": tensor_attr
+            "tensor_attr": tensor_attr,
         }
         if axis is not None:
             if mode in ["upscale_in_train"]:
-                config["op_names"] = ['']
+                config["op_names"] = [""]
             else:
-                config["op_names"] = ['scale']
+                config["op_names"] = ["scale"]
         models = Net(config)
 
         return (config, models)
 
-    @_test_with_pir
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

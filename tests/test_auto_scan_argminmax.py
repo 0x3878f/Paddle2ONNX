@@ -16,6 +16,7 @@ from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
 import unittest
 import paddle
+from onnxbase import _test_only_pir
 
 op_api_map = {
     "arg_min": paddle.argmin,
@@ -41,10 +42,12 @@ class Net(BaseNet):
             axis = paddle.assign(self.config["axis"])
         else:
             axis = self.config["axis"]
-        x = op_api_map[self.config["op_names"]](inputs,
-                                                axis=axis,
-                                                keepdim=self.config["keep_dim"],
-                                                dtype=self.config["out_dtype"])
+        x = op_api_map[self.config["op_names"]](
+            inputs,
+            axis=axis,
+            keepdim=self.config["keep_dim"],
+            dtype=self.config["out_dtype"],
+        )
         return x
 
 
@@ -56,17 +59,14 @@ class TestArgMinMaxConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=2, max_value=10), min_size=1, max_size=4))
-
-        input_spec = [-1] * len(input_shape)
+            st.lists(st.integers(min_value=2, max_value=10), min_size=1, max_size=4)
+        )
 
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
 
         axis = draw(
-            st.integers(
-                min_value=-len(input_shape), max_value=len(input_shape) - 1))
+            st.integers(min_value=-len(input_shape), max_value=len(input_shape) - 1)
+        )
 
         keep_dim = draw(st.booleans())
 
@@ -85,7 +85,7 @@ class TestArgMinMaxConvert(OPConvertAutoScanTest):
             "tensor_attr": tensor_attr,
             "input_spec_shape": [],
             "delta": 1e-4,
-            "rtol": 1e-4
+            "rtol": 1e-4,
         }
 
         models = list()
@@ -101,6 +101,7 @@ class TestArgMinMaxConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_only_pir
     def test(self):
         self.run_and_statis(max_examples=30, max_duration=-1)
 

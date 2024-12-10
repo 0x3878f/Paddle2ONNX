@@ -58,8 +58,8 @@ class PaddlePirParser {
                   const std::string& input_name,
                   bool if_in_sub_block) const;
   bool OpHasOutput(int64_t op_id,
-                   int64_t output_idx,
-                   bool if_in_sub_block) const;
+                  const std::string& output_name,
+                  bool if_in_sub_block) const;
   void GetOpAttr(const pir::Operation* op,
                  const std::string& name,
                  int64_t* res) const;
