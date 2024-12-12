@@ -60,7 +60,7 @@ def roi_align(input,
             where N is the batch size, C is the input channel, H is Height, W is weight.
             The data type is float32 or float64.
         rois (Tensor): ROIs (Regions of Interest) to pool over.It should be
-            a 2-D Tensor or 2-D LoDTensor of shape (num_rois, 4), the lod level is 1.
+            a 2-D Tensor or 2-D DenseTensor of shape (num_rois, 4), the lod level is 1.
             The data type is float32 or float64. Given as [[x1, y1, x2, y2], ...],
             (x1, y1) is the top left coordinates, and (x2, y2) is the bottom right coordinates.
         output_size (int or tuple[int, int]): The pooled output size(h, w), data type is int32. If int, h and w are both equal to output_size.

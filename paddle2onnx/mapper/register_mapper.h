@@ -98,44 +98,43 @@ class MapperHelper {
     return helper;
   }
 
-  int64_t GetAllOps(const std::string& file_path) {
-    std::ofstream outfile(file_path);
-    if (!outfile) {
-      std::cerr << "Failed to open file: " << file_path << std::endl;
-      return mappers.size();
+  std::vector<std::string> GetAllOps(bool isPir) {
+    std::vector<std::string> operators;
+    if (isPir) {
+      for (auto iter = pir_mappers.begin(); iter != pir_mappers.end(); iter++) {
+        operators.push_back(iter->first);
+      }
+    } else {
+      for (auto iter = mappers.begin(); iter != mappers.end(); iter++) {
+        operators.push_back(iter->first);
+      }
     }
-    for (auto iter = mappers.begin(); iter != mappers.end(); iter++) {
-      outfile << iter->first << std::endl;
-    }
-    outfile << "Total OPs: " << mappers.size() << std::endl;
-    P2OLogger() << " [ * Paddle2ONNX * ] All Registered OPs saved in "
-              << file_path << std::endl;
-    outfile.close();
-    return mappers.size();
+    return operators;
   }
 
   bool IsRegistered(const std::string& op_name) {
-    auto logger = P2OLogger();
-    // Search in PIR mappers first.
+    return mappers.find(op_name) != mappers.end();
+  }
+
+  bool IsRegisteredInPir(const std::string& op_name) {
     auto iter_pir = pir_mappers.find(op_name);
     if (pir_mappers.end() != iter_pir) {
-      logger << "Find " << op_name << " in PIR mappers" << std::endl;
       return true;
     }
-
-    // If we can't find op in PIR mappers, then try to
-    // find it in old mappers
     auto iter = mappers.find(op_name);
-    if (mappers.end() == iter) {
-      logger << "Not Founded! " << op_name << " is not registered" << std::endl;
+    if (mappers.end() != iter) {
+      P2OLogger()
+          << op_name
+          << " is not registered in PIR mappers, but found in old ir mappers."
+          << std::endl;
       return false;
     }
-    logger << "Find " << op_name << " in old mappers" << std::endl;
-    return true;
+    return false;
   }
 
   std::string GenName(const std::string& op_name) {
-    std::string key = "p2o." + op_name + ".";
+    // std::string key = "p2o." + op_name + ".";
+    std::string key = op_name + ".";
     if (name_counter.find(key) == name_counter.end()) {
       name_counter[key] = 0;
     } else {

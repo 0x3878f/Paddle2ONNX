@@ -40,7 +40,7 @@ def distribute_fpn_proposals(fpn_rois,
                              name=None):
     r"""
 
-    **This op only takes LoDTensor as input.** In Feature Pyramid Networks
+    **This op only takes DenseTensor as input.** In Feature Pyramid Networks
     (FPN) models, it is needed to distribute all proposals into different FPN
     level, with respect to scale of the proposals, the referring scale and the
     referring level. Besides, to restore the order of proposals, we return an
@@ -77,7 +77,7 @@ def distribute_fpn_proposals(fpn_rois,
     Returns:
         Tuple:
 
-        multi_rois(List) : A list of 2-D LoDTensor with shape [M, 4]
+        multi_rois(List) : A list of 2-D DenseTensor with shape [M, 4]
         and data type of float32 and float64. The length is
         max_level-min_level+1. The proposals in each FPN level.
 

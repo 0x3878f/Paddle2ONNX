@@ -44,7 +44,6 @@ int32_t SetValueMapper::GetMinOpsetVersion(bool verbose) {
             << std::endl;
     return -1;
   }
-  Logger(verbose, 12) << RequireOpset(12) << std::endl;
   return 12;
 }
 

@@ -40,10 +40,16 @@ int32_t SplitMapper::GetMinOpsetVersion(bool verbose) {
     }
   }
 
-  if (HasInput("sections") || HasInput("SectionsTensorList")) {
-    if (in_pir_mode) {
+  if (HasInput("sections")) {
+    if (IsConstantInput("sections")) {
       TryGetInputValue("sections", &sections_);
+    } else {
+      Logger(verbose, 13) << "While input sections is not a constant tensor, "
+                          << RequireOpset(13) << std::endl;
+      return 13;
     }
+  }
+  if (HasInput("SectionsTensorList")) {
     Logger(verbose, 13) << "While has input SectionsTensorList, "
                         << RequireOpset(13) << std::endl;
     return 13;

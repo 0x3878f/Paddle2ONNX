@@ -16,6 +16,21 @@ import os
 import paddle
 import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
 from paddle2onnx.utils import logging, paddle_jit_save_configs
+from contextlib import contextmanager
+
+
+def get_old_ir_guard():
+    # For old version of PaddlePaddle, donothing guard is returned.
+    @contextmanager
+    def dummy_guard():
+        yield
+
+    if not hasattr(paddle, "pir_utils"):
+        return dummy_guard
+    pir_utils = paddle.pir_utils
+    if not hasattr(pir_utils, "DygraphOldIrGuard"):
+        return dummy_guard
+    return pir_utils.DygraphOldIrGuard
 
 
 def export(
@@ -28,31 +43,45 @@ def export(
     enable_onnx_checker=True,
     enable_experimental_op=True,
     enable_optimize=True,
+    custom_op_info=None,
     deploy_backend="onnxruntime",
     calibration_file="",
     external_file="",
     export_fp16_model=False,
 ):
-
     deploy_backend = deploy_backend.lower()
-    # Check if file exists
-    if not os.path.isfile(model_filename):
-        raise RuntimeError("File does not exist: %s" % model_filename)
-    # cpp2py_export.cc
-    onnx_model_str = c_p2o.export(
-        model_filename,
-        params_filename,
-        opset_version,
-        auto_upgrade_opset,
-        verbose,
-        enable_onnx_checker,
-        enable_experimental_op,
-        enable_optimize,
-        deploy_backend,
-        calibration_file,
-        external_file,
-        export_fp16_model,
-    )
+    if custom_op_info is None:
+        onnx_model_str = c_p2o.export(
+            model_filename,
+            params_filename,
+            opset_version,
+            auto_upgrade_opset,
+            verbose,
+            enable_onnx_checker,
+            enable_experimental_op,
+            enable_optimize,
+            {},
+            deploy_backend,
+            calibration_file,
+            external_file,
+            export_fp16_model,
+        )
+    else:
+        onnx_model_str = c_p2o.export(
+            model_filename,
+            params_filename,
+            opset_version,
+            auto_upgrade_opset,
+            verbose,
+            enable_onnx_checker,
+            enable_experimental_op,
+            enable_optimize,
+            custom_op_info,
+            deploy_backend,
+            calibration_file,
+            external_file,
+            export_fp16_model,
+        )
     if save_file is not None:
         with open(save_file, "wb") as f:
             f.write(onnx_model_str)
@@ -76,9 +105,13 @@ def dygraph2onnx(layer, save_file, input_spec=None, opset_version=9, **configs):
         if os.path.isfile(params_file):
             os.remove(params_file)
     save_configs = paddle_jit_save_configs(configs)
-    paddle.jit.save(
-        layer, os.path.join(paddle_model_dir, "model"), input_spec, **save_configs
-    )
+    with get_old_ir_guard()():
+        # In PaddlePaddle 3.0.0b2, PIR becomes the default IR, but PIR export still in development.
+        # So we need to use the old IR to export the model, avoid make users confused.
+        # In the future, we will remove this guard and recommend users to use PIR.
+        paddle.jit.save(
+            layer, os.path.join(paddle_model_dir, "model"), input_spec, **save_configs
+        )
     logging.info("Static PaddlePaddle model saved in {}.".format(paddle_model_dir))
     if not os.path.isfile(params_file):
         params_file = ""

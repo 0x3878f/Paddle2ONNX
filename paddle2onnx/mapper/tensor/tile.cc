@@ -28,8 +28,15 @@ void TileMapper::Opset7() {
   // NOTE(Aurelius84): we need to deprecate this branch in the future.
   if (has_repeats_tensor) {
     auto repeats_info = GetInput("RepeatTimes");
-    repeats = helper_->AutoCast(repeats_info[0].name, repeats_info[0].dtype,
-                                P2ODataType::INT64);
+    Assert(repeats_info[0].shape[0] > 0,
+           "repeats info's shape[0] must be greater than 0.");
+    int32_t need_to_expand = x_info[0].Rank() - repeats_info[0].shape[0];
+    need_to_expand = std::max(0, need_to_expand);
+    auto ones = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                  std::vector<int64_t>(need_to_expand, 1));
+    auto temp_repeats = helper_->AutoCast(
+        repeats_info[0].name, repeats_info[0].dtype, P2ODataType::INT64);
+    repeats = helper_->Concat({ones, temp_repeats}, 0);
   } else if (has_repeats_tensor_list) {
     auto repeats_info = GetInput("repeat_times_tensor");
     repeats = helper_->ConcatIndices(repeats_info);

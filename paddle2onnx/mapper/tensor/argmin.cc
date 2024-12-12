@@ -16,13 +16,18 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(arg_min, ArgMinMapper)
+REGISTER_PIR_MAPPER(arg_min, ArgMinMapper)
 
 int32_t ArgMinMapper::GetMinOpsetVersion(bool verbose) {
-  if (IsAttrVar("axis") && !IsConstant(GetAttrVar("axis")[0])) {
+  if (!in_pir_mode && IsAttrVar("axis") && !IsConstant(GetAttrVar("axis")[0])) {
     Error() << "While Attribute(axis)'s type is Tensor, it's not "
                "supported "
                "unless it's a constant tensor."
             << std::endl;
+    return -1;
+  }
+  if (in_pir_mode && !IsConstantInput("axis")) {
+    Error() << "Only support constant axis in PIR mode." << std::endl;
     return -1;
   }
   return 7;
@@ -36,13 +41,17 @@ void ArgMinMapper::Opset7() {
     input = helper_->Flatten(input_info[0].name);
   }
 
-  if (IsAttrVar("axis")) {
-    auto axis_info = GetAttrVar("axis");
-    std::vector<int64_t> temp;
-    TryGetValue(axis_info[0], &temp);
-    axis_ = temp[0];
+  if (in_pir_mode) {
+    TryGetInputValue("axis", &axis_);
   } else {
-    GetAttr("axis", &axis_);
+    if (IsAttrVar("axis")) {
+      auto axis_info = GetAttrVar("axis");
+      std::vector<int64_t> temp;
+      TryGetValue(axis_info[0], &temp);
+      axis_ = temp[0];
+    } else {
+      GetAttr("axis", &axis_);
+    }
   }
 
   if (input_info[0].dtype == P2ODataType::FP64) {
@@ -60,11 +69,13 @@ void ArgMinMapper::Opset7() {
     if (flatten_) {
       out = helper_->Reshape(arg_node->output(0), shape);
     }
-    helper_->AutoCast(out, output_info[0].name, P2ODataType::INT64,
-                      output_info[0].dtype);
+    helper_->AutoCast(
+        out, output_info[0].name, P2ODataType::INT64, output_info[0].dtype);
   } else {
-    helper_->AutoCast(arg_node->output(0), output_info[0].name,
-                      P2ODataType::INT64, output_info[0].dtype);
+    helper_->AutoCast(arg_node->output(0),
+                      output_info[0].name,
+                      P2ODataType::INT64,
+                      output_info[0].dtype);
   }
 }
 

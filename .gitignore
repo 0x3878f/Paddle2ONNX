@@ -22,9 +22,12 @@ protobuf-*
 
 # Temporary files automatically generated when executing Paddle2ONNX unit tests
 *.pdmodel
+*.pdiparams
+*.pdiparams.info
+*inference.yml
 *.onnx
+*.temptxt
 tests/__pycache_*
 tests/*/__pycache_*
 tests/*/*.info
-UNKNOWN.egg-info/*
-resnet50/*
+tools/onnx/__pycache__*

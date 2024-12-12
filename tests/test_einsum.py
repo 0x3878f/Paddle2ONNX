@@ -14,10 +14,10 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import _test_only_pir
+from onnxbase import _test_with_pir
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_sum():
     """
     api: paddle.einsum
@@ -47,7 +47,7 @@ def test_einsum_sum():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_dot():
     """
     api: paddle.einsum
@@ -78,7 +78,7 @@ def test_einsum_dot():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_outer():
     """
     api: paddle.einsum
@@ -110,7 +110,7 @@ def test_einsum_outer():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_transpose():
     """
     api: paddle.einsum
@@ -141,7 +141,7 @@ def test_einsum_transpose():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_batch_matrix_multiplication():
     """
     api: paddle.einsum
@@ -173,7 +173,7 @@ def test_einsum_batch_matrix_multiplication():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_ellipsis_transpose():
     """
     api: paddle.einsum
@@ -204,7 +204,7 @@ def test_einsum_ellipsis_transpose():
     obj.run()
 
 
-@_test_only_pir
+@_test_with_pir
 def test_einsum_ellipsis_batch_matrix_multiplication():
     """
     api: paddle.einsum
@@ -239,3 +239,7 @@ def test_einsum_ellipsis_batch_matrix_multiplication():
 if __name__ == "__main__":
     test_einsum_sum()
     test_einsum_dot()
+    test_einsum_outer()
+    test_einsum_batch_matrix_multiplication()
+    test_einsum_ellipsis_transpose()
+    test_einsum_ellipsis_batch_matrix_multiplication()

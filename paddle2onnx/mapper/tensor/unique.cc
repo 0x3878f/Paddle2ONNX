@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(unique, UniqueMapper)
+REGISTER_PIR_MAPPER(unique, UniqueMapper)
 
 int32_t UniqueMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << RequireOpset(11) << std::endl;
@@ -25,25 +26,43 @@ int32_t UniqueMapper::GetMinOpsetVersion(bool verbose) {
 void UniqueMapper::Opset11() {
   auto intput_info = GetInput("X");
   auto output_out_info = GetOutput("Out");
-  auto output_indices_info = GetOutput("Indices");
-  auto output_index_info = GetOutput("Index");
-  auto output_counts_info = GetOutput("Counts");
 
-  std::string out_index_name = "out_index";
-  std::string out_indices_name = "out_indices";
-  std::string out_counts_name = "out_counts";
-  auto node = helper_->MakeNode("Unique", {intput_info[0].name},
-                                {output_out_info[0].name, out_indices_name,
-                                 out_index_name, out_counts_name});
+  std::string out_index_name = MapperHelper::Get()->GenName("helper.out_index");
+  std::string out_indices_name =
+      MapperHelper::Get()->GenName("helper.out_indices");
+  std::string out_counts_name =
+      MapperHelper::Get()->GenName("helper.out_counts");
+  auto node = helper_->MakeNode("Unique",
+                                {intput_info[0].name},
+                                {output_out_info[0].name,
+                                 out_indices_name,
+                                 out_index_name,
+                                 out_counts_name});
+  AddAttribute(node, "sorted", static_cast<int64_t>(is_sorted_));
   if (axis_.size()) {
     AddAttribute(node, "axis", axis_[0]);
   }
-  helper_->AutoCast(out_index_name, output_index_info[0].name,
-                    P2ODataType::INT64, output_index_info[0].dtype);
-  helper_->AutoCast(out_indices_name, output_indices_info[0].name,
-                    P2ODataType::INT64, output_indices_info[0].dtype);
-  helper_->AutoCast(out_counts_name, output_counts_info[0].name,
-                    P2ODataType::INT64, output_counts_info[0].dtype);
+  if (return_index_) {
+    auto output_indices_info = GetOutput("Indices");
+    helper_->AutoCast(out_indices_name,
+                      output_indices_info[0].name,
+                      P2ODataType::INT64,
+                      output_indices_info[0].dtype);
+  }
+  if (return_inverse_) {
+    auto output_index_info = GetOutput("Index");
+    helper_->AutoCast(out_index_name,
+                      output_index_info[0].name,
+                      P2ODataType::INT64,
+                      output_index_info[0].dtype);
+  }
+  if (return_counts_) {
+    auto output_counts_info = GetOutput("Counts");
+    helper_->AutoCast(out_counts_name,
+                      output_counts_info[0].name,
+                      P2ODataType::INT64,
+                      output_counts_info[0].dtype);
+  }
 }
 
 }  // namespace paddle2onnx

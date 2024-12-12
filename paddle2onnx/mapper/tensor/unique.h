@@ -22,11 +22,30 @@ namespace paddle2onnx {
 
 class UniqueMapper : public Mapper {
  public:
-  UniqueMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  UniqueMapper(const PaddleParser& p,
+               OnnxHelper* helper,
+               int64_t block_id,
                int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
     GetAttr("dtype", &dtype_);
+    GetAttr("return_index", &return_index_);
+    GetAttr("return_inverse", &return_inverse_);
+    GetAttr("return_counts", &return_counts_);
+    GetAttr("is_sorted", &is_sorted_);
+  }
+
+  UniqueMapper(const PaddlePirParser& p,
+               OnnxHelper* helper,
+               int64_t op_id,
+               bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("axis", &axis_);
+    GetAttr("dtype", &dtype_);
+    GetAttr("return_index", &return_index_);
+    GetAttr("return_inverse", &return_inverse_);
+    GetAttr("return_counts", &return_counts_);
+    GetAttr("is_sorted", &is_sorted_);
   }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset11() override;
@@ -34,6 +53,10 @@ class UniqueMapper : public Mapper {
  private:
   std::vector<int64_t> axis_;
   int64_t dtype_;
+  bool return_index_;
+  bool return_inverse_;
+  bool return_counts_;
+  bool is_sorted_;
 };
 
 }  // namespace paddle2onnx

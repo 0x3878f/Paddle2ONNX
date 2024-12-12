@@ -15,10 +15,8 @@
 #include "paddle2onnx/mapper/exporter.h"
 namespace paddle2onnx {
 
-REGISTER_MAPPER(elementwise_add, ElementwiseMapper)
 REGISTER_MAPPER(elementwise_sub, ElementwiseMapper)
 REGISTER_MAPPER(elementwise_div, ElementwiseMapper)
-REGISTER_MAPPER(elementwise_mul, ElementwiseMapper)
 REGISTER_MAPPER(elementwise_min, ElementwiseMapper)
 REGISTER_MAPPER(elementwise_max, ElementwiseMapper)
 REGISTER_MAPPER(elementwise_pow, ElementwiseMapper)
@@ -43,14 +41,14 @@ int32_t ElementwiseMapper::GetMinOpsetVersion(bool verbose) {
   return 7;
 }
 
-
 void ElementwiseMapper::Opset7() {
   auto input_x_info = GetInput("X");
   auto input_y_info = GetInput("Y");
   auto output_info = GetOutput("Out");
   auto iter = op_mapper_.find(convert_pir_op_name(OpType()));
   Assert(op_mapper_.end() != iter,
-         "Cannot find " + convert_pir_op_name(OpType()) + " in elementwise op_mapper.");
+         "Cannot find " + convert_pir_op_name(OpType()) +
+             " in elementwise op_mapper.");
 
   auto x_name = input_x_info[0].name;
   auto y_name = input_y_info[0].name;
@@ -80,7 +78,9 @@ void ElementwiseMapper::Opset7() {
 
   if (input_x_info[0].dtype == P2ODataType::BOOL &&
       input_y_info[0].dtype == P2ODataType::BOOL) {
-    helper_->AutoCast(output_name, output_info[0].name, P2ODataType::INT32,
+    helper_->AutoCast(output_name,
+                      output_info[0].name,
+                      P2ODataType::INT32,
                       P2ODataType::BOOL);
   } else {
     helper_->MakeNode("Identity", {output_name}, {output_info[0].name});
@@ -95,19 +95,20 @@ void ElementWiseModMapper::Opset10() {
   if (input_y_info[0].dtype == P2ODataType::INT32 ||
       input_y_info[0].dtype == P2ODataType::INT64) {
     if (this->deploy_backend == "tensorrt") {
-      auto x = helper_->AutoCast(input_x_info[0].name, input_x_info[0].dtype,
-                                 input_y_info[0].dtype);
+      auto x = helper_->AutoCast(
+          input_x_info[0].name, input_x_info[0].dtype, input_y_info[0].dtype);
       auto times =
           helper_->MakeNode("Div", {input_x_info[0].name, input_y_info[0].name})
               ->output(0);
       auto result =
           helper_->MakeNode("Mul", {input_y_info[0].name, times})->output(0);
-      helper_->MakeNode("Sub", {input_x_info[0].name, result},
-                        {output_info[0].name});
+      helper_->MakeNode(
+          "Sub", {input_x_info[0].name, result}, {output_info[0].name});
       return;
     }
     auto mod_node =
-        helper_->MakeNode("Mod", {input_x_info[0].name, input_y_info[0].name},
+        helper_->MakeNode("Mod",
+                          {input_x_info[0].name, input_y_info[0].name},
                           {output_info[0].name});
     AddAttribute(mod_node, "fmod", fmod);
     return;
@@ -149,35 +150,46 @@ void ElementWiseModMapper::Opset10() {
       mod_y_mul_less_node->output(0), dtype, P2ODataType::BOOL);
 
   helper_->MakeNode("Where",
-                    {mod_y_mul_condition_node, mod_y_add_node->output(0),
+                    {mod_y_mul_condition_node,
+                     mod_y_add_node->output(0),
                      mod_res_node->output(0)},
                     {output_info[0].name});
 }
 
-
 void ElementWiseFloordivMapper::Opset7() {
-  auto input_x_info =  GetInput("X");
-  auto input_y_info =  GetInput("Y");
+  auto input_x_info = GetInput("X");
+  auto input_y_info = GetInput("Y");
   auto output_info = GetOutput("Out");
 
-  auto div_input_0 = helper_->AutoCast(input_x_info[0].name, input_x_info[0].dtype, P2ODataType::FP32);
-  auto div_input_1 = helper_->AutoCast(input_y_info[0].name, input_y_info[0].dtype, P2ODataType::FP32);
+  auto div_input_0 = helper_->AutoCast(
+      input_x_info[0].name, input_x_info[0].dtype, P2ODataType::FP32);
+  auto div_input_1 = helper_->AutoCast(
+      input_y_info[0].name, input_y_info[0].dtype, P2ODataType::FP32);
 
- if (axis_ == -1 || axis_ == input_x_info[0].Rank() - 1 || input_x_info[0].Rank() == input_y_info[0].Rank()) {
+  if (axis_ == -1 || axis_ == input_x_info[0].Rank() - 1 ||
+      input_x_info[0].Rank() == input_y_info[0].Rank()) {
     auto div_node = helper_->MakeNode("Div", {div_input_0, div_input_1});
     auto floor_output = helper_->MakeNode("Floor", {div_node->output(0)});
-    helper_->AutoCast(floor_output->output(0), output_info[0].name, P2ODataType::FP32, output_info[0].dtype);
+    helper_->AutoCast(floor_output->output(0),
+                      output_info[0].name,
+                      P2ODataType::FP32,
+                      output_info[0].dtype);
   } else {
     std::vector<int64_t> broadcast_shape;
     broadcast_shape.resize(axis_ + input_x_info[0].Rank(), 1);
     for (auto i = 0; i < input_y_info[0].Rank(); ++i) {
       broadcast_shape[axis_ + i] = input_y_info[0].shape[i];
     }
-    std::string broadcast_shape_node = helper_->Constant(GetOnnxDtype(P2ODataType::INT64), broadcast_shape);
-    auto y_node = helper_->MakeNode("Reshape", {div_input_1, broadcast_shape_node});
+    std::string broadcast_shape_node =
+        helper_->Constant(GetOnnxDtype(P2ODataType::INT64), broadcast_shape);
+    auto y_node =
+        helper_->MakeNode("Reshape", {div_input_1, broadcast_shape_node});
     auto div_node = helper_->MakeNode("Div", {div_input_0, y_node->output(0)});
     auto floor_output = helper_->MakeNode("Floor", {div_node->output(0)});
-    helper_->AutoCast(floor_output->output(0), output_info[0].name, P2ODataType::FP32, output_info[0].dtype);
+    helper_->AutoCast(floor_output->output(0),
+                      output_info[0].name,
+                      P2ODataType::FP32,
+                      output_info[0].dtype);
   }
 }
 

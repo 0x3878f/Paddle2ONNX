@@ -605,7 +605,7 @@ bool PaddlePirParser::OpHasInput(int64_t op_id,
 }
 
 bool PaddlePirParser::OpHasOutput(int64_t op_id,
-                                  int64_t output_idx,
+                                  const std::string& output_name,
                                   bool if_in_sub_block) const {
   pir::Operation* op;
   if (if_in_sub_block) {
@@ -613,7 +613,10 @@ bool PaddlePirParser::OpHasOutput(int64_t op_id,
   } else {
     op = global_blocks_ops[op_id];
   }
-  return output_idx < op->num_results();
+  int64_t output_idx =
+      GetOpInputOutputName2Idx(op_id, output_name, false, if_in_sub_block);
+  return output_idx != -1 && output_idx < op->num_results() &&
+         op->result(output_idx);
 }
 
 bool PaddlePirParser::OpHasAttr(pir::Operation* op,
@@ -835,6 +838,40 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
       common::errors::InvalidArgument(
           "Cannot found attribute %s in op %s", name, op->name()));
 }
+
+void PaddlePirParser::GetOpAttr(const pir::Operation* op,
+                                const std::string& name,
+                                std::vector<bool>* res) const {
+  bool found = false;
+  for (auto& pair : op->attributes()) {
+    if (pair.first == name) {
+      found = true;
+      if (pair.second.isa<pir::ArrayAttribute>()) {
+        auto array_list =
+            pair.second.dyn_cast<::pir::ArrayAttribute>().AsVector();
+        if (array_list.size() > 0) {
+          PADDLE_ENFORCE_EQ(
+              array_list[0].isa<::pir::BoolAttribute>(),
+              true,
+              ::common::errors::Unimplemented("the 0th elementwise MUST be "
+                                              "ir::BoolAttribute"));
+          for (size_t i = 0; i < array_list.size(); ++i) {
+            res->push_back(
+                array_list[i].dyn_cast<::pir::BoolAttribute>().data());
+          }
+        }
+
+        break;
+      }
+    }
+  }
+  PADDLE_ENFORCE_EQ(
+      found,
+      true,
+      common::errors::InvalidArgument(
+          "Cannot found attribute %s in op %s", name, op->name()));
+}
+
 
 std::vector<TensorInfo> PaddlePirParser::GetOpInput(
     int64_t op_id, int64_t input_idx, bool if_in_sub_block) const {

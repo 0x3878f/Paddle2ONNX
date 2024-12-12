@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #pragma once
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "paddle2onnx/mapper/mapper.h"
@@ -21,14 +23,31 @@ namespace paddle2onnx {
 
 class DistMapper : public Mapper {
  public:
-  DistMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  DistMapper(const PaddleParser& p,
+             OnnxHelper* helper,
+             int64_t block_id,
              int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("p", &p_);
+    std::ostringstream oss;
+    oss << p_;
+    p_str_ = oss.str();
   }
+  DistMapper(const PaddlePirParser& p,
+             OnnxHelper* helper,
+             int64_t op_id,
+             bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("p", &p_);
+    std::ostringstream oss;
+    oss << p_;
+    p_str_ = oss.str();
+  }
+  int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 
  private:
   float p_;
+  std::string p_str_;
 };
 }  // namespace paddle2onnx

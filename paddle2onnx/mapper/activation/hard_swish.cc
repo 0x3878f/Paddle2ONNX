@@ -18,32 +18,42 @@ namespace paddle2onnx {
 REGISTER_MAPPER(hard_swish, HardSwishMapper)
 REGISTER_PIR_MAPPER(hard_swish, HardSwishMapper)
 
+int32_t HardSwishMapper::GetMinOpsetVersion(bool verbose) { return 14; }
+
 void HardSwishMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
-  std::string scale_node = helper_->Constant({},
-                                             GetOnnxDtype(input_info[0].dtype),
-                                             scale_);
-  std::string offset_node = helper_->Constant({},
-                                              GetOnnxDtype(input_info[0].dtype),
-                                              offset_);
-  auto add_node = helper_->MakeNode("Add",
-                                    {input_info[0].name, offset_node});
-  auto clip_node = helper_->Clip(add_node->output(0),
-                                 0.0,
-                                 threshold_,
-                                 input_info[0].dtype);
-  auto mul_node = helper_->MakeNode("Mul",
-                                    {input_info[0].name, clip_node});
-  helper_->MakeNode("Div",
-                    {mul_node->output(0), scale_node},
-                    {output_info[0].name});
+  std::string scale_node =
+      helper_->Constant({}, GetOnnxDtype(input_info[0].dtype), scale_);
+  std::string offset_node =
+      helper_->Constant({}, GetOnnxDtype(input_info[0].dtype), offset_);
+  auto add_node = helper_->MakeNode("Add", {input_info[0].name, offset_node});
+  auto clip_node =
+      helper_->Clip(add_node->output(0), 0.0, threshold_, input_info[0].dtype);
+  auto mul_node = helper_->MakeNode("Mul", {input_info[0].name, clip_node});
+  helper_->MakeNode(
+      "Div", {mul_node->output(0), scale_node}, {output_info[0].name});
+}
+
+inline bool IsAlmostEqual(float a, float b) {
+  constexpr float epsilon = 1e-5f;
+  return std::fabs(a - b) < epsilon;
 }
 
 void HardSwishMapper::Opset14() {
-  if (fabs(offset_ - 3.0) > 1e-05 || fabs(scale_ - 6.0) > 1e-05 ||
-      fabs(threshold_ - 6.0) > 1e-05) {
+  if (!IsAlmostEqual(offset_, 3.0)) {
+    P2OLogger() << "offset != 3.0, using Opset7()" << std::endl;
+    return Opset7();
+  }
+
+  if (!IsAlmostEqual(scale_, 6.0)) {
+    P2OLogger() << "scale_ != 6.0, using Opset7()" << std::endl;
+    return Opset7();
+  }
+
+  if (!IsAlmostEqual(threshold_, 6.0)) {
+    P2OLogger() << "offset != 3.0, using Opset7()" << std::endl;
     return Opset7();
   }
   auto input_info = GetInput("X");

@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -41,14 +40,12 @@ class TestDistConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input1_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=3, max_size=3))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=3, max_size=3)
+        )
 
         input2_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=10, max_value=20), min_size=2, max_size=2))
+            st.lists(st.integers(min_value=10, max_value=20), min_size=2, max_size=2)
+        )
 
         input2_shape[0] = input1_shape[1]
         input2_shape[1] = input1_shape[2]
@@ -62,9 +59,7 @@ class TestDistConvert(OPConvertAutoScanTest):
             p = draw(st.floats(min_value=0, max_value=4.0))
 
         dtype = draw(st.sampled_from(["float32", "float64"]))
-        opset_version = [7, 9, 15]
-        if p == 0.0:
-            opset_version = [9, 15]
+        opset_version = [9, 15]
         config = {
             "op_names": ["dist"],
             "test_data_shapes": [input1_shape, input2_shape],
@@ -78,6 +73,7 @@ class TestDistConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
