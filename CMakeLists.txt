@@ -141,6 +141,12 @@ install(FILES ${PROJECT_SOURCE_DIR}/paddle2onnx/converter.h
         DESTINATION include/paddle2onnx)
 
 if(BUILD_PADDLE2ONNX_PYTHON)
+  if(APPLE)
+    find_program(INSTALL_NAME_TOOL_EXECUTABLE install_name_tool)
+    if(NOT INSTALL_NAME_TOOL_EXECUTABLE)
+      message(FATAL_ERROR "install_name_tool not found, please check.\n")
+    endif()
+  endif()
   if("${PY_EXT_SUFFIX}" STREQUAL "")
     if(MSVC)
       set(PY_EXT_SUFFIX ".pyd")
