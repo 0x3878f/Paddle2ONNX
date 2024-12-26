@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(paddle2onnx C CXX)
 # ONNX 1.16 requires C++ 17
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Build the libraries with - fPIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Always link with libstdc++ fs.a when using GCC 8.
@@ -11,7 +12,11 @@ link_libraries(
 
 option(WITH_STATIC "Compile Paddle2ONNX with  STATIC" OFF)
 option(PADDLE2ONNX_DEBUG "If open the debug log while converting model" OFF)
-option(MSVC_STATIC_CRT "Compile Paddle2ONNX with  MSVC STATIC CRT" ON)
+option(MSVC_STATIC_CRT "Compile Paddle2ONNX with  MSVC STATIC CRT" OFF)
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+  add_definitions(-DPADDLE_WITH_TESTING)
+endif()
 
 if(PADDLE2ONNX_DEBUG)
   add_definitions(-DPADDLE2ONNX_DEBUG)
@@ -31,7 +36,7 @@ if(WITH_STATIC)
   add_definitions(-DWITH_PADDLE2ONNX_STATIC_INTERNAL_AT_COMPILING)
 endif()
 
-include(cmake/utils.cmake)
+include(utils)
 configure_file(${PROJECT_SOURCE_DIR}/paddle2onnx/mappers_registry.h.in
                ${PROJECT_SOURCE_DIR}/paddle2onnx/mappers_registry.h)
 
@@ -94,22 +99,33 @@ else()
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
 
-  # set(PADDLE_LIB ${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so)
-  set(PADDLE_LIB "${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so")
-  if(EXISTS ${PADDLE_LIB})
-    message(STATUS "found libpaddle.so : ${PADDLE_LIB}")
+  if(MSVC)
+    include(external/paddle)
+    # add paddle include dir
+    set(PADDLE_INCLUDE_DIR ${LIBPADDLE_INCLUDE_DIR})
+    set(PADDLE_LIB ${LIBPADDLE_BASE_LIBRARY})
+    set(COMMON_LIB ${LIBPADDLE_COMMON_LIBRARY})
   else()
-    message(FATAL_ERROR "not found libpaddle.so!")
+    set(PADDLE_LIB "${PYTHON_SITE_PACKAGES}/paddle/base/libpaddle.so")
+    if(EXISTS ${PADDLE_LIB})
+      message(STATUS "Found libpaddle.so : ${PADDLE_LIB}.")
+    else()
+      message(
+        FATAL_ERROR
+          "Can not found libpaddle.so at ${PYTHON_SITE_PACKAGES}/paddle/base!")
+    endif()
+    # add paddle include dir
+    set(PADDLE_INCLUDE_DIR ${PYTHON_SITE_PACKAGES}/paddle/include/)
   endif()
 
-  # add paddle include dir
-  set(PADDLE_INCLUDE_DIR ${PYTHON_SITE_PACKAGES}/paddle/include/)
   include_directories(${PADDLE_INCLUDE_DIR})
   if(APPLE)
     set_target_properties(paddle2onnx PROPERTIES LINK_FLAGS
                                                  "-undefined dynamic_lookup")
   elseif(MSVC)
     message("------ BUILD WITH MSVC --------")
+    # remove `interface` macro defined in MSVC
+    # target_compile_options(paddle2onnx PRIVATE /Uinterface)
   else()
     set_target_properties(paddle2onnx PROPERTIES COMPILE_FLAGS
                                                  "-fvisibility=hidden")
@@ -118,8 +134,14 @@ else()
     set_target_properties(paddle2onnx PROPERTIES LINK_FLAGS_RELEASE -s)
   endif()
   set_target_properties(paddle2onnx PROPERTIES VERSION ${PADDLE2ONNX_VERSION})
-  target_link_libraries(paddle2onnx ${PADDLE_LIB} p2o_paddle_proto onnx
-                        pybind11::embed glog::glog)
+  target_link_libraries(
+    paddle2onnx
+    ${PADDLE_LIB}
+    ${COMMON_LIB}
+    p2o_paddle_proto
+    onnx
+    pybind11::embed
+    glog::glog)
 endif()
 
 if(WIN32)
@@ -141,6 +163,12 @@ install(FILES ${PROJECT_SOURCE_DIR}/paddle2onnx/converter.h
         DESTINATION include/paddle2onnx)
 
 if(BUILD_PADDLE2ONNX_PYTHON)
+  if(APPLE)
+    find_program(INSTALL_NAME_TOOL_EXECUTABLE install_name_tool)
+    if(NOT INSTALL_NAME_TOOL_EXECUTABLE)
+      message(FATAL_ERROR "install_name_tool not found, please check.\n")
+    endif()
+  endif()
   if("${PY_EXT_SUFFIX}" STREQUAL "")
     if(MSVC)
       set(PY_EXT_SUFFIX ".pyd")
@@ -194,8 +222,9 @@ if(BUILD_PADDLE2ONNX_PYTHON)
                           PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
   endif()
 
-  target_link_libraries(paddle2onnx_cpp2py_export
-                        PRIVATE ${PADDLE_LIB} p2o_paddle_proto onnx glog::glog)
+  target_link_libraries(
+    paddle2onnx_cpp2py_export PRIVATE ${PADDLE_LIB} ${COMMON_LIB}
+                                      p2o_paddle_proto onnx glog::glog)
 
   if(MSVC)
     target_link_libraries(paddle2onnx_cpp2py_export PRIVATE ${PYTHON_LIBRARIES})
