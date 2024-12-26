@@ -27,6 +27,8 @@ import subprocess
 import sys
 import platform
 import multiprocessing
+import glob
+import shutil
 
 TOP_DIR = os.path.realpath(os.path.dirname(__file__))
 SRC_DIR = os.path.join(TOP_DIR, "paddle2onnx")
@@ -135,6 +137,7 @@ class cmake_build(setuptools.Command):
                     cmake_args.extend(["-A", "x64", "-T", "host=x64"])
                 else:
                     cmake_args.extend(["-A", "Win32", "-T", "host=x86"])
+                cmake_args.extend(["-G", "Visual Studio 16 2019"])
             if "CMAKE_ARGS" in os.environ:
                 extra_cmake_args = shlex.split(os.environ["CMAKE_ARGS"])
                 # prevent crossfire with downstream scripts
@@ -175,6 +178,15 @@ class build_ext(setuptools.command.build_ext.build_ext):
                     lib_path = debug_lib_dir
                 elif os.path.exists(release_lib_dir):
                     lib_path = release_lib_dir
+                # copy paddle libs
+                os.makedirs(os.path.join(extension_dst_dir, "libs"), exist_ok=True)
+                source_pattern = os.path.join(
+                    CMAKE_BUILD_DIR, "third_party", "paddle", "libpaddle", "*.dll"
+                )
+                dest_dir = os.path.join(extension_dst_dir, "libs")
+                for file_path in glob.glob(source_pattern):
+                    shutil.copy(file_path, dest_dir)
+
             src = os.path.join(lib_path, filename)
             dst = os.path.join(
                 os.path.realpath(self.build_lib), "paddle2onnx", filename
