@@ -93,6 +93,7 @@ jobs:
       - name: Build package
         run: |
           $Env:PATH = "${{ github.workspace }}\protobuf\protobuf_install\bin;" + $Env:PATH
+          $Env:PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
           python -m build --wheel
 
       # Install Paddle2ONNX
@@ -157,6 +158,7 @@ jobs:
       - name: Build package
         run: |
           export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
+          export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
           python -m build --wheel
 
       # Install Paddle2ONNX

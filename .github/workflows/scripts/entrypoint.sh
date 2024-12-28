@@ -54,6 +54,7 @@ cmake ../cmake -DCMAKE_INSTALL_PREFIX=`pwd`/installed_protobuf_lib -Dprotobuf_BU
 make -j
 make install
 export PATH=`pwd`/installed_protobuf_lib/bin:${PATH}
+export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
 
 # Build Paddle2ONNX wheels
 $PYTHON_COMMAND -m build --wheel || { echo "Building wheels failed."; exit 1; }
