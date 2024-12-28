@@ -74,8 +74,8 @@ jobs:
           git submodule update --init --recursive
           mkdir build
           cd build
-          cmake -G "Visual Studio 16 2019"  -DCMAKE_INSTALL_PREFIX=../protobuf_install -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_EXAMPLES=OFF ..
-          cmake --build . --config Release --target INSTALL
+          cmake -G "Visual Studio 16 2019"  -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}\protobuf\protobuf_install\ -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_EXAMPLES=OFF ..
+          cmake --build . --config Release --target install
 
       # Setup Python
       - name: Set up Python ${{ matrix.python-version }}
@@ -145,8 +145,7 @@ jobs:
           mkdir build
           cd build
           cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
-          make -j
-          make install
+          cmake --build . --target install
 
       # Install Python dependencies
       - name: Install Python dependencies

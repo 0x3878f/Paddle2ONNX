@@ -45,15 +45,17 @@ fi
 # source .github/workflows/scripts/download_protobuf.sh
 
 # Build and install protobuf
+original_dir=$(pwd)
 git clone https://github.com/protocolbuffers/protobuf.git
 cd protobuf
 git checkout v4.22.0
 git submodule update --init
 mkdir build_source && cd build_source
 cmake ../cmake -DCMAKE_INSTALL_PREFIX=`pwd`/installed_protobuf_lib -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
-make -j
-make install
+cmake --build . --target install
 export PATH=`pwd`/installed_protobuf_lib/bin:${PATH}
+cd $original_dir
+
 export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
 
 # Build Paddle2ONNX wheels
