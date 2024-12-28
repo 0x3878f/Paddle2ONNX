@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Copyright (c) ONNX Project Contributors
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -28,7 +42,18 @@ $PIP_INSTALL_COMMAND cmake
 if [[ "$SYSTEM_NAME" == "CentOS" ]]; then
     yum install -y wget
 fi
-source .github/workflows/scripts/download_protobuf.sh
+# source .github/workflows/scripts/download_protobuf.sh
+
+# Build and install protobuf
+git clone https://github.com/protocolbuffers/protobuf.git
+cd protobuf
+git checkout v4.22.0
+git submodule update --init
+mkdir build_source && cd build_source
+cmake ../cmake -DCMAKE_INSTALL_PREFIX=`pwd`/installed_protobuf_lib -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+make -j
+make install
+export PATH=`pwd`/installed_protobuf_lib/bin:${PATH}
 
 # Build Paddle2ONNX wheels
 $PYTHON_COMMAND -m build --wheel || { echo "Building wheels failed."; exit 1; }

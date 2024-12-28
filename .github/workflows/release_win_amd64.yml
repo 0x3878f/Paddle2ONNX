@@ -22,17 +22,29 @@ jobs:
         with:
           submodules: true
 
-      # Download and extract protobuf
-      - name: Download and extract protobuf
+      # Clone protobuf repository and checkout to v4.22.0
+      - name: Clone protobuf
         run: |
-          curl -L -o protobuf.zip https://bj.bcebos.com/fastdeploy/third_libs/protobuf-win-x64-3.16.0.zip
-          powershell -Command "Expand-Archive -Path protobuf.zip -DestinationPath $PWD/protobuf"
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v4.22.0
+
+      # Build and install protobuf
+      - name: Build and install protobuf
+        run: |
+          cd protobuf
+          git submodule update --init --recursive
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 16 2019"  -DCMAKE_INSTALL_PREFIX=../protobuf_install -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_EXAMPLES=OFF ..
+          cmake --build . --config Release --target INSTALL
 
       # Setup Python
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
+
       # Install Python dependencies
       - name: Install Python dependencies
         run: |
@@ -41,7 +53,7 @@ jobs:
 
       - name: Build package
         run: |
-          $Env:PATH = "${{ github.workspace }}\protobuf\bin;" + $Env:PATH
+          $Env:PATH = "${{ github.workspace }}\protobuf\protobuf_install\bin;" + $Env:PATH
           python -m build --wheel
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32

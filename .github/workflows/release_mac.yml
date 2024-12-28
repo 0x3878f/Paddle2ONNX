@@ -38,10 +38,23 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Download protobuf
-      - name: Download protobuf
+      # Clone protobuf repository and checkout to v4.22.0
+      - name: Clone protobuf
         run: |
-          source .github/workflows/scripts/download_protobuf.sh
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v4.22.0
+
+      # Build and install protobuf
+      - name: Build and install protobuf
+        run: |
+          cd protobuf
+          git submodule update --init --recursive
+          mkdir build
+          cd build
+          cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
+          make -j
+          make install
 
       # Install Python dependencies
       - name: Install Python dependencies

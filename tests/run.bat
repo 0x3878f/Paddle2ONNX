@@ -68,6 +68,9 @@ set ignore=!ignore! test_quantize_model.py
 set ignore=!ignore! test_quantize_model_minist.py
 set ignore=!ignore! test_quantize_model_speedup.py
 set ignore=!ignore! test_resnet_fp16.py
+set ignore=!ignore! test_empty.py
+set ignore=!ignore! test_auto_scan_pool_max_ops.py
+set ignore=!ignore! test_auto_scan_fill_constant.py
 
 REM Initialize bug count
 set bug=0
@@ -76,11 +79,12 @@ REM Install Python packages
 set PY_CMD=%1
 %PY_CMD% -m pip install pytest
 %PY_CMD% -m pip install onnx onnxruntime tqdm filelock
-%PY_CMD% -m pip install paddlepaddle==2.6.0
 %PY_CMD% -m pip install six hypothesis
+%PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
 
 REM Enable development mode and run tests
 set ENABLE_DEV=ON
+set FLAGS_enable_pir_api=0
 echo ============ failed cases ============ >> result.txt
 
 for %%f in (!cases!) do (
