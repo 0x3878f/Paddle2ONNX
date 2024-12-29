@@ -138,6 +138,12 @@ class cmake_build(setuptools.Command):
                 else:
                     cmake_args.extend(["-A", "Win32", "-T", "host=x86"])
                 cmake_args.extend(["-G", "Visual Studio 16 2019"])
+            else:
+                cmake_args.append(
+                    "-DPYTHON_LIBRARY={}".format(
+                        sysconfig.get_python_lib(standard_lib=True)
+                    )
+                )
             if "CMAKE_ARGS" in os.environ:
                 extra_cmake_args = shlex.split(os.environ["CMAKE_ARGS"])
                 # prevent crossfire with downstream scripts

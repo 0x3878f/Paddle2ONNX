@@ -61,20 +61,25 @@ export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu
 # Build Paddle2ONNX wheels
 $PYTHON_COMMAND -m build --wheel || { echo "Building wheels failed."; exit 1; }
 
-# Bundle external shared libraries into the wheels
-# find -exec does not preserve failed exit codes, so use an output file for failures
-failed_wheels=$PWD/failed-wheels
-rm -f "$failed_wheels"
-find . -type f -iname "*-linux*.whl" -exec sh -c "auditwheel repair '{}' -w \$(dirname '{}') --plat '${PLAT}' || { echo 'Repairing wheels failed.'; auditwheel show '{}' >> '$failed_wheels'; }" \;
+#  ============================================================================
+#   Due to libpaddle’s limitations, it can only maintain a restricted platform tag of ‘linux_x86_64’.
+#  ============================================================================
+# export LD_LIBRARY_PATH=/opt/python/${PY_VER}/lib/python${PY_VERSION}/site-packages/paddle/base/:$LD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=/opt/python/${PY_VER}/lib/python${PY_VERSION}/site-packages/paddle/libs/:$LD_LIBRARY_PATH
+# # Bundle external shared libraries into the wheels
+# # find -exec does not preserve failed exit codes, so use an output file for failures
+# failed_wheels=$PWD/failed-wheels
+# rm -f "$failed_wheels"
+# find . -type f -iname "*-linux*.whl" -exec sh -c "auditwheel repair '{}' -w \$(dirname '{}') --plat '${PLAT}' || { echo 'Repairing wheels failed.'; auditwheel show '{}' >> '$failed_wheels'; }" \;
 
-if [[ -f "$failed_wheels" ]]; then
-    echo "Repairing wheels failed:"
-    cat failed-wheels
-    exit 1
-fi
+# if [[ -f "$failed_wheels" ]]; then
+#     echo "Repairing wheels failed:"
+#     cat failed-wheels
+#     exit 1
+# fi
 
-# Remove useless *-linux*.whl; only keep manylinux*.whl
-rm -f dist/*-linux*.whl
+# # Remove useless *-linux*.whl; only keep manylinux*.whl
+# rm -f dist/*-linux*.whl
 
 echo "Successfully build wheels:"
-find . -type f -iname "*manylinux*.whl"
+# find . -type f -iname "*manylinux*.whl" # uncomment this line when libpaddle supports manylinux2014
