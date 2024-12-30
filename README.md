@@ -8,9 +8,9 @@ Paddle2ONNX 支持将 **PaddlePaddle** 模型格式转化到 **ONNX** 模型格�
 
 ## 2 Paddle2ONNX 环境依赖
 
-Paddle2ONNX 本身不依赖其他组件，但是我们建议您在以下环境下使用 Paddle2ONNX ：
+Paddle2ONNX 依赖PaddlePaddle3.0，我们建议您在以下环境下使用 Paddle2ONNX ：
 
-- PaddlePaddle == 2.6.0
+- PaddlePaddle == 3.0.0b2
 - onnxruntime >= 1.10.0
 
 ## 3 安装 Paddle2ONNX
@@ -29,7 +29,7 @@ pip install paddle2onnx
 
 Paddle2ONNX 在导出模型时，需要传入部署模型格式，包括两个文件
 
-- `model_name.pdmodel`: 表示模型结构
+- `model_name.json`: 表示模型结构
 - `model_name.pdiparams`: 表示模型参数
 
 ### 4.2 调整Paddle模型
@@ -42,8 +42,8 @@ Paddle2ONNX 在导出模型时，需要传入部署模型格式，包括两个�
 
 ```bash
 paddle2onnx --model_dir model_dir \
-            --model_filename inference.pdmodel \
-            --params_filename inference.pdiparams \
+            --model_filename model.json \
+            --params_filename model.pdiparams \
             --save_file model.onnx
 ```
 
@@ -55,7 +55,7 @@ paddle2onnx --model_dir model_dir \
 | --model_filename           | **[可选]** 配置位于 `--model_dir` 下存储网络结构的文件名                                                                         |
 | --params_filename          | **[可选]** 配置位于 `--model_dir` 下存储模型参数的文件名称                                                                        |
 | --save_file                | 指定转换后的模型保存目录路径                                                                                                  |
-| --opset_version            | **[可选]** 配置转换为 ONNX 的 OpSet 版本，目前支持 7~16 等多个版本，默认为 9                                                            |
+| --opset_version            | **[可选]** 配置转换为 ONNX 的 OpSet 版本，目前支持 7~19 等多个版本，默认为 9                                                            |
 | --enable_onnx_checker      | **[可选]**  配置是否检查导出为 ONNX 模型的正确性, 建议打开此开关， 默认为 True                                                             |
 | --enable_auto_update_opset | **[可选]**  是否开启 opset version 自动升级功能，当低版本 opset 无法转换时，自动选择更高版本的 opset进行转换， 默认为 True                              |
 | --deploy_backend           | **[可选]** 量化模型部署的推理引擎，支持 onnxruntime/rknn/tensorrt, 默认为 onnxruntime |

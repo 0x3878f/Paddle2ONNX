@@ -92,9 +92,9 @@ namespace paddle2onnx {
 
 class RollMapper : public Mapper {
  public:
-  RollMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-             int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {}
+  RollMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t op_id,
+             bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {}
   void Opset7() override;
 };
 
@@ -102,18 +102,18 @@ class RollMapper : public Mapper {
 ```
 
 > 注：
-> * Paddle2ONNX 需要实现 Opset version 7～16，如果实现的 OP 不是从 Opset version 7 开始，或者由于 Paddle OP 中的某些属性导致无法导出为ONNX，则需要重写基类中的 GetMinOpsetVersion 函数，该函数返回 -1 表示该 OP 无法导出为 ONNX，否则表示导出该 OP 所需的最小 Opset version
-> * OpsetX 函数表示 opset version 为 x 时的转换实现函数，如果定义了 Opset7 和 Opset10 两个转换方法，意味着用户指定转出 opset version 7～9 时，使用 Opset7 中的转换逻辑实现转换，用户指定 opset version 10～16 时，使用 Opset10 中的转换逻辑实现转换
+> * Paddle2ONNX 需要实现 Opset version 7～19，如果实现的 OP 不是从 Opset version 7 开始，或者由于 Paddle OP 中的某些属性导致无法导出为ONNX，则需要重写基类中的 GetMinOpsetVersion 函数，该函数返回 -1 表示该 OP 无法导出为 ONNX，否则表示导出该 OP 所需的最小 Opset version
+> * OpsetX 函数表示 opset version 为 x 时的转换实现函数，如果定义了 Opset7 和 Opset10 两个转换方法，意味着用户指定转出 opset version 7～9 时，使用 Opset7 中的转换逻辑实现转换，用户指定 opset version 10～19 时，使用 Opset10 中的转换逻辑实现转换
 
 
-然后我们在 roll.cc 中添加实现。首先我们需要使用 **REGISTER_MAPPER** 宏来注册算子，第一个参数填写我们获取到的算子名称（这里是 roll ），第二个参数填写转换类的名称（这里是 RollMapper ）
+然后我们在 roll.cc 中添加实现。首先我们需要使用 **REGISTER_PIR_MAPPER** 宏来注册算子，第一个参数填写我们获取到的算子名称（这里是 roll ），第二个参数填写转换类的名称（这里是 RollMapper ）
 
 ```c++
 #include <limits>
 #include "paddle2onnx/mapper/tensor/roll.h"
 
 namespace paddle2onnx {
-REGISTER_MAPPER(roll, RollMapper)
+REGISTER_PIR_MAPPER(roll, RollMapper)
 }
 ```
 
@@ -354,10 +354,10 @@ Paddle2ONNX 已经实现了大量 OP 的单测，可以参考 Paddle2ONNX/test/*
  1. 进入[Paddle2ONNX 官方 Repo](https://github.com/PaddlePaddle/Paddle2ONNX)，点击右上角的 Star 关注 Repo 的最新动向，然后点击 Fork 将代码克隆到自己的代码库中。
  2. 返回自己的主页，使用 git clone 将 Fork 的代码克隆到本地，然后在克隆代码的根目录下运行 pre-commit install 安装 pre-commit 钩子，以在提交代码时完成代码风格的检查。
  3. 按照要求进行开发，开发中请依次完成 OP 转换和单测，并多写英文注释，便于代码更容易让人理解。
- 4. 开发完成后将本地修改 git commit 到本地仓库，然后 git push origin XXX 到远端仓库，此时回到 github 中 Fork 的 Repo 可以看到为如下提示：
- ![图片](https://user-images.githubusercontent.com/30516196/231718803-d2b3c940-144e-44e3-8b2b-ae93cc01f8f2.png)
- 点击 compare&pull request 按钮，然后出现如下界面，这里需要写言简意赅的标题和详细的修改内容。认真填写完成之后点击 creat pull request 完成 PR。
- ![图片](https://user-images.githubusercontent.com/30516196/231719191-7fcf812a-e0b4-4db0-b66e-fade3e5be5bc.png)
+ 4. 开发完成后将本地修改 git commit 到本地仓库，然后 git push origin XXX 到远端仓库，此时回到 github 中 Fork 的 Repo
+ 点击 compare&pull request 按钮，这里需要写言简意赅的标题和详细的修改内容。认真填写完成之后点击 creat pull request 完成 PR。
  5. 进入到 Paddle2ONNX 的官方 Repo 可以在[Pull Request](https://github.com/PaddlePaddle/Paddle2ONNX/pulls) 中可以看到提交的 PR，PR 中有 CI 测试，如果 CI 测试没有通过，请点击没有通过 CI 后的 Details 查看详情并修改，通过 CI 之后会有专人进行 code review 和 merge。
-![图片](https://user-images.githubusercontent.com/30516196/231719335-d61c433f-70f3-4cc1-b7f5-29f2bab7e69a.png)
- 6. 更详细的资料请参考[Paddle 的 PR 指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/10_contribution/submit_pr_guide_cn.html)
+ 6. 更详细的资料请参考[Paddle 的 PR 指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/10_contribution/submit_pr_guide_cn.html)。
+
+ ## 5 其它参考资料
+ * [Paddle2ONNX 算子完善参考](https://github.com/PaddlePaddle/Paddle2ONNX/issues/1399)
