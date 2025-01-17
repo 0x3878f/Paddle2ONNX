@@ -110,9 +110,6 @@ class cmake_build(setuptools.Command):
             cmake_args = [
                 CMAKE,
                 "-DPYTHON_INCLUDE_DIR={}".format(sysconfig.get_python_inc()),
-                "-DPYTHON_LIBRARY={}".format(
-                    sysconfig.get_python_lib(standard_lib=True)
-                ),
                 "-DPYTHON_EXECUTABLE={}".format(sys.executable),
                 "-DBUILD_PADDLE2ONNX_PYTHON=ON",
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
