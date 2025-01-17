@@ -18,39 +18,13 @@ jobs:
         architecture: [ 'x64' ]
 
     steps:
-      # Checkout the latest branch of Paddle2ONNX.
-      - name: Checkout Paddle2ONNX
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Build on manylinux2014_x86_64
-        uses: docker://quay.io/pypa/manylinux2014_x86_64:latest
-        with:
-          entrypoint: bash
-          args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }} manylinux2014_x86_64 CentOS
-
-      - name: Setup Python 3.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.8'
-
-      # Install Paddle2ONNX
-      - name: Install Paddle2ONNX
-        run: |
-          python -m pip install dist/*.whl
-
-      # Install Test
-      - name: Run Test
-        working-directory: ./tests
-        run: |
-          bash run.sh python
+      - <<: *common-steps
 
   build_on_windows:
     runs-on: windows-2019
     strategy:
       matrix:
-        python-version: [ '3.8' ]
+        python-version: [ '3.10' ]
         architecture: [ 'x64' ]
 
     steps:
@@ -60,12 +34,12 @@ jobs:
         with:
           submodules: true
 
-      # Clone protobuf repository and checkout to v4.22.0
+      # Clone protobuf repository and checkout to v21.12
       - name: Clone protobuf
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
-          git checkout v4.22.0
+          git checkout v21.12
 
       # Build and install protobuf
       - name: Build and install protobuf
@@ -116,57 +90,59 @@ jobs:
       matrix:
         python-version: [ '3.8']
         architecture: [ 'arm64' ]
+      steps:
+        - <<: *common-steps
 
-    steps:
-      # Checkout the latest branch of Paddle2ONNX.
-      - name: Checkout Paddle2ONNX
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+  common-steps: &common-steps
+    # Checkout the latest branch of Paddle2ONNX.
+    - name: Checkout Paddle2ONNX
+      uses: actions/checkout@v4
+      with:
+        submodules: true
 
-      # Setup Python
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+    # Setup Python
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      # Clone protobuf repository and checkout to v4.22.0
-      - name: Clone protobuf
-        run: |
-          git clone https://github.com/protocolbuffers/protobuf.git
-          cd protobuf
-          git checkout v4.22.0
+    # Clone protobuf repository and checkout to v21.12
+    - name: Clone protobuf
+      run: |
+        git clone https://github.com/protocolbuffers/protobuf.git
+        cd protobuf
+        git checkout v21.12
 
-      # Build and install protobuf
-      - name: Build and install protobuf
-        run: |
-          cd protobuf
-          git submodule update --init --recursive
-          mkdir build
-          cd build
-          cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
-          cmake --build . --target install
+    # Build and install protobuf
+    - name: Build and install protobuf
+      run: |
+        cd protobuf
+        git submodule update --init --recursive
+        mkdir build
+        cd build
+        cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
+        cmake --build . --target install
 
-      # Install Python dependencies
-      - name: Install Python dependencies
-        run: |
-          python -m pip install -q --upgrade pip
-          python -m pip install setuptools wheel build
+    # Install Python dependencies
+    - name: Install Python dependencies
+      run: |
+        python -m pip install -q --upgrade pip
+        python -m pip install setuptools wheel build
 
-      # Build package
-      - name: Build package
-        run: |
-          export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
-          export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
-          python -m build --wheel
+    # Build package
+    - name: Build package
+      run: |
+        export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
+        export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
+        python -m build --wheel
 
-      # Install Paddle2ONNX
-      - name: Install Paddle2ONNX
-        run: |
-          python -m pip install dist/*.whl
+    # Install Paddle2ONNX
+    - name: Install Paddle2ONNX
+      run: |
+        python -m pip install dist/*.whl
 
-      # Install Test
-      - name: Run Test
-        working-directory: ./tests
-        run: |
-          bash run.sh python
+    # Install Test
+    - name: Run Test
+      working-directory: ./tests
+      run: |
+        bash run.sh python

@@ -26,24 +26,18 @@ jobs:
         with:
           submodules: true
 
-      # Checkout the latest branch of Paddle2ONNX.
-      - name: Checkout Paddle2ONNX
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
       # Setup Python
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Clone protobuf repository and checkout to v4.22.0
+      # Clone protobuf repository and checkout to v21.12
       - name: Clone protobuf
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
-          git checkout v4.22.0
+          git checkout v21.12
 
       # Build and install protobuf
       - name: Build and install protobuf

@@ -80,7 +80,8 @@ set PY_CMD=%1
 %PY_CMD% -m pip install pytest
 %PY_CMD% -m pip install onnx onnxruntime tqdm filelock
 %PY_CMD% -m pip install six hypothesis
-%PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
+REM %PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
+%PY_CMD% -m pip install https://paddle2onnx.bj.bcebos.com/paddle_windows/paddlepaddle_gpu-0.0.0-cp310-cp310-win_amd64.wh
 
 REM Enable development mode and run tests
 set ENABLE_DEV=ON

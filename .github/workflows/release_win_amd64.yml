@@ -12,7 +12,8 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
+        # python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.10']
         architecture: [ 'x64' ]
 
     steps:
@@ -22,12 +23,12 @@ jobs:
         with:
           submodules: true
 
-      # Clone protobuf repository and checkout to v4.22.0
+      # Clone protobuf repository and checkout to v21.12
       - name: Clone protobuf
         run: |
           git clone https://github.com/protocolbuffers/protobuf.git
           cd protobuf
-          git checkout v4.22.0
+          git checkout v21.12
 
       # Build and install protobuf
       - name: Build and install protobuf
