@@ -25,7 +25,7 @@ jobs:
       # setting up qemu for enabling aarch64 binary execution on x86 machine
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
 
-      - name: Build on manylinux2014_aarch64
+      - name: Build on manylinux_2_28_aarch64
         uses: docker://quay.io/pypa/manylinux_2_28_aarch64
         with:
           entrypoint: bash

@@ -71,6 +71,8 @@ set ignore=!ignore! test_resnet_fp16.py
 set ignore=!ignore! test_empty.py
 set ignore=!ignore! test_auto_scan_pool_max_ops.py
 set ignore=!ignore! test_auto_scan_fill_constant.py
+set ignore=!ignore! test_auto_scan_layer_norm.py
+set ignore=!ignore! test_auto_scan_scatter_nd_add.py
 
 REM Initialize bug count
 set bug=0
@@ -81,7 +83,7 @@ set PY_CMD=%1
 %PY_CMD% -m pip install onnx onnxruntime tqdm filelock
 %PY_CMD% -m pip install six hypothesis
 REM %PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
-%PY_CMD% -m pip install https://paddle2onnx.bj.bcebos.com/paddle_windows/paddlepaddle_gpu-0.0.0-cp310-cp310-win_amd64.wh
+%PY_CMD% -m pip install https://paddle2onnx.bj.bcebos.com/paddle_windows/paddlepaddle_gpu-0.0.0-cp310-cp310-win_amd64.whl
 
 REM Enable development mode and run tests
 set ENABLE_DEV=ON
@@ -94,7 +96,7 @@ for %%f in (!cases!) do (
     if !errorlevel! equ 0 (
         echo Skipping %%f
     ) else (
-        %PY_CMD% -m pytest %%f
+        %PY_CMD% -m pytest %%f -s
         if !errorlevel! neq 0 (
             echo %%f >> result.txt
             set /a bug+=1

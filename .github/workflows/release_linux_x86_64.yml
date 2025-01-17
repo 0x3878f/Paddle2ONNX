@@ -22,7 +22,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Build on manylinux2014_x86_64
+      - name: Build on manylinux_2_28_x86_64
         uses: docker://quay.io/pypa/manylinux_2_28_x86_64:latest
         with:
           entrypoint: bash
