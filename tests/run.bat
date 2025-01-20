@@ -73,6 +73,13 @@ set ignore=!ignore! test_auto_scan_pool_max_ops.py
 set ignore=!ignore! test_auto_scan_fill_constant.py
 set ignore=!ignore! test_auto_scan_layer_norm.py
 set ignore=!ignore! test_auto_scan_scatter_nd_add.py
+REM uncomment below tests when using not paddlepaddle-gpu
+set ignore=!ignore! test_auto_scan_assign.py
+set ignore=!ignore! test_auto_scan_scatter_nd_add.py
+set ignore=!ignore! test_auto_scan_conv2d.py
+set ignore=!ignore! test_auto_scan_conv2d_transpose.py
+set ignore=!ignore! test_auto_scan_conv3d.py
+set ignore=!ignore! test_auto_scan_grid_sampler.py
 
 REM Initialize bug count
 set bug=0
