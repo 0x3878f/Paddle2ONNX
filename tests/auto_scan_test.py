@@ -163,7 +163,7 @@ class OPConvertAutoScanTest(unittest.TestCase):
         opset_version = config["opset_version"]
         input_specs = config["input_spec_shape"]
 
-        use_gpu = True
+        use_gpu = False
         if "use_gpu" in config.keys():
             use_gpu = config["use_gpu"]
 

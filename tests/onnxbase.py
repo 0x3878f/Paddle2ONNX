@@ -203,7 +203,7 @@ class APIOnnx(object):
         input_spec_shape=[],
         delta=1e-5,
         rtol=1e-5,
-        use_gpu=True,
+        use_gpu=False,
         **sup_params,
     ):
         self.ops = ops
