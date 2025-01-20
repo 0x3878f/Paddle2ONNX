@@ -22,11 +22,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Build on manylinux2014_x86_64
-        uses: docker://quay.io/pypa/manylinux2014_x86_64:latest
+      - name: Build on manylinux_2_28_x86_64
+        uses: docker://quay.io/pypa/manylinux_2_28_x86_64:latest
         with:
           entrypoint: bash
-          args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }} manylinux2014_x86_64 CentOS
+          args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }}
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
         with:

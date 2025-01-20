@@ -71,6 +71,7 @@ export PY_CMD=$1
 $PY_CMD -m pip install pytest
 $PY_CMD -m pip install onnx onnxruntime tqdm filelock
 $PY_CMD -m pip install six hypothesis
+$PY_CMD -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
 
 export ENABLE_DEV=ON
 echo "============ failed cases =============" >> result.txt

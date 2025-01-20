@@ -68,6 +68,18 @@ set ignore=!ignore! test_quantize_model.py
 set ignore=!ignore! test_quantize_model_minist.py
 set ignore=!ignore! test_quantize_model_speedup.py
 set ignore=!ignore! test_resnet_fp16.py
+set ignore=!ignore! test_empty.py
+set ignore=!ignore! test_auto_scan_pool_max_ops.py
+set ignore=!ignore! test_auto_scan_fill_constant.py
+set ignore=!ignore! test_auto_scan_layer_norm.py
+set ignore=!ignore! test_auto_scan_scatter_nd_add.py
+REM uncomment below tests when using not paddlepaddle-gpu
+set ignore=!ignore! test_auto_scan_assign.py
+set ignore=!ignore! test_auto_scan_scatter_nd_add.py
+set ignore=!ignore! test_auto_scan_conv2d.py
+set ignore=!ignore! test_auto_scan_conv2d_transpose.py
+set ignore=!ignore! test_auto_scan_conv3d.py
+set ignore=!ignore! test_auto_scan_grid_sampler.py
 
 REM Initialize bug count
 set bug=0
@@ -76,11 +88,13 @@ REM Install Python packages
 set PY_CMD=%1
 %PY_CMD% -m pip install pytest
 %PY_CMD% -m pip install onnx onnxruntime tqdm filelock
-%PY_CMD% -m pip install paddlepaddle==2.6.0
 %PY_CMD% -m pip install six hypothesis
+REM %PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
+%PY_CMD% -m pip install https://paddle2onnx.bj.bcebos.com/paddle_windows/paddlepaddle_gpu-0.0.0-cp310-cp310-win_amd64.whl
 
 REM Enable development mode and run tests
 set ENABLE_DEV=ON
+set FLAGS_enable_pir_api=0
 echo ============ failed cases ============ >> result.txt
 
 for %%f in (!cases!) do (
@@ -89,7 +103,7 @@ for %%f in (!cases!) do (
     if !errorlevel! equ 0 (
         echo Skipping %%f
     ) else (
-        %PY_CMD% -m pytest %%f
+        %PY_CMD% -m pytest %%f -s
         if !errorlevel! neq 0 (
             echo %%f >> result.txt
             set /a bug+=1

@@ -26,22 +26,28 @@ jobs:
         with:
           submodules: true
 
-      # Checkout the latest branch of Paddle2ONNX.
-      - name: Checkout Paddle2ONNX
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
       # Setup Python
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Download protobuf
-      - name: Download protobuf
+      # Clone protobuf repository and checkout to v21.12
+      - name: Clone protobuf
         run: |
-          source .github/workflows/scripts/download_protobuf.sh
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v21.12
+
+      # Build and install protobuf
+      - name: Build and install protobuf
+        run: |
+          cd protobuf
+          git submodule update --init --recursive
+          mkdir build
+          cd build
+          cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
+          cmake --build . --target install
 
       # Install Python dependencies
       - name: Install Python dependencies
@@ -53,6 +59,7 @@ jobs:
       - name: Build package
         run: |
           export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
+          export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
           python -m build --wheel
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32

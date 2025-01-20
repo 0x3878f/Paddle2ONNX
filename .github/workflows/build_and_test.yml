@@ -2,9 +2,9 @@ name: Build and Test
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "test_pir" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "test_pir" ]
 
 permissions:
   contents: read
@@ -15,8 +15,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.8']
-        architecture: [ 'x64' ]
-
+        architecture: [ 'x86_64']
     steps:
       # Checkout the latest branch of Paddle2ONNX.
       - name: Checkout Paddle2ONNX
@@ -24,11 +23,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Build on manylinux2014_x86_64
-        uses: docker://quay.io/pypa/manylinux2014_x86_64:latest
+      - name: Build on manylinux_2_28_x86_64
+        uses: docker://quay.io/pypa/manylinux_2_28_x86_64:latest
         with:
           entrypoint: bash
-          args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }} manylinux2014_x86_64 CentOS
+          args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }}
 
       - name: Setup Python 3.8
         uses: actions/setup-python@v5
@@ -50,49 +49,62 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        python-version: [ '3.8' ]
+        python-version: [ '3.10' ]
         architecture: [ 'x64' ]
 
     steps:
-    # Checkout the latest branch of Paddle2ONNX.
-    - name: Checkout Paddle2ONNX
-      uses: actions/checkout@v4
-      with:
-        submodules: true
+      # Checkout the latest branch of Paddle2ONNX.
+      - name: Checkout Paddle2ONNX
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    # Download and extract protobuf
-    - name: Download and extract protobuf
-      run: |
-        curl -L -o protobuf.zip https://bj.bcebos.com/fastdeploy/third_libs/protobuf-win-x64-3.16.0.zip
-        powershell -Command "Expand-Archive -Path protobuf.zip -DestinationPath $PWD/protobuf"
+      # Clone protobuf repository and checkout to v21.12
+      - name: Clone protobuf
+        run: |
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v21.12
 
-    # Setup Python
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    # Install Python dependencies
-    - name: Install Python dependencies
-      run: |
-        python -m pip install -q --upgrade pip
-        python -m pip install setuptools wheel auditwheel auditwheel-symbols build
+      # Build and install protobuf
+      - name: Build and install protobuf
+        run: |
+          cd protobuf
+          git submodule update --init --recursive
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 16 2019"  -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}\protobuf\protobuf_install\ -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_EXAMPLES=OFF ..
+          cmake --build . --config Release --target install
 
-    # Build package
-    - name: Build package
-      run: |
-        $Env:PATH = "${{ github.workspace }}\protobuf\bin;" + $Env:PATH
-        python -m build --wheel
+      # Setup Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    # Install Paddle2ONNX
-    - name: Install Paddle2ONNX
-      run: |
-        Get-ChildItem -Path dist/*.whl | foreach {python -m pip install --upgrade $_.fullname}
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install setuptools wheel auditwheel auditwheel-symbols build
 
-    # Install Test
-    - name: Run Test
-      working-directory: ./tests
-      run: |
-        .\run.bat python
+      # Build package
+      - name: Build package
+        run: |
+          $Env:PATH = "${{ github.workspace }}\protobuf\protobuf_install\bin;" + $Env:PATH
+          $Env:PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
+          python -m build --wheel
+
+      # Install Paddle2ONNX
+      - name: Install Paddle2ONNX
+        run: |
+          Get-ChildItem -Path dist/*.whl | foreach {python -m pip install --upgrade $_.fullname}
+
+      # Install Test
+      - name: Run Test
+        working-directory: ./tests
+        run: |
+          .\run.bat python
 
   build_on_macos:
     # Use MACOSX_DEPLOYMENT_TARGET=12.0 to produce compatible wheel
@@ -103,7 +115,6 @@ jobs:
       matrix:
         python-version: [ '3.8']
         architecture: [ 'arm64' ]
-
     steps:
       # Checkout the latest branch of Paddle2ONNX.
       - name: Checkout Paddle2ONNX
@@ -117,10 +128,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Download protobuf
-      - name: Download protobuf
+      # Clone protobuf repository and checkout to v21.12
+      - name: Clone protobuf
         run: |
-          source .github/workflows/scripts/download_protobuf.sh
+          git clone https://github.com/protocolbuffers/protobuf.git
+          cd protobuf
+          git checkout v21.12
+
+      # Build and install protobuf
+      - name: Build and install protobuf
+        run: |
+          cd protobuf
+          git submodule update --init --recursive
+          mkdir build
+          cd build
+          cmake ../cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/installed_protobuf -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
+          cmake --build . --target install
 
       # Install Python dependencies
       - name: Install Python dependencies
@@ -132,6 +155,7 @@ jobs:
       - name: Build package
         run: |
           export PATH="${{ github.workspace }}/installed_protobuf/bin:$PATH"
+          export PIP_EXTRA_INDEX_URL="https://www.paddlepaddle.org.cn/packages/nightly/cpu/"
           python -m build --wheel
 
       # Install Paddle2ONNX
