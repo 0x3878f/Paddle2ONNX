@@ -138,7 +138,7 @@ void NMSMapper::KeepTopK(const std::string& selected_indices) {
     AddAttribute(ensemble_value, "axis", int64_t(0));
 
     std::shared_ptr<ONNX_NAMESPACE::NodeProto> new_top_k;
-    if (OnnxHelper::GetOpsetVersion() > 13) {
+    if (OnnxHelper::GetOpsetVersion() >= 18) {
       std::string reduce_min_axis = helper_->Constant(
           {1}, ONNX_NAMESPACE::TensorProto::INT64, static_cast<int64_t>(0));
       new_top_k = helper_->MakeNode(
