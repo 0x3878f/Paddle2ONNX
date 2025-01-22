@@ -53,6 +53,9 @@ void LinspaceMapper::Opset9() {
   std::string range_tensor = helper_->AutoCast(
       num_info[0].name, num_info[0].dtype, P2ODataType::INT64);
 
+  if(num_info[0].Rank() == 0) {
+    range_tensor = helper_->Unsqueeze(range_tensor, std::vector<int64_t>(1, 0));
+  }
   std::string one_like_node = helper_->ConstOfShape(
       range_tensor, GetOnnxDtype(P2ODataType::FP32), static_cast<float>(1));
 
