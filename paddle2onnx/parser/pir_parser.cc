@@ -872,7 +872,6 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
           "Cannot found attribute %s in op %s", name, op->name()));
 }
 
-
 std::vector<TensorInfo> PaddlePirParser::GetOpInput(
     int64_t op_id, int64_t input_idx, bool if_in_sub_block) const {
   PADDLE_ENFORCE_GT(input_idx,
@@ -977,7 +976,9 @@ P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
   // old IR, where P2ODataType is stored in TensorInfo.dtype. In the mapper,
   // GetOnnxDtype is called to obtain TensorProto_DataType in ONNX.
   // Add more type mappings if necessary.
-  if (dtype == phi::DataType::BOOL) {
+  if (dtype == phi::DataType::UNDEFINED) {
+    return P2ODataType::UNDEFINED;
+  } else if (dtype == phi::DataType::BOOL) {
     return P2ODataType::BOOL;
   } else if (dtype == phi::DataType::UINT8) {
     return P2ODataType::UINT8;

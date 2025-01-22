@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle2onnx/parser/tensor_utils.h"
+#include "paddle2onnx/proto/p2o_paddle.pb.h"
 #include "paddle2onnx/utils/utils.h"
 
 namespace paddle2onnx {
@@ -33,23 +34,27 @@ TensorInfo::TensorInfo(const TensorInfo &info) {
 }
 
 int32_t PaddleDataTypeSize(int32_t paddle_dtype) {
-  if (paddle_dtype == P2ODataType::BOOL) {
+  if (paddle_dtype == paddle2onnx::framework::proto::VarType_Type_BOOL) {
     return sizeof(bool);
-  } else if (paddle_dtype == P2ODataType::INT8) {
+  } else if (paddle_dtype == paddle2onnx::framework::proto::VarType_Type_INT8) {
     return sizeof(int8_t);
-  } else if (paddle_dtype == P2ODataType::INT16) {
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_INT16) {
     return sizeof(int16_t);
-  } else if (paddle_dtype == P2ODataType::INT32) {
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_INT32) {
     return sizeof(int32_t);
-  } else if (paddle_dtype == P2ODataType::INT64) {
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_INT64) {
     return sizeof(int64_t);
-  } else if (paddle_dtype == P2ODataType::FP32) {
+  } else if (paddle_dtype == paddle2onnx::framework::proto::VarType_Type_FP32) {
     return sizeof(float);
-  } else if (paddle_dtype == P2ODataType::FP16) {
+  } else if (paddle_dtype == paddle2onnx::framework::proto::VarType_Type_FP16) {
     return sizeof(int16_t);
-  } else if (paddle_dtype == P2ODataType::FP64) {
+  } else if (paddle_dtype == paddle2onnx::framework::proto::VarType_Type_FP64) {
     return sizeof(double);
-  } else if (paddle_dtype == P2ODataType::UINT8) {
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_UINT8) {
     return sizeof(uint8_t);
   } else {
     Assert(false, "Unexpected data type: " + std::to_string(paddle_dtype));
