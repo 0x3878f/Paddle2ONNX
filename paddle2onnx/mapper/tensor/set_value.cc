@@ -44,10 +44,10 @@ int32_t SetValueMapper::GetMinOpsetVersion(bool verbose) {
             << std::endl;
     return -1;
   }
-  return 12;
+  return 17;
 }
 
-void SetValueMapper::Opset12() {
+void SetValueMapper::Opset17() {
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Out");
   std::string starts = "";

@@ -38,7 +38,7 @@ class Net(BaseNet):
 class TestSetValueConvert(OPConvertAutoScanTest):
     """
     api: set_value
-    OPset version: 12, 13, 15
+    OPset version: 17, 19
     """
 
     def sample_convert_config(self, draw):
@@ -54,7 +54,7 @@ class TestSetValueConvert(OPConvertAutoScanTest):
             "op_names": ["set_value"],
             "test_data_shapes": [input_shape, update_input_shape],
             "test_data_types": [[dtype], [dtype]],
-            "opset_version": [12, 13, 14, 15],
+            "opset_version": [17, 19],
             "input_spec_shape": [],
         }
 

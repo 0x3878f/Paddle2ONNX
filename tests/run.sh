@@ -32,7 +32,6 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_masked_select.py \
         test_auto_scan_pad2d.py \
         test_auto_scan_roll.py \
-        test_auto_scan_set_value.py \
         test_auto_scan_unfold.py \
         test_auto_scan_uniform_random_batch_size_like.py \
         test_auto_scan_uniform_random.py \
