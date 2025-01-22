@@ -210,6 +210,9 @@ int32_t ModelExporter::GetCfBlockMinOpsetVersion(
       pir_parser.sub_blocks_ops.push_back(op);
     }
   }
+  // Must generate All sub_block's op output names must be generated here
+  // because it's may used in OPMapper.GetMinOpsetVersion function.
+  pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
   auto max_opset = GetMinOpsetVersion(pir_parser, &block, true);
   pir_parser.sub_blocks_ops.clear();
   pir_parser.sub_blocks_ops = sub_blocks_ops_copy;
@@ -223,18 +226,17 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser,
   std::set<std::string> verbose_log;
   OnnxHelper helper;
   std::vector<pir::Operation*> block_ops;
-  for (auto& op :
-       block->ops()) {  // it's  necessary to be same with global/sub_blocks_ops
-    if (op->name() == "builtin.parameter") {
-      continue;
+  // it's  necessary to be same with global/sub_blocks_ops
+  for (auto& op : block->ops()) {
+    if (op->name() != "builtin.parameter") {
+      block_ops.push_back(op);
     }
-    block_ops.push_back(op);
   }
   for (auto i = 0; i < block_ops.size(); ++i) {
     auto op = block_ops[i];
     std::string op_name = op->name();
     if (op_name == "pd_op.data" || op_name == "pd_op.fetch" ||
-        op_name == "pd_op.yeild") {
+        op_name == "cf.yield") {
       continue;
     }
     int current_opset = 7;
@@ -470,9 +472,10 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
       pir_parser.sub_blocks_ops.push_back(op);
     }
   }
-  pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
+  // generate sub-block op outputs names in GetMinOpSetVersion() function.
+  // pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
   if (!pir_parser.sub_blocks_ops.empty()) {
-    // get cf.yeild op input
+    // get cf.yield op input
     pir::Operation* cf_yield_op = pir_parser.sub_blocks_ops.back();
     // std::vector<std::string> sub_block_outpus;
     for (int32_t idx = 0; idx < cf_yield_op->num_operands(); ++idx) {
@@ -590,7 +593,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
       for (int32_t idx = 0; idx < outputs.size(); ++idx) {
         auto output_item = outputs[idx];
         if (output_item->name() == input_item->name()) {
-          output_item->set_name(pir_parser.GenOpInputOutputName("yeild"));
+          output_item->set_name(pir_parser.GenOpInputOutputName("yield"));
           temp_helper.MakeNode(
               "Identity", {input_item->name()}, {output_item->name()});
           outputs[idx] = std::move(output_item);

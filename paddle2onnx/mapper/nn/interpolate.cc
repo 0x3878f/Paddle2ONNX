@@ -132,7 +132,7 @@ void InterpolateMapper::Opset11() {
   }
   std::shared_ptr<ONNX_NAMESPACE::NodeProto> node;
   if (size != "") {
-    node = helper_->MakeNode("Resize", {x_info[0].name, roi, "", size},
+    node = helper_->MakeNode("Resize", {x_info[0].name, roi, scale, size},
                              {out_info[0].name});
   } else {
     node = helper_->MakeNode("Resize", {x_info[0].name, roi, scale},
