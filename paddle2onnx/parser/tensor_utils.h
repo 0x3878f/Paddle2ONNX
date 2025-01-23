@@ -26,7 +26,6 @@
 
 namespace paddle2onnx {
 enum P2ODataType {
-  UNDEFINED,
   BOOL,
   INT16,
   INT32,
@@ -34,6 +33,7 @@ enum P2ODataType {
   FP16,
   FP32,
   FP64,
+  UNDEFINED,
   X8,
   X9,
   X10,
