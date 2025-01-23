@@ -37,6 +37,8 @@ class PaddlePirParser {
   // recoring set of operators for sub block
   mutable std::vector<pir::Operation*>
       sub_blocks_ops;  // todo(wangmingkai02): delete sub_blocks_ops
+  // recoring set of operators for all blocks
+  std::set<pir::Operation*> total_blocks_ops;
   // recording args of while op body name info
   std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
       while_op_input_value_map;
@@ -270,6 +272,7 @@ class PaddlePirParser {
   bool LoadParams(const std::string& path);
   bool GetParamValueName(std::vector<std::string>* var_names);
   void GetGlobalBlocksOps();
+  void GetAllBlocksOpsSet(pir::Block *block);
   void GetGlobalBlockInputOutputInfo();
   void GetGlobalBlockInputValueName();
   void GetGlobalBlockOutputValueName();

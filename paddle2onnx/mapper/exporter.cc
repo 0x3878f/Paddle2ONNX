@@ -41,14 +41,12 @@ bool ModelExporter::IsOpsRegistered(const PaddlePirParser& pir_parser,
                                     bool enable_experimental_op) {
   OnnxHelper temp_helper;
   std::set<std::string> unsupported_ops;
-  for (auto op : pir_parser.global_blocks_ops) {
+  for (auto op : pir_parser.total_blocks_ops) {
     if (op->name() == "pd_op.data" || op->name() == "pd_op.fetch") {
       continue;
     }
-    if (op->name() == "pd_op.if") {
-      continue;
-    }
-    if (op->name() == "pd_op.while") {
+    if (op->name() == "pd_op.if" || op->name() == "pd_op.while" ||
+        op->name() == "cf.yield") {
       continue;
     }
     std::string op_name = convert_pir_op_name(op->name());
