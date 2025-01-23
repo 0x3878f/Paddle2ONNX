@@ -32,6 +32,7 @@
 #include "paddle/pir/include/core/builtin_op.h"
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
+#include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 
 phi::DataType TransToPhiDataType(pir::Type dtype) {
   if (dtype.isa<pir::BFloat16Type>()) {
@@ -206,6 +207,25 @@ void PaddlePirParser::GetOpArgNameMappings() {
     for (auto& attr : item.second) {
       for (auto& attr_item : attr.second) {
         _op_arg_name_mappings[op_name][attr_item] = attr.first;
+      }
+    }
+  }
+}
+
+void PaddlePirParser::GetAllBlocksOpsSet(pir::Block* block) {
+  for(auto &op : block->ops()) {
+    std::string op_name = op->name();
+    if(op_name != "builtin.parameter") {
+      total_blocks_ops.insert(op);
+      if(op_name == "pd_op.if") {
+        auto if_op = op->dyn_cast<paddle::dialect::IfOp>();
+        pir::Block& true_block = if_op.true_block();
+        GetAllBlocksOpsSet(&true_block);
+        pir::Block& false_block = if_op.false_block();
+        GetAllBlocksOpsSet(&false_block);
+      } else if(op_name == "pd_op.while") {
+        auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
+        GetAllBlocksOpsSet(&while_op.body());
       }
     }
   }
@@ -436,6 +456,7 @@ bool PaddlePirParser::Init(const std::string& _model,
   GetGlobalBlockInputOutputInfo();
   GetAllOpOutputName();
   GetOpArgNameMappings();
+  GetAllBlocksOpsSet(pir_program_->block());
   return true;
 }
 int PaddlePirParser::NumOfBlocks() const {
