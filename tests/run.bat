@@ -38,7 +38,6 @@ set ignore=!ignore! test_auto_scan_isx_ops.py
 set ignore=!ignore! test_auto_scan_masked_select.py
 set ignore=!ignore! test_auto_scan_pad2d.py
 set ignore=!ignore! test_auto_scan_roll.py
-set ignore=!ignore! test_auto_scan_set_value.py
 set ignore=!ignore! test_auto_scan_unfold.py
 set ignore=!ignore! test_auto_scan_uniform_random_batch_size_like.py
 set ignore=!ignore! test_auto_scan_uniform_random.py

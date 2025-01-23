@@ -200,32 +200,78 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddleParser& parser) {
   return max_opset;
 }
 
-int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser) {
+int32_t ModelExporter::GetCfBlockMinOpsetVersion(
+    const PaddlePirParser& pir_parser, pir::Block& block) {
+  std::vector<pir::Operation*> sub_blocks_ops_copy(pir_parser.sub_blocks_ops);
+  pir_parser.sub_blocks_ops.clear();
+  std::vector<pir::Operation*> block_ops;
+  for (auto& op : block.ops()) {
+    if (op->name() != "builtin.parameter") {
+      pir_parser.sub_blocks_ops.push_back(op);
+    }
+  }
+  // Must generate All sub_block's op output names must be generated here
+  // because it's may used in OPMapper.GetMinOpsetVersion function.
+  pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
+  auto max_opset = GetMinOpsetVersion(pir_parser, &block, true);
+  pir_parser.sub_blocks_ops.clear();
+  pir_parser.sub_blocks_ops = sub_blocks_ops_copy;
+  return max_opset;
+}
+
+int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser,
+                                          pir::Block* block,
+                                          bool if_in_sublock) {
   int32_t max_opset = 7;
   std::set<std::string> verbose_log;
   OnnxHelper helper;
-  // TODO(wangmingkai02): consider the case of cf op
-  for (auto i = 0; i < pir_parser.global_blocks_ops.size(); i++) {
-    std::string op_name = pir_parser.global_blocks_ops[i]->name();
-    if (op_name == "pd_op.data" || op_name == "pd_op.fetch") {
-      continue;
+  std::vector<pir::Operation*> block_ops;
+  // it's  necessary to be same with global/sub_blocks_ops
+  for (auto& op : block->ops()) {
+    if (op->name() != "builtin.parameter") {
+      block_ops.push_back(op);
     }
-    if (op_name == "pd_op.if" || op_name == "pd_op.while") {
+  }
+  for (auto i = 0; i < block_ops.size(); ++i) {
+    auto op = block_ops[i];
+    std::string op_name = op->name();
+    if (op_name == "pd_op.data" || op_name == "pd_op.fetch" ||
+        op_name == "cf.yield") {
       continue;
     }
     int current_opset = 7;
-    auto mapper = MapperHelper::Get()->CreateMapper(
-        convert_pir_op_name(op_name), pir_parser, &helper, i, false);
-    current_opset = mapper->GetMinOpsetVersion(verbose_);
-    delete mapper;
+    if (op_name == "pd_op.if") {
+      auto if_op = op->dyn_cast<paddle::dialect::IfOp>();
+      pir::Block& true_block = if_op.true_block();
+      auto true_block_opset_version =
+          GetCfBlockMinOpsetVersion(pir_parser, true_block);
+      pir::Block& false_block = if_op.false_block();
+      auto false_block_opset_version =
+          GetCfBlockMinOpsetVersion(pir_parser, false_block);
+      current_opset = true_block_opset_version > false_block_opset_version
+                          ? true_block_opset_version
+                          : false_block_opset_version;
+      current_opset = current_opset > 11 ? current_opset : 11;
+    } else if (op_name == "pd_op.while") {
+      auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
+      current_opset = GetCfBlockMinOpsetVersion(pir_parser, while_op.body());
+      current_opset = current_opset > 11 ? current_opset : 11;
 
+    } else {
+      auto mapper = MapperHelper::Get()->CreateMapper(
+          convert_pir_op_name(op_name), pir_parser, &helper, i, if_in_sublock);
+      current_opset = mapper->GetMinOpsetVersion(verbose_);
+      delete mapper;
+    }
     if (current_opset > max_opset) {
       max_opset = current_opset;
       if (current_opset > opset_version_) {
-        verbose_log.insert(
-            "Due to the operator: " + pir_parser.global_blocks_ops[i]->name() +
-            " " + "requires opset_version >= " + std::to_string(current_opset) +
-            ".");
+        if (opset_version_ < 11 ||
+            (op_name != "pd_op.if" && op_name != "pd_op.while")) {
+          verbose_log.insert("Due to the operator: " + op_name + " " +
+                             "requires opset_version >= " +
+                             std::to_string(current_opset) + ".");
+        }
       }
     }
   }
@@ -240,7 +286,8 @@ void ModelExporter::SetOpsetVersion(const PaddlePirParser& pir_parser,
                                     bool auto_upgrade_opset) {
   bool opset_is_legal = true;
   // here
-  int32_t min_opset = GetMinOpsetVersion(pir_parser);
+  int32_t min_opset =
+      GetMinOpsetVersion(pir_parser, pir_parser.pir_program_->block(), false);
   if (min_opset < 7 || min_opset > MAX_ONNX_OPSET_VERSION) {
     P2OLogger(verbose_) << "The Opset Version must be between 7 and "
                         << MAX_ONNX_OPSET_VERSION << std::endl;
@@ -249,7 +296,7 @@ void ModelExporter::SetOpsetVersion(const PaddlePirParser& pir_parser,
   if (!auto_upgrade_opset) {
     if (min_opset > opset_version_) {
       P2OLogger(verbose_) << "Please set the opset_version to "
-                          << std::to_string(opset_version_)
+                          << std::to_string(min_opset)
                           << " or set auto_upgrade_opset=true." << std::endl;
       opset_is_legal = false;
     }
@@ -425,9 +472,10 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
       pir_parser.sub_blocks_ops.push_back(op);
     }
   }
-  pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
+  // generate sub-block op outputs names in GetMinOpSetVersion() function.
+  // pir_parser.GetAllSubBlockOpOutputName(pir_parser.sub_blocks_ops);
   if (!pir_parser.sub_blocks_ops.empty()) {
-    // get cf.yeild op input
+    // get cf.yield op input
     pir::Operation* cf_yield_op = pir_parser.sub_blocks_ops.back();
     // std::vector<std::string> sub_block_outpus;
     for (int32_t idx = 0; idx < cf_yield_op->num_operands(); ++idx) {
@@ -545,7 +593,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
       for (int32_t idx = 0; idx < outputs.size(); ++idx) {
         auto output_item = outputs[idx];
         if (output_item->name() == input_item->name()) {
-          output_item->set_name(pir_parser.GenOpInputOutputName("yeild"));
+          output_item->set_name(pir_parser.GenOpInputOutputName("yield"));
           temp_helper.MakeNode(
               "Identity", {input_item->name()}, {output_item->name()});
           outputs[idx] = std::move(output_item);

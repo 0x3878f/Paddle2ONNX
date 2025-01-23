@@ -102,7 +102,7 @@ class SetValueMapper : public Mapper {
   }
 
   int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset12() override;
+  void Opset17() override;
 
  private:
   std::vector<int64_t> axes_;

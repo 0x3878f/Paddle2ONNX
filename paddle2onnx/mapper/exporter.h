@@ -157,8 +157,13 @@ class ModelExporter {
 
   ONNX_NAMESPACE::ModelProto onnx_model_;
   // Opset Version
+
+  int32_t GetCfBlockMinOpsetVersion(const PaddlePirParser& pir_parser,
+                                    pir::Block& block);
   int32_t GetMinOpsetVersion(const PaddleParser& parser);
-  int32_t GetMinOpsetVersion(const PaddlePirParser& parser);
+  int32_t GetMinOpsetVersion(const PaddlePirParser& pir_parser,
+                             pir::Block* block,
+                             bool if_in_sublock);
   void SetOpsetVersion(const PaddleParser& parser, bool auto_upgrade_opset);
   void SetOpsetVersion(const PaddlePirParser& pir_parser,
                        bool auto_upgrade_opset);
