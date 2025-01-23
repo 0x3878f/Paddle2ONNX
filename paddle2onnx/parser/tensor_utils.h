@@ -13,11 +13,8 @@
 // limitations under the License.
 
 #pragma once
-#include "paddle2onnx/utils/utils.h"
-
 #include <cstddef>
 #include <cstdint>
-
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -25,6 +22,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include "paddle2onnx/utils/utils.h"
 
 namespace paddle2onnx {
 enum P2ODataType {
@@ -35,7 +33,7 @@ enum P2ODataType {
   FP16,
   FP32,
   FP64,
-  X7,
+  UNDEFINED,
   X8,
   X9,
   X10,
@@ -61,10 +59,11 @@ struct TensorInfo {
   bool is_tensor_array = false;
 
   TensorInfo() {}
-  TensorInfo(const std::string &_name, const std::vector<int64_t> &_shape,
-             const int32_t &_dtype);
+  TensorInfo(const std::string& _name,
+             const std::vector<int64_t>& _shape,
+             const int32_t& _dtype);
 
-  TensorInfo(const TensorInfo &info);
+  TensorInfo(const TensorInfo& info);
 };
 
 struct Weight {
@@ -73,7 +72,8 @@ struct Weight {
   int32_t dtype;
 
   template <typename T>
-  void set(int32_t data_type, const std::vector<int64_t>& dims,
+  void set(int32_t data_type,
+           const std::vector<int64_t>& dims,
            const std::vector<T>& data) {
     buffer.clear();
     shape.clear();
@@ -86,8 +86,8 @@ struct Weight {
   }
   template <typename T>
   void get(std::vector<T>* data) const {
-    int64_t nums = std::accumulate(std::begin(shape), std::end(shape), 1,
-                                   std::multiplies<int64_t>());
+    int64_t nums = std::accumulate(
+        std::begin(shape), std::end(shape), 1, std::multiplies<int64_t>());
     data->resize(nums);
     if (dtype == P2ODataType::INT64) {
       std::vector<int64_t> value(nums);
