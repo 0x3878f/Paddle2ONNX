@@ -1015,11 +1015,14 @@ P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
     return P2ODataType::FP32;
   } else if (dtype == phi::DataType::FLOAT64) {
     return P2ODataType::FP64;
-    // } else if (dtype == phi::DataType::COMPLEX64) {
-    // } else if (dtype == phi::DataType::COMPLEX128) {
+  } else if (dtype == phi::DataType::COMPLEX64) {
+    return P2ODataType::COMPLEX64;
+  } else if (dtype == phi::DataType::COMPLEX128) {
+    return P2ODataType::COMPLEX128;
   } else if (dtype == phi::DataType::FLOAT16) {
     return P2ODataType::FP16;
-    // } else if (dtype == phi::DataType::BFLOAT16) {
+  } else if (dtype == phi::DataType::BFLOAT16) {
+    return P2ODataType::BF16;
   } else {
     Assert(false,
            "Unsupported data type exists in "
