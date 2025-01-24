@@ -117,23 +117,26 @@ class MapperHelper {
   }
 
   bool IsRegisteredInPir(const std::string& op_name) {
+    static std::set<std::string> log_infos;
     auto iter_pir = pir_mappers.find(op_name);
     if (pir_mappers.end() != iter_pir) {
       return true;
     }
     auto iter = mappers.find(op_name);
     if (mappers.end() != iter) {
-      P2OLogger()
-          << op_name
-          << " is not registered in PIR mappers, but found in old ir mappers."
-          << std::endl;
+      std::string log_info =
+          op_name +
+          " is not registered in new ir mappers, but found in old ir mappers.";
+      if (!log_infos.count(log_info)) {
+        log_infos.insert(log_info);
+        P2OLogger() << log_info << std::endl;
+      }
       return false;
     }
     return false;
   }
 
   std::string GenName(const std::string& op_name) {
-    // std::string key = "p2o." + op_name + ".";
     std::string key = op_name + ".";
     if (name_counter.find(key) == name_counter.end()) {
       name_counter[key] = 0;
