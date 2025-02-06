@@ -28,7 +28,7 @@ jobs:
           entrypoint: bash
           args: .github/workflows/scripts/entrypoint.sh ${{ matrix.python-version }}
 
-      - uses: actions/upload-artifact@5.3
+      - uses: actions/upload-artifact@4.6
         with:
           name: wheels
           path: dist
