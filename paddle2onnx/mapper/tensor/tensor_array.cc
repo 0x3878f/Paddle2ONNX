@@ -33,8 +33,7 @@ void CreateArrayMapper::Opset11() {
   auto output_info = GetOutput(0);
   auto node = helper_->MakeNode("SequenceEmpty", {}, {output_info[0].name});
   AddAttribute(node, "dtype", GetOnnxDtype(dtype_));
-  pir_parser_->SetTensorArrayName(
-      pir_op_idx_, if_in_cf_block, output_info[0].name);
+  SetTensorArrayName(output_info[0].name);
 }
 int32_t ArrayLengthMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << "ArrayLengthMapper " << RequireOpset(11) << std::endl;
@@ -42,8 +41,7 @@ int32_t ArrayLengthMapper::GetMinOpsetVersion(bool verbose) {
 }
 void ArrayLengthMapper::Opset11() {
   auto output_info = GetOutput(0);
-  std::string arr_name =
-      pir_parser_->GetTensorArrayName(pir_op_idx_, if_in_cf_block);
+  std::string arr_name = GetTensorArrayName();
   helper_->MakeNode("SequenceLength", {arr_name}, {output_info[0].name});
 }
 int32_t ArrayWriteMapper::GetMinOpsetVersion(bool verbose) {
@@ -55,13 +53,11 @@ void ArrayWriteMapper::Opset11() {
   auto index_info = GetInput(2);
   auto output_info = GetOutput(0);
   auto squeeze_node = helper_->MakeNode("Squeeze", {index_info[0].name});
-  std::string arr_name =
-      pir_parser_->GetTensorArrayName(pir_op_idx_, if_in_cf_block);
+  std::string arr_name = GetTensorArrayName();
   helper_->MakeNode("SequenceInsert",
                     {arr_name, tensor_info[0].name, squeeze_node->output(0)},
                     {output_info[0].name});
-  pir_parser_->SetTensorArrayName(
-      pir_op_idx_, if_in_cf_block, output_info[0].name);
+  SetTensorArrayName(output_info[0].name);
 }
 int32_t ArrayReadMapper::GetMinOpsetVersion(bool verbose) {
   Logger(verbose, 11) << "ArrayReadMapper " << RequireOpset(11) << std::endl;
@@ -71,8 +67,7 @@ void ArrayReadMapper::Opset11() {
   auto index_info = GetInput(1);
   auto output_info = GetOutput(0);
   auto squeeze_node = helper_->MakeNode("Squeeze", {index_info[0].name});
-  std::string arr_name =
-      pir_parser_->GetTensorArrayName(pir_op_idx_, if_in_cf_block);
+  std::string arr_name = GetTensorArrayName();
   helper_->MakeNode(
       "SequenceAt", {arr_name, squeeze_node->output(0)}, {output_info[0].name});
 }

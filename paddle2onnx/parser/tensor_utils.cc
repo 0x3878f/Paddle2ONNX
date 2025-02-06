@@ -56,6 +56,15 @@ int32_t PaddleDataTypeSize(int32_t paddle_dtype) {
   } else if (paddle_dtype ==
              paddle2onnx::framework::proto::VarType_Type_UINT8) {
     return sizeof(uint8_t);
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_BF16) {
+    return sizeof(int16_t);
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_COMPLEX64) {
+    return sizeof(float) * 2;
+  } else if (paddle_dtype ==
+             paddle2onnx::framework::proto::VarType_Type_COMPLEX128) {
+    return sizeof(double) * 2;
   } else {
     Assert(false, "Unexpected data type: " + std::to_string(paddle_dtype));
   }

@@ -386,5 +386,13 @@ class Mapper {
   bool TryGetValue(const TensorInfo& info, std::vector<T>* data) {
     return parser_->TryGetTensorValue(block_idx_, info.name, data);
   }
+
+  void SetTensorArrayName(const std::string &arr_name) {
+    pir_parser_->SetTensorArrayName(pir_op_idx_, if_in_cf_block, arr_name);
+  }
+
+  std::string GetTensorArrayName() {
+    return pir_parser_->GetTensorArrayName(pir_op_idx_, if_in_cf_block);
+  }
 };
 }  // namespace paddle2onnx
