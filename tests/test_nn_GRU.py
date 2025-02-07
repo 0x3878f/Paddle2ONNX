@@ -14,7 +14,7 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -34,6 +34,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_GRU_base():
     """
     api: paddle.nn.GRU
@@ -42,7 +43,8 @@ def test_GRU_base():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-10, rtol=1e-11
-    obj = APIOnnx(op, 'nn_GRU', [9, 10, 11, 12])
-    obj.set_input_data("input_data",
-                       paddle.randn((4, 23, 16)), paddle.randn((2, 4, 32)))
+    obj = APIOnnx(op, "nn_GRU", [9, 10, 11, 12])
+    obj.set_input_data(
+        "input_data", paddle.randn((4, 23, 16)), paddle.randn((2, 4, 32))
+    )
     obj.run()

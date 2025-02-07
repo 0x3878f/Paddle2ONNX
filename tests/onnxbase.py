@@ -18,8 +18,8 @@ from onnxruntime import InferenceSession
 import os
 import numpy as np
 import paddle
+import paddle2onnx
 import paddle.static as static
-import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
 from paddle2onnx.convert import dygraph2onnx
 import shutil
 from functools import wraps
@@ -469,19 +469,14 @@ class APIOnnx(object):
             params_file = pdiparams_path
             if not os.path.exists(params_file):
                 params_file = ""
-
-            # clip extra
-            model_file = None
-            if paddle.get_flags("FLAGS_enable_pir_api")["FLAGS_enable_pir_api"]:
-                model_file = original_model_file
-            else:
-                model_file = os.path.join(self.name, "cliped_model.pdmodel")
-                self.clip_extra_program_only(original_model_file, model_file)
+            # # clip extra
+            model_file = original_model_file
 
             for v in self._version:
-                onnx_model_str = c_p2o.export(
+                onnx_model_str = paddle2onnx.export(
                     model_file,  # model_filename
                     params_file,  # params_filename
+                    None,
                     v,  # opset_version
                     False,  # auto_upgrade_opset
                     True,  # verbose

@@ -21,6 +21,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(pool3d, Pool3dMapper)
+REGISTER_PIR_MAPPER(pool3d, Pool3dMapper)
 REGISTER_MAPPER(max_pool3d_with_index, Pool3dMapper)
 
 bool Pool3dMapper::IsSameSpan(const int64_t& in_size, const int64_t& out_size) {

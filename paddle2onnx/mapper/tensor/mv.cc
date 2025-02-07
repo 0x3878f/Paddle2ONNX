@@ -20,6 +20,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(mv, MVMapper)
+REGISTER_PIR_MAPPER(mv, MVMapper)
 
 void MVMapper::Opset7() {
   auto input_x_info = GetInput("X");

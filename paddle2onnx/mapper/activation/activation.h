@@ -111,6 +111,15 @@ class SeluMapper : public Mapper {
     GetAttr("scale", &scale_);
   }
 
+  SeluMapper(const PaddlePirParser& p,
+            OnnxHelper* helper,
+            int64_t op_id,
+            bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {
+    GetAttr("alpha", &alpha_);
+    GetAttr("scale", &scale_);
+    }
+
   void Opset7() override;
 
  private:
@@ -228,6 +237,14 @@ class EluMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("alpha", &alpha_);
   }
+
+  EluMapper(const PaddlePirParser& p,
+            OnnxHelper* helper,
+            int64_t i,
+            bool c)
+      : Mapper(p, helper, i, c) {
+    GetAttr("alpha", &alpha_);
+  }
   void Opset7() override;
 
  private:
@@ -241,6 +258,13 @@ class MishMapper : public Mapper {
              int64_t block_id,
              int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
+    GetAttr("threshold", &threshold_);
+  }
+  MishMapper(const PaddlePirParser& p,
+             OnnxHelper* helper,
+             int64_t i,
+             bool c)
+      : Mapper(p, helper, i, c) {
     GetAttr("threshold", &threshold_);
   }
   int32_t GetMinOpsetVersion(bool verbose) override;
@@ -257,6 +281,11 @@ class SquareMapper : public Mapper {
                int64_t block_id,
                int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  SquareMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t i,
+              bool c)
+    : Mapper(p, helper, i, c) {}
   void Opset7() override;
 };
 
@@ -284,6 +313,11 @@ class LogSigmoidMapper : public Mapper {
                    int64_t block_id,
                    int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  LogSigmoidMapper(const PaddlePirParser& p,
+                   OnnxHelper* helper,
+                   int64_t i,
+                   bool c)
+      : Mapper(p, helper, i, c){}
   void Opset7() override;
 };
 
@@ -294,6 +328,11 @@ class RsqrtMapper : public Mapper {
               int64_t block_id,
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  RsqrtMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t i,
+                  bool c)
+      :Mapper(p, helper, i, c) {}
   void Opset7() override;
 };
 
@@ -304,6 +343,13 @@ class LogSoftmaxMapper : public Mapper {
                    int64_t block_id,
                    int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
+    GetAttr("axis", &axis_);
+  }
+  LogSoftmaxMapper(const PaddlePirParser& p,
+                   OnnxHelper* helper,
+                   int64_t i,
+                   bool c)
+      : Mapper(p, helper, i, c) {
     GetAttr("axis", &axis_);
   }
   void Opset7() override;
@@ -321,6 +367,15 @@ class SoftShrinkMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("lambda", &lambda_);
   }
+
+  SoftShrinkMapper(const PaddlePirParser& p,
+                   OnnxHelper* helper,
+                   int64_t i,
+                   bool c)
+      :Mapper(p, helper, i, c) {
+        GetAttr("lambda", &lambda_);
+      }
+
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 9) << RequireOpset(9) << std::endl;
     return 9;
@@ -340,6 +395,14 @@ class ThresholdedReluMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("threshold", &threshold_);
   }
+
+  ThresholdedReluMapper(const PaddlePirParser& p,
+                        OnnxHelper* helper,
+                        int64_t i,
+                        bool c)
+      : Mapper(p, helper, i, c) {
+    GetAttr("threshold", &threshold_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 10) << RequireOpset(10) << std::endl;
     return 10;
@@ -357,6 +420,12 @@ class TanhShrinkMapper : public Mapper {
                    int64_t block_id,
                    int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+
+  TanhShrinkMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {}
   void Opset7() override;
 };
 

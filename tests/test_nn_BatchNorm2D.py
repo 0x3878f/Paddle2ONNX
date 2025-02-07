@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -34,6 +35,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_BatchNorm2D_9():
     """
     api: paddle.nn.BatchNorm2D
@@ -42,14 +44,15 @@ def test_BatchNorm2D_9():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'nn_BatchNorm2D', [9])
+    obj = APIOnnx(op, "nn_BatchNorm2D", [9])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(
-            randtool("float", -1, 1, [3, 1, 10, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 1, 10, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_BatchNorm2D_10():
     """
     api: paddle.nn.BatchNorm2D
@@ -58,14 +61,15 @@ def test_BatchNorm2D_10():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'nn_BatchNorm2D', [10])
+    obj = APIOnnx(op, "nn_BatchNorm2D", [10])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(
-            randtool("float", -1, 1, [3, 1, 10, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 1, 10, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_BatchNorm2D_11():
     """
     api: paddle.nn.BatchNorm2D
@@ -74,14 +78,15 @@ def test_BatchNorm2D_11():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'nn_BatchNorm2D', [11])
+    obj = APIOnnx(op, "nn_BatchNorm2D", [11])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(
-            randtool("float", -1, 1, [3, 1, 10, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 1, 10, 10]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_BatchNorm2D_12():
     """
     api: paddle.nn.BatchNorm2D
@@ -90,9 +95,9 @@ def test_BatchNorm2D_12():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'nn_BatchNorm2D', [12])
+    obj = APIOnnx(op, "nn_BatchNorm2D", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(
-            randtool("float", -1, 1, [3, 1, 10, 10]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 1, 10, 10]).astype("float32")),
+    )
     obj.run()

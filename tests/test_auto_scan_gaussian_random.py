@@ -14,11 +14,10 @@
 
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
 from onnxbase import randtool
-from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-import numpy as np
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net_tensorlist(BaseNet):
@@ -35,7 +34,8 @@ class Net_tensorlist(BaseNet):
             inputs,
             mean=self.config["mean"],
             std=self.config["std"],
-            dtype=self.config["out_dtype"])
+            dtype=self.config["out_dtype"],
+        )
         return x
 
 
@@ -47,9 +47,8 @@ class TestGaussianRandomConvert_tensorlist(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=1, max_value=1), min_size=3, max_size=3))
+            st.lists(st.integers(min_value=1, max_value=1), min_size=3, max_size=3)
+        )
 
         mean = draw(st.floats(min_value=-1.0, max_value=1.0))
 
@@ -74,8 +73,7 @@ class TestGaussianRandomConvert_tensorlist(OPConvertAutoScanTest):
         # Tensor List input, three 0D tensors
         config = {
             "op_names": ["gaussian_random"],
-            "test_data_shapes":
-            [generator1_data, generator2_data, generator3_data],
+            "test_data_shapes": [generator1_data, generator2_data, generator3_data],
             "test_data_types": [[dtype], [dtype], [dtype]],
             "opset_version": [11],
             "input_spec_shape": [],
@@ -83,13 +81,14 @@ class TestGaussianRandomConvert_tensorlist(OPConvertAutoScanTest):
             "std": std,
             "out_dtype": out_dtype,
             "delta": 1e11,
-            "rtol": 1e11
+            "rtol": 1e11,
         }
 
         models = Net_tensorlist(config)
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -107,7 +106,8 @@ class Net(BaseNet):
             inputs,
             mean=self.config["mean"],
             std=self.config["std"],
-            dtype=self.config["out_dtype"])
+            dtype=self.config["out_dtype"],
+        )
         return x
 
 
@@ -119,9 +119,8 @@ class TestGaussianRandomConvert(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=1, max_value=9), min_size=1, max_size=1))
+            st.lists(st.integers(min_value=1, max_value=9), min_size=1, max_size=1)
+        )
 
         mean = draw(st.floats(min_value=-1.0, max_value=1.0))
 
@@ -146,7 +145,7 @@ class TestGaussianRandomConvert(OPConvertAutoScanTest):
             "std": std,
             "out_dtype": out_dtype,
             "delta": 1e11,
-            "rtol": 1e11
+            "rtol": 1e11,
         }
 
         models = Net(config)
@@ -170,7 +169,8 @@ class Net_list(BaseNet):
             shape=self.config["shape"],
             mean=self.config["mean"],
             std=self.config["std"],
-            dtype=self.config["out_dtype"])
+            dtype=self.config["out_dtype"],
+        )
         return x
 
 
@@ -182,9 +182,8 @@ class TestGaussianRandomConvert_list(OPConvertAutoScanTest):
 
     def sample_convert_config(self, draw):
         input_shape = draw(
-            st.lists(
-                st.integers(
-                    min_value=1, max_value=10), min_size=0, max_size=5))
+            st.lists(st.integers(min_value=1, max_value=10), min_size=0, max_size=5)
+        )
 
         mean = draw(st.floats(min_value=-1.0, max_value=1.0))
 
@@ -204,7 +203,7 @@ class TestGaussianRandomConvert_list(OPConvertAutoScanTest):
             "shape": input_shape,
             "out_dtype": out_dtype,
             "delta": 1e11,
-            "rtol": 1e11
+            "rtol": 1e11,
         }
 
         models = Net_list(config)

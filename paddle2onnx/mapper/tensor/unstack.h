@@ -24,6 +24,11 @@ class UnstackMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
   }
+  UnstackMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {
+    GetAttr("axis", &axis_);
+  }
   void Opset7() override;
 
  private:

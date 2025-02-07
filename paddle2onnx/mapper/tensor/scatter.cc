@@ -16,6 +16,8 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(scatter, ScatterMapper)
+REGISTER_PIR_MAPPER(scatter, ScatterMapper)
+
 
 int32_t ScatterMapper::GetMinOpsetVersion(bool verbose) {
   if (!overwrite_) {

@@ -28,6 +28,14 @@ class SoftmaxCrossEntropyLossMapper : public Mapper {
     GetAttr("soft_label", &soft_label_);
     GetAttr("ignore_index", &ignore_index_);
   }
+  SoftmaxCrossEntropyLossMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                                int64_t op_id,
+                      bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
+    GetAttr("axis", &axis_);
+    GetAttr("soft_label", &soft_label_);
+    GetAttr("ignore_index", &ignore_index_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset12() override;
 

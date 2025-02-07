@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(gaussian_random, GaussianRandomMapper)
+REGISTER_PIR_MAPPER(gaussian, GaussianRandomMapper)
 
 int32_t GaussianRandomMapper::GetMinOpsetVersion(bool verbose) {
   if (HasInput("ShapeTensor") && !IsConstantInput("ShapeTensor")) {
@@ -53,6 +54,7 @@ void GaussianRandomMapper::Opset7() {
     AddAttribute(node, "dtype", GetOnnxDtype(out_info[0].dtype));
     AddAttribute(node, "mean", mean_);
     AddAttribute(node, "scale", std_);
+
     AddAttribute(node, "shape", std::vector<int64_t>(1, 1));
     AddAttribute(node, "seed", static_cast<float>(seed_));
     helper_->Squeeze(node->output(0), {out_info[0].name}, {0});
@@ -63,6 +65,9 @@ void GaussianRandomMapper::Opset7() {
     AddAttribute(node, "dtype", GetOnnxDtype(out_info[0].dtype));
     AddAttribute(node, "mean", mean_);
     AddAttribute(node, "scale", std_);
+    if (in_pir_mode){
+      TryGetInputValue("shape", &shape_);
+    }
     AddAttribute(node, "shape", shape_);
     AddAttribute(node, "seed", static_cast<float>(seed_));
   } else {

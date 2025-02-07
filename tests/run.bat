@@ -93,8 +93,8 @@ REM %PY_CMD% -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.c
 %PY_CMD% -m pip install https://paddle2onnx.bj.bcebos.com/paddle_windows/paddlepaddle_gpu-0.0.0-cp310-cp310-win_amd64.whl
 
 REM Enable development mode and run tests
-set ENABLE_DEV=ON
 set FLAGS_enable_pir_api=0
+set ENABLE_DEV=ON
 echo ============ failed cases ============ >> result.txt
 
 for %%f in (!cases!) do (

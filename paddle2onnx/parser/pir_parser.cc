@@ -126,7 +126,7 @@ std::string PaddlePirParser::GetSubBlockOpOutputName(
 
 void PaddlePirParser::GetGlobalBlockInputValueName() {
   for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data") {
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed") {
       std::string var_name =
           op->attribute<pir::StrAttribute>("name").AsString();
       AddOpOutputName(op, var_name, 0);
@@ -168,7 +168,7 @@ void PaddlePirParser::GetAllSubBlockOpOutputName(
 void PaddlePirParser::GetAllOpOutputName() {
   GetGlobalBlockInputValueName();
   for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.fetch") continue;
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"|| op->name() == "pd_op.fetch") continue;
     std::string var_name = GenOpInputOutputName(op->name());
     int num_outputs = op->num_results();
     for (int i = 0; i < num_outputs; ++i) {
@@ -247,12 +247,6 @@ std::string PaddlePirParser::GetOpArgName(int64_t op_id,
     op_name =
         op->attributes().at("op_name").dyn_cast<pir::StrAttribute>().AsString();
   }
-  std::string builtin_prefix = "builtin.";
-  if (op_name.substr(0, builtin_prefix.size()) == builtin_prefix) {
-    Assert(false,
-           "builtin op " + op_name +
-               " is not supported by GetOpInputOutputName2Idx.");
-  }
   if (_op_arg_name_mappings.count(op_name)) {
     name = _op_arg_name_mappings.at(op_name).count(name)
                ? _op_arg_name_mappings.at(op_name).at(name)
@@ -314,7 +308,6 @@ bool PaddlePirParser::LoadProgram(const std::string& model) {
   pir::IrContext* ctx = pir::IrContext::Instance();
   ctx->GetOrRegisterDialect<paddle::dialect::OperatorDialect>();
   ctx->GetOrRegisterDialect<pir::BuiltinDialect>();
-  // pir::Program new_program(ctx);
   pir_program_ = std::make_shared<pir::Program>(ctx);
   if (!pir::ReadModule(model, pir_program_.get(), /*pir_version*/ 1)) {
     P2OLogger() << "Failed to deserialize PaddlePaddle model." << std::endl;
@@ -337,7 +330,6 @@ bool PaddlePirParser::GetParamValueName(std::vector<std::string>* var_names) {
       auto attrs = op->attribute(kAttrIsPersistable)
                        .dyn_cast<pir::ArrayAttribute>()
                        .AsVector();
-      // builtin.paramter 的输出大小会>1嘛？？？
       for (uint32_t i = 0; i < attrs.size(); i++) {
         bool is_persistable = attrs[i].dyn_cast<pir::BoolAttribute>().data();
         if (is_persistable) {
@@ -366,7 +358,7 @@ bool PaddlePirParser::LoadParams(const std::string& path) {
   is.seekg(0, std::ios::beg);
   std::vector<std::string> var_names;
   GetParamValueName(&var_names);
-  P2OLogger() << "Getting paramas value name from pir::program successfully"
+  P2OLogger() << "Getting parama's attribute 'param_namefrom' from pir::program successfully"
               << std::endl;
 
   int64_t read_size = 0;
@@ -438,17 +430,17 @@ bool PaddlePirParser::Init(const std::string& _model,
                            const std::string& _params) {
   std::vector<Weight> weights;
   if (!LoadProgram(_model)) {
-    P2OLogger() << "Failed to load program of PaddlePaddle pir model"
-                << std::endl;
+    P2OLogger() << "Failed to load "<<_model << std::endl;
     return false;
   }
-  P2OLogger() << "Load PaddlePaddle pir model successfully" << std::endl;
+  P2OLogger() << "Load PaddlePaddle pir model " <<_model << "successfully" << std::endl;
   if (_params != "") {
     if (!LoadParams(_params)) {
       P2OLogger() << "Failed to load parameters of PaddlePaddle model"
                   << std::endl;
       return false;
     }
+    P2OLogger() << "Load parameters " << _params << " successfully" << std::endl;
   }
 
   // InitBlock();
@@ -568,13 +560,15 @@ void PaddlePirParser::GetGlobalBlockInputOutputInfo() {
   // std::cout << "Program (fwd | bwd): \n" << print_stream.str() <<
   // std::endl;
   for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data") {
-      std::string var_name =
-          op->attribute<pir::StrAttribute>("name").AsString();
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
+      // std::string var_name =
+      //     op->attribute<pir::StrAttribute>("name").AsString();
+      std::string var_name = GenOpInputOutputName(op->name());
       inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
     } else if (op->name() == "pd_op.fetch") {
-      std::string var_name =
-          op->attribute<pir::StrAttribute>("name").AsString();
+      // std::string var_name =
+      //     op->attribute<pir::StrAttribute>("name").AsString();
+      std::string var_name = GenOpInputOutputName(op->name());
       outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
     }
   }
