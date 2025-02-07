@@ -38,7 +38,11 @@ void ReduceMeanMapper::Opset18() {
       GetAttr(axis_name_, &dim_);
     }
   } else {
-    GetAttr("axis", &dim_);
+    if (HasAttr(axis_name_)) {
+      GetAttr(axis_name_, &dim_);
+    } else {
+      TryGetInputValue(axis_name_, &dim_);
+    }
     if (dim_.size() == 0) {
       reduce_all_ = true;
     } else {
@@ -50,6 +54,9 @@ void ReduceMeanMapper::Opset18() {
   std::string dims;
   if (IsAttrVar(axis_name_)) {
     auto info = GetAttrVar(axis_name_);
+    dims = helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+  } else if(HasInput(axis_name_)) {
+    auto info = GetInput(axis_name_);
     dims = helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
   } else {
     if (!reduce_all_) {
@@ -92,7 +99,12 @@ void ReduceMeanMapper::Opset11() {
       GetAttr(axis_name_, &dim_);
     }
   } else {
-    GetAttr("axis", &dim_);
+    if (HasAttr(axis_name_)) {
+      GetAttr(axis_name_, &dim_);
+    } else {
+      Assert(TryGetInputValue(axis_name_, &dim_),
+        "Can not get input 'axis(dim)' value.");
+    }
     if (dim_.size() == 0) {
       reduce_all_ = true;
     } else {
