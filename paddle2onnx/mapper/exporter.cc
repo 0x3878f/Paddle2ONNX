@@ -233,7 +233,7 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser,
   for (auto i = 0; i < block_ops.size(); ++i) {
     auto op = block_ops[i];
     std::string op_name = op->name();
-    if (op_name == "pd_op.data" || op_name == "pd_op.fetch" ||
+    if (op_name == "pd_op.data" || op_name == "pd_op.feed" || op_name == "pd_op.fetch" ||
         op_name == "cf.yield") {
       continue;
     }

@@ -124,27 +124,6 @@ std::string PaddlePirParser::GetSubBlockOpOutputName(
   return _op_outputs[op][output_idx];
 }
 
-void PaddlePirParser::GetGlobalBlockInputValueName() {
-  for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed") {
-      std::string var_name =
-          op->attribute<pir::StrAttribute>("name").AsString();
-      AddOpOutputName(op, var_name, 0);
-    }
-  }
-}
-void PaddlePirParser::GetGlobalBlockOutputValueName() {
-  for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.fetch") {
-      std::string var_name =
-          op->attribute<pir::StrAttribute>("name").AsString();
-      auto value = op->operand(0).source();
-      AddOpOutputName(value.defining_op(),
-                      var_name,
-                      value.dyn_cast<pir::OpResult>().index());
-    }
-  }
-}
 void PaddlePirParser::GetAllSubBlockOpOutputName(
     std::vector<pir::Operation*> block_op_lists) const {
   for (auto op : block_op_lists) {
@@ -166,17 +145,37 @@ void PaddlePirParser::GetAllSubBlockOpOutputName(
   }
 }
 void PaddlePirParser::GetAllOpOutputName() {
-  GetGlobalBlockInputValueName();
+  inputs.clear();
+  outputs.clear();
+  // print pir::program in C++
+  // std::ostringstream print_stream;
+  // print_stream << "ForwardProgram is :\n";
+  // pir_program_->Print(print_stream);
+  // std::cout << "Program (fwd | bwd): \n" << print_stream.str() <<
+  // std::endl;
   for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"|| op->name() == "pd_op.fetch") continue;
-    std::string var_name = GenOpInputOutputName(op->name());
-    int num_outputs = op->num_results();
-    for (int i = 0; i < num_outputs; ++i) {
-      auto tmp_var_name = var_name + "." + std::to_string(i);
-      AddOpOutputName(op, tmp_var_name, i);
+    //Get global block Input Info
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
+      // std::string var_name = GenOpInputOutputName(op->name());
+      std::string var_name = op->attribute<pir::StrAttribute>("name").AsString();
+      inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      AddOpOutputName(op, var_name, 0);
+    }else if (op->name() == "pd_op.fetch") {
+      std::string var_name = GenOpInputOutputName(op->name());
+      outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      auto value = op->operand(0).source();
+      AddOpOutputName(value.defining_op(),
+                      var_name,
+                      value.dyn_cast<pir::OpResult>().index());
+    }else{
+      std::string var_name = GenOpInputOutputName(op->name());
+      int num_outputs = op->num_results();
+      for (int i = 0; i < num_outputs; ++i) {
+        auto tmp_var_name = var_name + "." + std::to_string(i);
+        AddOpOutputName(op, tmp_var_name, i);
+      }
     }
   }
-  GetGlobalBlockOutputValueName();
 }
 
 void PaddlePirParser::GetOpArgNameMappings() {
@@ -445,7 +444,6 @@ bool PaddlePirParser::Init(const std::string& _model,
 
   // InitBlock();
   GetGlobalBlocksOps();
-  GetGlobalBlockInputOutputInfo();
   GetAllOpOutputName();
   GetOpArgNameMappings();
   GetAllBlocksOpsSet(pir_program_->block());
@@ -548,30 +546,6 @@ std::vector<TensorInfo> PaddlePirParser::GetSubBlockValueTensorInfo(
     results.push_back(GetTensorInfo(name, value.type()));
   }
   return results;
-}
-
-void PaddlePirParser::GetGlobalBlockInputOutputInfo() {
-  inputs.clear();
-  outputs.clear();
-  // print pir::program in C++
-  // std::ostringstream print_stream;
-  // print_stream << "ForwardProgram is :\n";
-  // pir_program_->Print(print_stream);
-  // std::cout << "Program (fwd | bwd): \n" << print_stream.str() <<
-  // std::endl;
-  for (auto op : global_blocks_ops) {
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
-      // std::string var_name =
-      //     op->attribute<pir::StrAttribute>("name").AsString();
-      std::string var_name = GenOpInputOutputName(op->name());
-      inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
-    } else if (op->name() == "pd_op.fetch") {
-      // std::string var_name =
-      //     op->attribute<pir::StrAttribute>("name").AsString();
-      std::string var_name = GenOpInputOutputName(op->name());
-      outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
-    }
-  }
 }
 
 bool PaddlePirParser::IsAttrVar(const pir::Operation* op,
