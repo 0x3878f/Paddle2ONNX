@@ -81,7 +81,7 @@ do
     if [[ ${ignore} =~ ${file##*/} ]]; then
         echo "跳过"
     else
-        FLAGS_enable_pir_api=0 $PY_CMD -m pytest ${file} -s
+        FLAGS_enable_pir_api=0 $PY_CMD -m pytest ${file}
         if [ $? -ne 0 ]; then
             echo ${file} >> result.txt
             bug=`expr ${bug} + 1`
