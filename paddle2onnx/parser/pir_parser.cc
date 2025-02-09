@@ -156,8 +156,8 @@ void PaddlePirParser::GetAllOpOutputName() {
   for (auto op : global_blocks_ops) {
     //Get global block Input Info
     if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
-      // std::string var_name = GenOpInputOutputName(op->name());
-      std::string var_name = op->attribute<pir::StrAttribute>("name").AsString();
+      std::string var_name = GenOpInputOutputName(op->name());
+      // std::string var_name = op->attribute<pir::StrAttribute>("name").AsString();
       inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
       AddOpOutputName(op, var_name, 0);
     }else if (op->name() == "pd_op.fetch") {

@@ -14,7 +14,6 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import _test_with_pir
 
 
 class BaseNet1(paddle.nn.Layer):
@@ -28,7 +27,6 @@ class BaseNet1(paddle.nn.Layer):
             return inputs * 3
 
 
-@_test_with_pir
 def test_ifelse_1_true():
     op = BaseNet1()
     op.eval()
@@ -37,7 +35,6 @@ def test_ifelse_1_true():
     obj.run()
 
 
-@_test_with_pir
 def test_ifelse_1_false():
     op = BaseNet1()
     op.eval()
@@ -57,7 +54,6 @@ class BaseNet2(paddle.nn.Layer):
             return inputs * 3, inputs * 4
 
 
-@_test_with_pir
 def test_ifelse_2_true():
     op = BaseNet2()
     op.eval()
@@ -66,7 +62,6 @@ def test_ifelse_2_true():
     obj.run()
 
 
-@_test_with_pir
 def test_ifelse_2_false():
     op = BaseNet2()
     op.eval()
@@ -86,7 +81,6 @@ class BaseNet3(paddle.nn.Layer):
             return 2
 
 
-@_test_with_pir
 def test_ifelse_3_true():
     op = BaseNet3()
     op.eval()
@@ -95,7 +89,6 @@ def test_ifelse_3_true():
     obj.run()
 
 
-@_test_with_pir
 def test_ifelse_3_false():
     op = BaseNet3()
     op.eval()
@@ -115,7 +108,6 @@ class BaseNet4(paddle.nn.Layer):
             return 2
 
 
-@_test_with_pir
 def test_ifelse_4_true():
     op = BaseNet4()
     op.eval()
@@ -124,7 +116,6 @@ def test_ifelse_4_true():
     obj.run()
 
 
-@_test_with_pir
 def test_ifelse_4_false():
     op = BaseNet4()
     op.eval()
@@ -144,7 +135,6 @@ class BaseNet5(paddle.nn.Layer):
             return 2, 3
 
 
-@_test_with_pir
 def test_ifelse_5_true():
     op = BaseNet5()
     op.eval()
@@ -153,7 +143,6 @@ def test_ifelse_5_true():
     obj.run()
 
 
-@_test_with_pir
 def test_ifelse_5_false():
     op = BaseNet5()
     op.eval()
