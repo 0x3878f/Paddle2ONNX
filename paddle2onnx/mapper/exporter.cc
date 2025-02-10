@@ -252,6 +252,7 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser,
       current_opset = current_opset > 11 ? current_opset : 11;
     } else if (op_name == "pd_op.while") {
       auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
+      pir_parser.GetWhileInputValuesAndArgsMappings(while_op);
       current_opset = GetCfBlockMinOpsetVersion(pir_parser, while_op.body());
       current_opset = current_opset > 11 ? current_opset : 11;
 
@@ -483,7 +484,7 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportIfBlock(
       temp_outputs.push_back(std::move(MakeValueInfo(cond_info[0])));
       if (value.defining_op() == nullptr) {
         value =
-            pir::Value(pir_parser.while_op_input_value_map[&(*(value.impl()))]);
+            pir::Value(pir_parser.while_op_values_args_map[&(*(value.impl()))]);
       }
       if (value.defining_op()->GetParent() != &block) {
         temp_inputs.push_back(std::move(MakeValueInfo(cond_info[0])));

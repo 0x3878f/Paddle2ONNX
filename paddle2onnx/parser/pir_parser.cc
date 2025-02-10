@@ -106,10 +106,10 @@ std::string PaddlePirParser::GetOpOutputName(const pir::Value& source) const {
 
 std::string PaddlePirParser::GetSubBlockOpOutputName(
     const pir::Value& source) const {
-  auto it = while_op_input_value_map.find(&(*(source.impl())));
+  auto it = while_op_values_args_map.find(&(*(source.impl())));
   pir::Operation* op;
   uint32_t output_idx;
-  if (it != while_op_input_value_map.end()) {
+  if (it != while_op_values_args_map.end()) {
     pir::Value value(it->second);
     op = value.defining_op();
     output_idx = value.dyn_cast<pir::OpResult>().index();
@@ -1029,4 +1029,34 @@ P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
            "PaddlePirParser::TransPirDataType2OnnxDataType.");
   }
 }
+void PaddlePirParser::GetWhileInputValuesAndArgsMappings(
+    const paddle::dialect::WhileOp& while_op) const {
+  // mapping args and inputs in while op using while_op_values_args_map
+  std::vector<pir::detail::ValueImpl*> while_op_input_value_address;
+  std::vector<pir::detail::ValueImpl*> while_op_input_arg_address;
+  // record input value address
+  for (int index = 1; index < while_op.num_operands(); index++) {
+    const pir::Value& value = while_op.operand_source(index);
+    while_op_input_value_address.push_back(
+        &(*(value).impl()));  // get value address
+  }
+  // record args value address
+  std::vector<pir::Value> args = while_op.block_args();
+  for (int i = 0; i < args.size(); i++) {
+    const pir::Value& value = args[i];
+    while_op_input_arg_address.push_back(&(*(value.impl())));
+  }
+
+  // mapping
+  for (int index = 0; index < while_op_input_value_address.size(); index++) {
+    auto arg_addr = while_op_input_arg_address[index];
+    if (while_op_values_args_map.count(arg_addr)) continue;
+    auto value_addr = while_op_input_value_address[index];
+    while (while_op_values_args_map.count(value_addr)) {
+      value_addr = while_op_values_args_map[value_addr];
+    }
+    while_op_values_args_map[arg_addr] = value_addr;
+  }
+}
+
 }  // namespace paddle2onnx

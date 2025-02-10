@@ -25,32 +25,12 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,
   std::vector<TensorInfo> outputs_info;
   auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
   auto cond_info = pir_parser.GetTensorInfo(while_op.cond());
-  // mapping args and inputs in while op using while_op_input_value_map
-  std::vector<pir::detail::ValueImpl*> while_op_input_value_address;
-  std::vector<pir::detail::ValueImpl*> while_op_input_arg_address;
-  pir_parser.while_op_input_value_map
-      .clear();  // wangmingkai02: handle nested loop situations in future.
-
-  // record input value address
   for (int index = 1; index < while_op.num_operands(); index++) {
     const pir::Value& value = while_op.operand_source(index);
     inputs_info.push_back(pir_parser.GetTensorInfo(
-        pir_parser.GetOpOutputName(value), value.type()));
-    while_op_input_value_address.push_back(
-        &(*(value).impl()));  // get value address
+        pir_parser.GetSubBlockOpOutputName(value), value.type()));
   }
-  // record args value address
-  std::vector<pir::Value> args = while_op.block_args();
-  for (int i = 0; i < args.size(); i++) {
-    const pir::Value& value = args[i];
-    while_op_input_arg_address.push_back(&(*(value.impl())));
-  }
-
-  // mapping
-  for (int index = 0; index < while_op_input_value_address.size(); index++) {
-    pir_parser.while_op_input_value_map[while_op_input_arg_address[index]] =
-        while_op_input_value_address[index];
-  }
+  pir_parser.GetWhileInputValuesAndArgsMappings(while_op);
 
   std::vector<pir::Operation*> sub_blocks_ops_copy(pir_parser.sub_blocks_ops);
   pir_parser.sub_blocks_ops.clear();
@@ -120,7 +100,7 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,
     input_names.push_back(inputs_info[i].name);
   }
   for (size_t i = 0; i < op->num_results(); i++) {
-    output_names.push_back(pir_parser.GetOpOutputName(op->result(i)));
+    output_names.push_back(pir_parser.GetSubBlockOpOutputName(op->result(i)));
   }
   auto loop_node = temp_helper->MakeNode("Loop", input_names, output_names);
   AddAttribute(loop_node, "body", graph);
