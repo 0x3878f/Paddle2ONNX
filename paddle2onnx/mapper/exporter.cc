@@ -252,7 +252,7 @@ int32_t ModelExporter::GetMinOpsetVersion(const PaddlePirParser& pir_parser,
       current_opset = current_opset > 11 ? current_opset : 11;
     } else if (op_name == "pd_op.while") {
       auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
-      pir_parser.GetWhileInputValuesAndArgsMappings(while_op);
+      pir_parser.GetWhileInputValuesAndArgsMappings(&while_op);
       current_opset = GetCfBlockMinOpsetVersion(pir_parser, while_op.body());
       current_opset = current_opset > 11 ? current_opset : 11;
 

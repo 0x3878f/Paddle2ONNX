@@ -267,7 +267,7 @@ class PaddlePirParser {
   std::string GetTensorArrayName(int64_t op_id, bool if_in_sub_block) const;
   std::string GenOpInputOutputName(const std::string& name) const;
   void GetWhileInputValuesAndArgsMappings(
-      const paddle::dialect::WhileOp& while_op) const;
+      paddle::dialect::WhileOp *while_op) const;
 
  private:
   bool IsAttrVar(const pir::Operation* op, const int64_t& attr_id) const;

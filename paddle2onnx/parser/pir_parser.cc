@@ -1030,18 +1030,18 @@ P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
   }
 }
 void PaddlePirParser::GetWhileInputValuesAndArgsMappings(
-    const paddle::dialect::WhileOp& while_op) const {
+    paddle::dialect::WhileOp* while_op) const {
   // mapping args and inputs in while op using while_op_values_args_map
   std::vector<pir::detail::ValueImpl*> while_op_input_value_address;
   std::vector<pir::detail::ValueImpl*> while_op_input_arg_address;
   // record input value address
-  for (int index = 1; index < while_op.num_operands(); index++) {
-    const pir::Value& value = while_op.operand_source(index);
+  for (int index = 1; index < while_op->num_operands(); index++) {
+    const pir::Value& value = while_op->operand_source(index);
     while_op_input_value_address.push_back(
         &(*(value).impl()));  // get value address
   }
   // record args value address
-  std::vector<pir::Value> args = while_op.block_args();
+  std::vector<pir::Value> args = while_op->block_args();
   for (int i = 0; i < args.size(); i++) {
     const pir::Value& value = args[i];
     while_op_input_arg_address.push_back(&(*(value.impl())));

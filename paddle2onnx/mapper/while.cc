@@ -30,7 +30,7 @@ void ModelExporter::ExportWhile(PaddlePirParser& pir_parser,
     inputs_info.push_back(pir_parser.GetTensorInfo(
         pir_parser.GetSubBlockOpOutputName(value), value.type()));
   }
-  pir_parser.GetWhileInputValuesAndArgsMappings(while_op);
+  pir_parser.GetWhileInputValuesAndArgsMappings(&while_op);
 
   std::vector<pir::Operation*> sub_blocks_ops_copy(pir_parser.sub_blocks_ops);
   pir_parser.sub_blocks_ops.clear();
