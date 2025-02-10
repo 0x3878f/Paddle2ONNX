@@ -14,9 +14,80 @@
 
 import os
 import paddle
+import tempfile
 import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
 from paddle2onnx.utils import logging, paddle_jit_save_configs
 from contextlib import contextmanager
+from paddle.decomposition import decomp
+
+
+def load_model(model_filename):
+    """Loads the pir model from json file."""
+    assert os.path.exists(
+        model_filename
+    ), f"Model file {model_filename} does not exist."
+    if model_filename.endswith(".json"):
+        model_filename = model_filename[:-5]
+    return paddle.jit.load(model_filename)
+
+
+def compare_programs(original_program, new_program):
+    """Compares two pir programs' operations."""
+    original_ops = [op.name() for op in original_program.global_block().ops]
+    new_ops = [op.name() for op in new_program.global_block().ops]
+    return original_ops == new_ops
+
+
+def save_new_program(new_program, model_file):
+    """Saves the decomposed program to a file."""
+    if not paddle.device.is_compiled_with_cuda():
+        print("PaddlePaddle was not compiled with CUDA support.")
+    elif paddle.device.cuda.device_count() == 0:
+        print("No GPU found.")
+    place = paddle.CPUPlace()
+    exe = paddle.static.Executor(place)
+
+    tmp_dir = tempfile.mkdtemp()
+    filename = os.path.basename(model_file) + "_decompose"
+    filename_without_extension, _ = os.path.splitext(filename)
+    save_dir = os.path.join(tmp_dir, filename_without_extension)
+
+    # Find feed and fetch operations
+    feed, fetch = [], []
+    for op in new_program.global_block().ops:
+        if op.name() == "pd_op.feed":
+            feed = op.results()
+        if op.name() == "pd_op.fetch" or op.name() == "builtin.shadow_output":
+            fetch = op.operands_source()
+
+    with paddle.pir_utils.IrGuard():
+        paddle.static.save_inference_model(
+            save_dir, feed, fetch, exe, program=new_program
+        )
+
+    new_model_file = save_dir + ".json"
+    assert os.path.exists(
+        new_model_file
+    ), f"Pir Model file {new_model_file} does not exist."
+    logging.info(f"Decomposed Model file path: {new_model_file}")
+    return new_model_file
+
+
+def decompose_program(model_filename):
+    """Decomposes the given pir program."""
+
+    model = load_model(model_filename)
+    new_program = model.program().clone()
+    with decomp.prim_guard():
+        decomp.decompose_dist_program(new_program)
+
+    if compare_programs(model.program(), new_program):
+        return model_filename
+
+    logging.info(f"Origin program: {model.program()}")
+    logging.info(f"Decomposed program: {new_program}")
+
+    return save_new_program(new_program, model_filename)
 
 
 def get_old_ir_guard():
@@ -39,6 +110,7 @@ def export(
     save_file=None,
     opset_version=7,
     auto_upgrade_opset=True,
+    dist_prim_all=True,
     verbose=True,
     enable_onnx_checker=True,
     enable_experimental_op=True,
@@ -49,6 +121,10 @@ def export(
     external_file="",
     export_fp16_model=False,
 ):
+    if paddle.get_flags("FLAGS_enable_pir_api")["FLAGS_enable_pir_api"]:
+        if dist_prim_all and auto_upgrade_opset:
+            model_filename = decompose_program(model_filename)
+
     deploy_backend = deploy_backend.lower()
     if custom_op_info is None:
         onnx_model_str = c_p2o.export(

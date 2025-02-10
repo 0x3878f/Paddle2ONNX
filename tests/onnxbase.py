@@ -20,7 +20,7 @@ import numpy as np
 import paddle
 import paddle.static as static
 import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
-from paddle2onnx.convert import dygraph2onnx
+from paddle2onnx.convert import dygraph2onnx, decompose_program
 import shutil
 from functools import wraps
 
@@ -231,6 +231,8 @@ class APIOnnx(object):
         self.input_spec_shape = input_spec_shape
         self.input_dtype = []
         self.res_fict = {}
+        self.dist_prim_all = True
+        self.auto_upgrade_opset = True
 
         if isfunction(self.func):
             # self._func = self.BuildFunc(self.func, **self.kwargs_dict_dygraph["params_group1"])
@@ -473,7 +475,10 @@ class APIOnnx(object):
             # clip extra
             model_file = None
             if paddle.get_flags("FLAGS_enable_pir_api")["FLAGS_enable_pir_api"]:
-                model_file = original_model_file
+                if self.dist_prim_all and self.auto_upgrade_opset:
+                    model_file = decompose_program(original_model_file)
+                else:
+                    model_file = original_model_file
             else:
                 model_file = os.path.join(self.name, "cliped_model.pdmodel")
                 self.clip_extra_program_only(original_model_file, model_file)
@@ -483,7 +488,7 @@ class APIOnnx(object):
                     model_file,  # model_filename
                     params_file,  # params_filename
                     v,  # opset_version
-                    False,  # auto_upgrade_opset
+                    True,  # auto_upgrade_opset
                     True,  # verbose
                     True,  # enable_onnx_checker
                     True,  # enable_experimental_op

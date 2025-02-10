@@ -93,6 +93,12 @@ def arg_parser():
         help="whether enable auto_update_opset, default is True",
     )
     parser.add_argument(
+        "--enable_dist_prim_all",
+        type=ast.literal_eval,
+        default=True,
+        help="whether enable dist_prim_all, default is True",
+    )
+    parser.add_argument(
         "--external_filename",
         type=str,
         default=None,
@@ -160,6 +166,7 @@ def main():
         save_file=args.save_file,
         opset_version=args.opset_version,
         auto_upgrade_opset=args.enable_auto_update_opset,
+        dist_prim_all=args.enable_dist_prim_all,
         verbose=True,
         enable_onnx_checker=args.enable_onnx_checker,
         enable_experimental_op=True,
