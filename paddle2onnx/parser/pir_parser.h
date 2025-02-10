@@ -22,6 +22,7 @@
 #include "paddle/pir/include/core/value.h"
 #include "paddle2onnx/parser/tensor_utils.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
+#include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 namespace paddle2onnx {
 class PaddlePirParser {
  public:
@@ -40,8 +41,8 @@ class PaddlePirParser {
   // recoring set of operators for all blocks
   std::set<pir::Operation*> total_blocks_ops;
   // recording args of while op body name info
-  std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
-      while_op_input_value_map;
+  mutable std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
+      while_op_values_args_map;
   int NumOfBlocks() const;
   // int NumOfOps(int block_idx) const;
   int NumOfProgramOps() const;
@@ -265,6 +266,8 @@ class PaddlePirParser {
                           std::string tensor_arr_name) const;
   std::string GetTensorArrayName(int64_t op_id, bool if_in_sub_block) const;
   std::string GenOpInputOutputName(const std::string& name) const;
+  void GetWhileInputValuesAndArgsMappings(
+      paddle::dialect::WhileOp *while_op) const;
 
  private:
   bool IsAttrVar(const pir::Operation* op, const int64_t& attr_id) const;
