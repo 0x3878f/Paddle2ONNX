@@ -19,6 +19,7 @@ import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
 from paddle2onnx.utils import logging, paddle_jit_save_configs
 from contextlib import contextmanager
 from paddle.decomposition import decomp
+from paddle.base.executor import global_scope
 
 
 def load_model(model_filename):
@@ -38,12 +39,8 @@ def compare_programs(original_program, new_program):
     return original_ops == new_ops
 
 
-def save_new_program(new_program, model_file):
+def save_program(program, model_file):
     """Saves the decomposed program to a file."""
-    if not paddle.device.is_compiled_with_cuda():
-        print("PaddlePaddle was not compiled with CUDA support.")
-    elif paddle.device.cuda.device_count() == 0:
-        print("No GPU found.")
     place = paddle.CPUPlace()
     exe = paddle.static.Executor(place)
 
@@ -54,16 +51,14 @@ def save_new_program(new_program, model_file):
 
     # Find feed and fetch operations
     feed, fetch = [], []
-    for op in new_program.global_block().ops:
+    for op in program.global_block().ops:
         if op.name() == "pd_op.feed":
-            feed = op.results()
+            feed.extend(op.results())
         if op.name() == "pd_op.fetch" or op.name() == "builtin.shadow_output":
-            fetch = op.operands_source()
+            fetch.extend(op.operands_source())
 
     with paddle.pir_utils.IrGuard():
-        paddle.static.save_inference_model(
-            save_dir, feed, fetch, exe, program=new_program
-        )
+        paddle.static.save_inference_model(save_dir, feed, fetch, exe, program=program)
 
     new_model_file = save_dir + ".json"
     assert os.path.exists(
@@ -73,9 +68,29 @@ def save_new_program(new_program, model_file):
     return new_model_file
 
 
+def load_parameter(program):
+    params = []
+    opts = []
+    for var in program.list_vars():
+        if var.is_parameter or var.get_defining_op().name() == "builtin.parameter":
+            params.append(var)
+        elif var.persistable and var.get_defining_op().name() == "pd_op.data":
+            opts.append(var)
+    vars_list = params + opts
+    vars = [var for var in vars_list if var.persistable]
+
+    if vars is None:
+        return
+
+    place = paddle.CPUPlace()
+    exe = paddle.static.Executor(place)
+    paddle.base.libpaddle.pir.create_loaded_parameter(
+        vars, global_scope(), exe._default_executor
+    )
+
+
 def decompose_program(model_filename):
     """Decomposes the given pir program."""
-
     model = load_model(model_filename)
     new_program = model.program().clone()
     with decomp.prim_guard():
@@ -87,7 +102,8 @@ def decompose_program(model_filename):
     logging.info(f"Origin program: {model.program()}")
     logging.info(f"Decomposed program: {new_program}")
 
-    return save_new_program(new_program, model_filename)
+    load_parameter(new_program)
+    return save_program(new_program, model_filename)
 
 
 def get_old_ir_guard():
