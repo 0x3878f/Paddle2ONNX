@@ -33,7 +33,6 @@ void FftR2cMapper::Opset17() {
     std::string zero_str = helper_->Constant(GetOnnxDtype(P2ODataType::INT64), std::vector<int64_t>({0}));
     auto node1 = helper_->MakeNode("Unsqueeze", {input_info[0].name, one_str});
     auto node2 = helper_->MakeNode("Unsqueeze", {node1->output(0), zero_str});
-
     auto dft_node = helper_->MakeNode("DFT", {node2->output(0)});
     AddAttribute(dft_node, "onesided", int64_t(onesided_));
     AddAttribute(dft_node, "inverse", int64_t(0));

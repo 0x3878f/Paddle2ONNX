@@ -27,6 +27,7 @@ class FftR2cMapper : public Mapper {
                   int64_t op_id,
                   bool c)
       : Mapper(p, helper, op_id, c) {
+
     in_pir_mode = true;
     GetAttr("normalization", &normalization_);
     GetAttr("onesided", &onesided_);
