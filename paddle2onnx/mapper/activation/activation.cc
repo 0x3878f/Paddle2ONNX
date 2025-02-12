@@ -53,6 +53,7 @@ REGISTER_MAPPER(reciprocal, ActivationMapper)
 REGISTER_MAPPER(relu, ActivationMapper)
 REGISTER_PIR_MAPPER(relu, ActivationMapper)
 REGISTER_MAPPER(round, ActivationMapper)
+REGISTER_PIR_MAPPER(round, ActivationMapper)
 REGISTER_MAPPER(rsqrt, RsqrtMapper)
 REGISTER_MAPPER(sel, ActivationMapper)
 REGISTER_MAPPER(selu, SeluMapper)
@@ -113,9 +114,27 @@ void ActivationMapper::Opset7() {
     helper_->AutoCast(output, output_info[0].name, P2ODataType::FP32,
                       output_info[0].dtype);
   } else {
-    helper_->MakeNode(iter->second, {input_info[0].name},
+    if (convert_pir_op_name(OpType()) == "abs" && input_info[0].dtype == P2ODataType::COMPLEX64){
+      input_info[0].dtype = P2ODataType::FP32;
+      int shape_size = input_info[0].shape.size();
+      std::string one_str = helper_->Constant(GetOnnxDtype(P2ODataType::INT64), std::vector<int64_t>({1}));
+      auto split_node = helper_->MakeNode("Split", {input_info[0].name},2);
+      AddAttribute(split_node,"axis",int64_t(-1));
+
+      auto real_squre = helper_->MakeNode("Mul", {split_node->output(0),split_node->output(0)});
+      auto imag_squre = helper_->MakeNode("Mul", {split_node->output(1),split_node->output(1)});
+
+      auto node_add = helper_->MakeNode("Add", {real_squre->output(0),imag_squre->output(0)});
+
+      helper_->MakeNode("Sqrt", {node_add->output(0)},
                       {output_info[0].name});
+    }else{
+      helper_->MakeNode(iter->second, {input_info[0].name},
+                      {output_info[0].name});
+    }
+
   }
+
 }
 
 int32_t PReluMapper::GetMinOpsetVersion(bool verbose) {
