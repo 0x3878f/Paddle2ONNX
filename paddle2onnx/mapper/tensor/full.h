@@ -29,7 +29,7 @@ class FullMapper : public Mapper {
              bool if_in_cf_block)
       : Mapper(p, helper, op_id, if_in_cf_block) {
     GetAttr("dtype", &dtype_);
-    GetAttr("value", &value_);
+    GetScalarAttr("value", &value_);
     GetAttr("shape", &shape_);
   }
 
@@ -37,7 +37,7 @@ class FullMapper : public Mapper {
 
  private:
   int64_t dtype_;
-  double value_;
+  ScalarData value_;
   std::vector<int64_t> shape_;
 };
 
