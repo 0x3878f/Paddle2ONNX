@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import onnx
 from inspect import isfunction
 import logging
 from onnxruntime import InferenceSession
@@ -353,10 +354,19 @@ class APIOnnx(object):
         """
         make onnx res
         """
+        model_path = os.path.join(
+            self.pwd, self.name, self.name + "_" + str(ver) + ".onnx"
+        )
+        model = onnx.load(model_path)
         sess = InferenceSession(
-            os.path.join(self.pwd, self.name, self.name + "_" + str(ver) + ".onnx"),
+            model_path,
             providers=["CPUExecutionProvider"],
         )
+
+        input_feed = {}
+        if len(model.graph.input) == 0:
+            return sess.run(output_names=None, input_feed=input_feed)
+
         ort_outs = sess.run(output_names=None, input_feed=self.input_feed)
         return ort_outs
 
