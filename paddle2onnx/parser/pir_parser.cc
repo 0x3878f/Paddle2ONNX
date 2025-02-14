@@ -669,6 +669,9 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
       if (pair.second.isa<pir::DoubleAttribute>()) {
         *res = pair.second.dyn_cast<::pir::DoubleAttribute>().data();
         break;
+      }else if(op->name()=="pd_op.full"&& pair.second.isa<pir::FloatAttribute>()){
+        *res = static_cast<double>(pair.second.dyn_cast<::pir::FloatAttribute>().data());
+        break;
       }
     }
   }
