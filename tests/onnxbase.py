@@ -360,7 +360,6 @@ class APIOnnx(object):
         for key, value in self.input_feed.items():
             temp_dict[input_names[int(key)].name] = value
         self.input_feed = temp_dict
-        print("+++++++++++++:", self.input_feed)
         ort_outs = sess.run(output_names=None, input_feed=self.input_feed)
         return ort_outs
 

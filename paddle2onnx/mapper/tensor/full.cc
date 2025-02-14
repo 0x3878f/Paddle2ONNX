@@ -23,7 +23,8 @@ REGISTER_PIR_MAPPER(full, FullMapper)
 
 void FullMapper::Opset7() {
   auto output_info = GetOutput("Out");
-  helper_->Constant(output_info[0].name, shape_, 
+  std::cout << "full value is : " << value_ << std::endl;
+  helper_->Constant(output_info[0].name, shape_,
                     GetOnnxDtype(output_info[0].dtype), value_);
 }
 

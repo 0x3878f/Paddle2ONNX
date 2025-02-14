@@ -147,6 +147,7 @@ void PaddlePirParser::GetAllSubBlockOpOutputName(
 void PaddlePirParser::GetAllOpOutputName() {
   inputs.clear();
   outputs.clear();
+  std::vector<std::pair<TensorInfo, int64_t>> inputs_temp;
   // print pir::program in C++
   // std::ostringstream print_stream;
   // print_stream << "ForwardProgram is :\n";
@@ -158,7 +159,22 @@ void PaddlePirParser::GetAllOpOutputName() {
     if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
       std::string var_name = GenOpInputOutputName(op->name());
       // std::string var_name = op->attribute<pir::StrAttribute>("name").AsString();
-      inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      // inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      std::string input_name = op->attribute<pir::StrAttribute>("name").AsString();
+      int64_t input_name_idx;
+      try {
+        input_name_idx = std::stoll(input_name);
+        PADDLE_ENFORCE_EQ(
+            input_name == std::to_string(input_name_idx),
+            true,
+            common::errors::InvalidArgument("invalid input name: %s", input_name));
+      } catch (const std::invalid_argument& e) {
+        Assert(false, "input name is not a number: " + input_name);
+      }
+
+      inputs_temp.push_back(
+          std::make_pair(GetTensorInfo(var_name, op->result(0).type()),  input_name_idx)
+      );
       AddOpOutputName(op, var_name, 0);
     }else if (op->name() == "pd_op.fetch") {
       std::string var_name = GenOpInputOutputName(op->name());
@@ -175,6 +191,15 @@ void PaddlePirParser::GetAllOpOutputName() {
         AddOpOutputName(op, tmp_var_name, i);
       }
     }
+  }
+  std::sort(inputs_temp.begin(),
+            inputs_temp.end(),
+            [](const std::pair<TensorInfo, int64_t>& a,
+               const std::pair<TensorInfo, int64_t>& b) {
+              return a.second < b.second;
+            });
+  for(auto input : inputs_temp) {
+    inputs.push_back(input.first);
   }
 }
 
