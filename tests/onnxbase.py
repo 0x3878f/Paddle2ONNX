@@ -232,8 +232,8 @@ class APIOnnx(object):
         self.input_spec_shape = input_spec_shape
         self.input_dtype = []
         self.res_fict = {}
-        self.dist_prim_all = True
-        self.auto_upgrade_opset = True
+        self.dist_prim_all = False
+        self.auto_upgrade_opset = False
 
         if isfunction(self.func):
             # self._func = self.BuildFunc(self.func, **self.kwargs_dict_dygraph["params_group1"])
@@ -498,7 +498,7 @@ class APIOnnx(object):
                     model_file,  # model_filename
                     params_file,  # params_filename
                     v,  # opset_version
-                    True,  # auto_upgrade_opset
+                    False,  # auto_upgrade_opset
                     True,  # verbose
                     True,  # enable_onnx_checker
                     True,  # enable_experimental_op

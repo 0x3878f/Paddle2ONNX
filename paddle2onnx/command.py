@@ -95,8 +95,8 @@ def arg_parser():
     parser.add_argument(
         "--enable_dist_prim_all",
         type=ast.literal_eval,
-        default=True,
-        help="whether enable dist_prim_all, default is True",
+        default=False,
+        help="whether enable dist_prim_all, default is False",
     )
     parser.add_argument(
         "--external_filename",

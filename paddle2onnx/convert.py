@@ -126,7 +126,7 @@ def export(
     save_file=None,
     opset_version=7,
     auto_upgrade_opset=True,
-    dist_prim_all=True,
+    dist_prim_all=False,
     verbose=True,
     enable_onnx_checker=True,
     enable_experimental_op=True,
