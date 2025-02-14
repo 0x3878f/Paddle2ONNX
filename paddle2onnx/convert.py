@@ -99,8 +99,8 @@ def decompose_program(model_filename):
     if compare_programs(model.program(), new_program):
         return model_filename
 
-    logging.info(f"Origin program: {model.program()}")
-    logging.info(f"Decomposed program: {new_program}")
+    # logging.info(f"Origin program: {model.program()}")
+    # logging.info(f"Decomposed program: {new_program}")
 
     load_parameter(new_program)
     return save_program(new_program, model_filename)
