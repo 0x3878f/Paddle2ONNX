@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_PIR_MAPPER(abs, AbsMapper)
+REGISTER_MAPPER(abs, AbsMapper)
 
 int32_t AbsMapper::GetMinOpsetVersion(bool verbose) {
     return 13;
