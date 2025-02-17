@@ -226,8 +226,17 @@ void SplitMapper::Opset13() {
 void SplitMapper::Opset18() {
   std::vector<TensorInfo> input_info;
   std::vector<TensorInfo> output_info;
-  input_info = GetInput("X");
-  output_info = GetOutput("Out");
+  if (HasInput("X")) {
+    input_info = GetInput("X");
+  } else {
+    input_info = GetInput("x");
+  }
+  if (HasOutput("Out")) {
+    output_info = GetOutput("Out");
+  } else {
+    output_info = GetOutput("out");
+  }
+
   int64_t axis = axis_;
   if (HasInput("axis") || HasInput("AxisTensor")) {
     if (in_pir_mode) {
@@ -295,7 +304,6 @@ void SplitMapper::Opset18() {
   // or the num_ouputs attribute. Here we choose to add split input.
   int64_t each_part_size = input_info[0].shape[axis] / num;
   std::vector<int64_t> splits_size = std::vector<int64_t>(num, each_part_size);
-
   helper_->Split(input_info[0].name, output_names, splits_size, axis);
 }
 
