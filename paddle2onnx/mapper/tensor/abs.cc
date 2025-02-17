@@ -18,7 +18,6 @@ namespace paddle2onnx {
 REGISTER_PIR_MAPPER(abs, AbsMapper)
 
 int32_t AbsMapper::GetMinOpsetVersion(bool verbose) {
-    auto input_info = GetInput("X");
     return 13;
 
 }
@@ -37,7 +36,7 @@ void AbsMapper::Opset13() {
     }else{
         helper_->MakeNode("Abs", {input_info[0].name},
                     {output_info[0].name});
-    }  
+    }
 }
 void AbsMapper::Opset18() {
        auto input_info = GetInput("X");
@@ -54,7 +53,7 @@ void AbsMapper::Opset18() {
     }else{
         helper_->MakeNode("Abs", {input_info[0].name},
                     {output_info[0].name});
-    }  
+    }
 
 }
 
