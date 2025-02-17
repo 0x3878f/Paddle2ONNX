@@ -292,6 +292,11 @@ class RsqrtMapper : public Mapper {
               int64_t block_id,
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
+  RsqrtMapper(const PaddlePirParser& p,
+              OnnxHelper* helper,
+              int64_t i,
+              bool c)
+      : Mapper(p, helper, i, c) {}
   void Opset7() override;
 };
 
