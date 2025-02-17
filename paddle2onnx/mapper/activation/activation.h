@@ -38,7 +38,6 @@ class ActivationMapper : public Mapper {
     op_mapper_["cos"] = "Cos";
     op_mapper_["sin"] = "Sin";
     op_mapper_["round"] = "Round";
-    op_mapper_["abs"] = "Abs";
     op_mapper_["acos"] = "Acos";
     op_mapper_["asin"] = "Asin";
     op_mapper_["atan"] = "Atan";
@@ -64,7 +63,6 @@ class ActivationMapper : public Mapper {
     op_mapper_["cos"] = "Cos";
     op_mapper_["sin"] = "Sin";
     op_mapper_["round"] = "Round";
-    op_mapper_["abs"] = "Abs";
     op_mapper_["acos"] = "Acos";
     op_mapper_["asin"] = "Asin";
     op_mapper_["atan"] = "Atan";
