@@ -34,13 +34,16 @@ void AbsMapper::Opset13() {
         std::string split_node2 = helper_->Squeeze(split_node->output(1), {-1});
         auto real_squre = helper_->MakeNode("Mul", {split_node1,split_node1});
         auto imag_squre = helper_->MakeNode("Mul", {split_node2 ,split_node2});
+        auto node_add = helper_->MakeNode("Add", {real_squre->output(0),imag_squre->output(0)});
+        helper_->MakeNode("Sqrt", {node_add->output(0)},
+                    {output_info[0].name});
     }else{
         helper_->MakeNode("Abs", {input_info[0].name},
                     {output_info[0].name});
     }
 }
 void AbsMapper::Opset18() {
-       auto input_info = GetInput("X");
+    auto input_info = GetInput("X");
     auto output_info = GetOutput("Out");
     if (input_info[0].dtype == P2ODataType::COMPLEX64){
         std::string one_str = helper_->Constant(GetOnnxDtype(P2ODataType::INT64), std::vector<int64_t>({1}));
@@ -51,6 +54,9 @@ void AbsMapper::Opset18() {
         std::string split_node2 = helper_->Squeeze(split_node->output(1), {-1});
         auto real_squre = helper_->MakeNode("Mul", {split_node1,split_node1});
         auto imag_squre = helper_->MakeNode("Mul", {split_node2 ,split_node2});
+        auto node_add = helper_->MakeNode("Add", {real_squre->output(0),imag_squre->output(0)});
+        helper_->MakeNode("Sqrt", {node_add->output(0)},
+                    {output_info[0].name});
     }else{
         helper_->MakeNode("Abs", {input_info[0].name},
                     {output_info[0].name});
