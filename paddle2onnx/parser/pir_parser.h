@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 #include <map>
+#include <variant>
 
 #include "paddle/common/errors.h"
 #include "paddle/phi/common/data_type.h"
@@ -26,6 +27,7 @@
 namespace paddle2onnx {
 class PaddlePirParser {
  public:
+  typedef std::variant<double, float, int64_t, int32_t, bool> ScalarData;
   bool Init(const std::string& _model, const std::string& _params = "");
   std::map<std::string, Weight> params;
   std::shared_ptr<pir::Program> pir_program_;
@@ -91,6 +93,11 @@ class PaddlePirParser {
                  const std::string& name,
                  std::vector<bool>* res) const;
   bool OpHasAttr(pir::Operation* op, const std::string& name) const;
+
+  void GetOpScalarValue(int64_t op_id,
+                        bool if_in_sub_block,
+                        const std::string& scalar_attr_name,
+                        ScalarData* scalar_data) const;
   std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
                                      int64_t input_idx,

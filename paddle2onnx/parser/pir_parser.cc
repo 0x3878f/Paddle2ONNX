@@ -33,6 +33,7 @@
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
 #include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
+#include "paddle2onnx/mapper/data_helper.h"
 
 phi::DataType TransToPhiDataType(pir::Type dtype) {
   if (dtype.isa<pir::BFloat16Type>()) {
@@ -893,6 +894,39 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
           "Cannot found attribute %s in op %s", name, op->name()));
 }
 
+void PaddlePirParser::GetOpScalarValue(int64_t op_id,
+                                       bool if_in_sub_block,
+                                       const std::string& scalar_attr_name,
+                                       ScalarData* scalar_data) const {
+  pir::Operation* op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+  PADDLE_ENFORCE_EQ(
+      OpHasAttr(op, scalar_attr_name),
+      true,
+      common::errors::InvalidArgument(
+          "Cannot found attribute %s in op %s", scalar_attr_name, op->name()));
+  auto attr = op->attribute(scalar_attr_name);
+  if (attr.isa<pir::DoubleAttribute>()) {
+    *scalar_data =
+        static_cast<double>(attr.dyn_cast<::pir::DoubleAttribute>().data());
+  } else if (attr.isa<pir::FloatAttribute>()) {
+    *scalar_data =
+        static_cast<float>(attr.dyn_cast<::pir::FloatAttribute>().data());
+  } else if (attr.isa<pir::Int64Attribute>()) {
+    *scalar_data =
+        static_cast<int64_t>(attr.dyn_cast<::pir::Int64Attribute>().data());
+  } else if (attr.isa<pir::Int32Attribute>()) {
+    *scalar_data =
+        static_cast<int32_t>(attr.dyn_cast<::pir::Int32Attribute>().data());
+  } else if (attr.isa<pir::BoolAttribute>()) {
+    *scalar_data =
+        static_cast<bool>(attr.dyn_cast<::pir::BoolAttribute>().data());
+  } else {
+    Assert(false,
+           "ScalarData only support double, float, int64_t, int32_t and bool "
+           "now.");
+  }
+}
 std::vector<TensorInfo> PaddlePirParser::GetOpInput(
     int64_t op_id, int64_t input_idx, bool if_in_sub_block) const {
   PADDLE_ENFORCE_GT(input_idx,
