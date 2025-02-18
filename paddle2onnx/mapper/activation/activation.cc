@@ -15,9 +15,6 @@
 #include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {
-
-REGISTER_MAPPER(abs, ActivationMapper)
-REGISTER_PIR_MAPPER(abs, ActivationMapper)
 REGISTER_MAPPER(acos, ActivationMapper)
 REGISTER_PIR_MAPPER(acos, ActivationMapper)
 REGISTER_MAPPER(asin, ActivationMapper)
@@ -132,10 +129,12 @@ void ActivationMapper::Opset7() {
     auto output = helper_->MakeNode(iter->second, {input})->output(0);
     helper_->AutoCast(output, output_info[0].name, P2ODataType::FP32,
                       output_info[0].dtype);
-  } else {
-    helper_->MakeNode(iter->second, {input_info[0].name},
+  } else{
+      helper_->MakeNode(iter->second, {input_info[0].name},
                       {output_info[0].name});
   }
+
+
 }
 
 int32_t PReluMapper::GetMinOpsetVersion(bool verbose) {

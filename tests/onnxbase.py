@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import onnx
 from inspect import isfunction
 import logging
 from onnxruntime import InferenceSession
@@ -20,7 +21,7 @@ import numpy as np
 import paddle
 import paddle2onnx
 import paddle.static as static
-from paddle2onnx.convert import dygraph2onnx
+from paddle2onnx.convert import dygraph2onnx, decompose_program
 import shutil
 from functools import wraps
 
@@ -231,6 +232,8 @@ class APIOnnx(object):
         self.input_spec_shape = input_spec_shape
         self.input_dtype = []
         self.res_fict = {}
+        self.dist_prim_all = False
+        self.auto_upgrade_opset = False
 
         if isfunction(self.func):
             # self._func = self.BuildFunc(self.func, **self.kwargs_dict_dygraph["params_group1"])
@@ -283,6 +286,7 @@ class APIOnnx(object):
                     self.input_feed[str(i)] = in_data.numpy()
 
                 i += 1
+        self.input_feed_backup = self.input_feed
 
     def set_device_mode(self, is_gpu=True):
         if paddle.device.is_compiled_with_cuda() is True and is_gpu:
@@ -351,15 +355,24 @@ class APIOnnx(object):
         """
         make onnx res
         """
+        model_path = os.path.join(
+            self.pwd, self.name, self.name + "_" + str(ver) + ".onnx"
+        )
+        model = onnx.load(model_path)
         sess = InferenceSession(
-            os.path.join(self.pwd, self.name, self.name + "_" + str(ver) + ".onnx"),
+            model_path,
             providers=["CPUExecutionProvider"],
         )
         input_names = sess.get_inputs()
         temp_dict = {}
+        self.input_feed = self.input_feed_backup
         for key, value in self.input_feed.items():
             temp_dict[input_names[int(key)].name] = value
         self.input_feed = temp_dict
+
+        input_feed = {}
+        if len(model.graph.input) == 0:
+            return sess.run(output_names=None, input_feed=input_feed)
         ort_outs = sess.run(output_names=None, input_feed=self.input_feed)
         return ort_outs
 
@@ -477,13 +490,25 @@ class APIOnnx(object):
             # # clip extra
             model_file = original_model_file
 
+            # clip extra
+            model_file = None
+            if paddle.get_flags("FLAGS_enable_pir_api")["FLAGS_enable_pir_api"]:
+                if self.dist_prim_all and self.auto_upgrade_opset:
+                    model_file = decompose_program(original_model_file)
+                else:
+                    model_file = original_model_file
+            else:
+                model_file = os.path.join(self.name, "cliped_model.pdmodel")
+                self.clip_extra_program_only(original_model_file, model_file)
+
             for v in self._version:
                 onnx_model_str = paddle2onnx.export(
                     model_file,  # model_filename
                     params_file,  # params_filename
-                    None,
+                    None,  # save_file
                     v,  # opset_version
                     False,  # auto_upgrade_opset
+                    False,  # dist_prim_all
                     True,  # verbose
                     True,  # enable_onnx_checker
                     True,  # enable_experimental_op

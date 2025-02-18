@@ -27,7 +27,7 @@ int32_t ReduceMapperSum::GetMinOpsetVersion(bool verbose) {
 void ReduceMapperSum::Opset13() {
   auto axis_name_ = "dim";
   GetAttr("keep_dim", &keep_dim_);
-if (!in_pir_mode) {
+  if (!in_pir_mode) {
     GetAttr("reduce_all", &reduce_all_);
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
@@ -47,6 +47,13 @@ if (!in_pir_mode) {
   }
 
   auto x_info = GetInput("X");
+  auto x_name = x_info[0].name;
+  auto x_tpye = x_info[0].dtype;
+  if (x_info[0].dtype == P2ODataType::BOOL) {
+    x_name = helper_->AutoCast(x_name, x_tpye, P2ODataType::INT32);
+    x_tpye = P2ODataType::INT32;
+  }
+
   std::string dims;
   if (IsAttrVar(axis_name_)) {
     auto info = GetAttrVar(axis_name_);
@@ -61,7 +68,7 @@ if (!in_pir_mode) {
   }
 
   // Add attribute
-  auto reduce_node = helper_->MakeNode("ReduceSum", {x_info[0].name, dims});
+  auto reduce_node = helper_->MakeNode("ReduceSum", {x_name, dims});
   AddAttribute(reduce_node, "keepdims", static_cast<int64_t>(keep_dim_));
   auto out_node_name = reduce_node->output(0);
 
@@ -73,7 +80,6 @@ if (!in_pir_mode) {
     out_node_name = helper_->Reshape(out_node_name, {-1});
   }
   auto out_info = GetOutput("Out");
-  helper_->AutoCast(out_node_name, out_info[0].name,
-                        x_info[0].dtype, out_info[0].dtype);
+  helper_->AutoCast(out_node_name, out_info[0].name, x_tpye, out_info[0].dtype);
 }
 }  // namespace paddle2onnx

@@ -23,6 +23,7 @@
 namespace paddle2onnx {
 class Mapper {
  public:
+  using ScalarData = PaddlePirParser::ScalarData;
   Mapper() {}
   Mapper(const PaddleParser& p,
          OnnxHelper* helper,
@@ -237,6 +238,12 @@ class Mapper {
   // }
 
   std::string Name() const { return name_; }
+
+  void GetScalarAttr(const std::string& scalar_name, ScalarData* scalar_data) {
+    Assert(in_pir_mode, "Only support PIR mode.");
+    pir_parser_->GetOpScalarValue(
+        pir_op_idx_, if_in_cf_block, scalar_name, scalar_data);
+  }
 
   bool HasInput(const std::string& name) const {
     if (in_pir_mode) {

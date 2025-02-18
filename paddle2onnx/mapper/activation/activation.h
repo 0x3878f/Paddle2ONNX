@@ -38,7 +38,6 @@ class ActivationMapper : public Mapper {
     op_mapper_["cos"] = "Cos";
     op_mapper_["sin"] = "Sin";
     op_mapper_["round"] = "Round";
-    op_mapper_["abs"] = "Abs";
     op_mapper_["acos"] = "Acos";
     op_mapper_["asin"] = "Asin";
     op_mapper_["atan"] = "Atan";
@@ -64,7 +63,6 @@ class ActivationMapper : public Mapper {
     op_mapper_["cos"] = "Cos";
     op_mapper_["sin"] = "Sin";
     op_mapper_["round"] = "Round";
-    op_mapper_["abs"] = "Abs";
     op_mapper_["acos"] = "Acos";
     op_mapper_["asin"] = "Asin";
     op_mapper_["atan"] = "Atan";
@@ -329,10 +327,10 @@ class RsqrtMapper : public Mapper {
               int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {}
   RsqrtMapper(const PaddlePirParser& p,
-                  OnnxHelper* helper,
-                  int64_t i,
-                  bool c)
-      :Mapper(p, helper, i, c) {}
+              OnnxHelper* helper,
+              int64_t i,
+              bool c)
+      : Mapper(p, helper, i, c) {}
   void Opset7() override;
 };
 

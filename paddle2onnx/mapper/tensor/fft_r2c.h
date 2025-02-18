@@ -20,25 +20,29 @@
 
 namespace paddle2onnx {
 
-class FullMapper : public Mapper {
+class FftR2cMapper : public Mapper {
  public:
-  // Only for PIR
-  FullMapper(const PaddlePirParser& p,
-             OnnxHelper* helper,
-             int64_t op_id,
-             bool if_in_cf_block)
-      : Mapper(p, helper, op_id, if_in_cf_block) {
-    GetAttr("dtype", &dtype_);
-    GetScalarAttr("value", &value_);
-    GetAttr("shape", &shape_);
+  FftR2cMapper(const PaddlePirParser& p,
+                  OnnxHelper* helper,
+                  int64_t op_id,
+                  bool c)
+      : Mapper(p, helper, op_id, c) {
+
+    in_pir_mode = true;
+    GetAttr("normalization", &normalization_);
+    GetAttr("onesided", &onesided_);
+    GetAttr("forward", &forward_);
+    GetAttr("axes",&axes_);
   }
 
-  void Opset7() override;
+  int32_t GetMinOpsetVersion(bool verbose) override;
+  void Opset17() override;
 
  private:
-  int64_t dtype_;
-  ScalarData value_;
-  std::vector<int64_t> shape_;
+  std::string normalization_;
+  bool onesided_;
+  bool forward_;
+  std::vector<int64_t> axes_;
 };
 
 }  // namespace paddle2onnx

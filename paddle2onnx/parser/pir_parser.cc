@@ -33,6 +33,7 @@
 #include "paddle/pir/include/core/ir_context.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
 #include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
+#include "paddle2onnx/mapper/data_helper.h"
 
 phi::DataType TransToPhiDataType(pir::Type dtype) {
   if (dtype.isa<pir::BFloat16Type>()) {
@@ -106,10 +107,10 @@ std::string PaddlePirParser::GetOpOutputName(const pir::Value& source) const {
 
 std::string PaddlePirParser::GetSubBlockOpOutputName(
     const pir::Value& source) const {
-  auto it = while_op_input_value_map.find(&(*(source.impl())));
+  auto it = while_op_values_args_map.find(&(*(source.impl())));
   pir::Operation* op;
   uint32_t output_idx;
-  if (it != while_op_input_value_map.end()) {
+  if (it != while_op_values_args_map.end()) {
     pir::Value value(it->second);
     op = value.defining_op();
     output_idx = value.dyn_cast<pir::OpResult>().index();
@@ -889,6 +890,39 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
           "Cannot found attribute %s in op %s", name, op->name()));
 }
 
+void PaddlePirParser::GetOpScalarValue(int64_t op_id,
+                                       bool if_in_sub_block,
+                                       const std::string& scalar_attr_name,
+                                       ScalarData* scalar_data) const {
+  pir::Operation* op =
+      if_in_sub_block ? sub_blocks_ops[op_id] : global_blocks_ops[op_id];
+  PADDLE_ENFORCE_EQ(
+      OpHasAttr(op, scalar_attr_name),
+      true,
+      common::errors::InvalidArgument(
+          "Cannot found attribute %s in op %s", scalar_attr_name, op->name()));
+  auto attr = op->attribute(scalar_attr_name);
+  if (attr.isa<pir::DoubleAttribute>()) {
+    *scalar_data =
+        static_cast<double>(attr.dyn_cast<::pir::DoubleAttribute>().data());
+  } else if (attr.isa<pir::FloatAttribute>()) {
+    *scalar_data =
+        static_cast<float>(attr.dyn_cast<::pir::FloatAttribute>().data());
+  } else if (attr.isa<pir::Int64Attribute>()) {
+    *scalar_data =
+        static_cast<int64_t>(attr.dyn_cast<::pir::Int64Attribute>().data());
+  } else if (attr.isa<pir::Int32Attribute>()) {
+    *scalar_data =
+        static_cast<int32_t>(attr.dyn_cast<::pir::Int32Attribute>().data());
+  } else if (attr.isa<pir::BoolAttribute>()) {
+    *scalar_data =
+        static_cast<bool>(attr.dyn_cast<::pir::BoolAttribute>().data());
+  } else {
+    Assert(false,
+           "ScalarData only support double, float, int64_t, int32_t and bool "
+           "now.");
+  }
+}
 std::vector<TensorInfo> PaddlePirParser::GetOpInput(
     int64_t op_id, int64_t input_idx, bool if_in_sub_block) const {
   PADDLE_ENFORCE_GT(input_idx,
@@ -1025,4 +1059,34 @@ P2ODataType PaddlePirParser::TransPirDataType2OldIrDataType(
            "PaddlePirParser::TransPirDataType2OnnxDataType.");
   }
 }
+void PaddlePirParser::GetWhileInputValuesAndArgsMappings(
+    paddle::dialect::WhileOp* while_op) const {
+  // mapping args and inputs in while op using while_op_values_args_map
+  std::vector<pir::detail::ValueImpl*> while_op_input_value_address;
+  std::vector<pir::detail::ValueImpl*> while_op_input_arg_address;
+  // record input value address
+  for (int index = 1; index < while_op->num_operands(); index++) {
+    const pir::Value& value = while_op->operand_source(index);
+    while_op_input_value_address.push_back(
+        &(*(value).impl()));  // get value address
+  }
+  // record args value address
+  std::vector<pir::Value> args = while_op->block_args();
+  for (int i = 0; i < args.size(); i++) {
+    const pir::Value& value = args[i];
+    while_op_input_arg_address.push_back(&(*(value.impl())));
+  }
+
+  // mapping
+  for (int index = 0; index < while_op_input_value_address.size(); index++) {
+    auto arg_addr = while_op_input_arg_address[index];
+    if (while_op_values_args_map.count(arg_addr)) continue;
+    auto value_addr = while_op_input_value_address[index];
+    while (while_op_values_args_map.count(value_addr)) {
+      value_addr = while_op_values_args_map[value_addr];
+    }
+    while_op_values_args_map[arg_addr] = value_addr;
+  }
+}
+
 }  // namespace paddle2onnx

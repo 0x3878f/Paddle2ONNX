@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 #include <map>
+#include <variant>
 
 #include "paddle/common/errors.h"
 #include "paddle/phi/common/data_type.h"
@@ -22,9 +23,11 @@
 #include "paddle/pir/include/core/value.h"
 #include "paddle2onnx/parser/tensor_utils.h"
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
+#include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 namespace paddle2onnx {
 class PaddlePirParser {
  public:
+  typedef std::variant<double, float, int64_t, int32_t, bool> ScalarData;
   bool Init(const std::string& _model, const std::string& _params = "");
   std::map<std::string, Weight> params;
   std::shared_ptr<pir::Program> pir_program_;
@@ -40,8 +43,8 @@ class PaddlePirParser {
   // recoring set of operators for all blocks
   std::set<pir::Operation*> total_blocks_ops;
   // recording args of while op body name info
-  std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
-      while_op_input_value_map;
+  mutable std::unordered_map<pir::detail::ValueImpl*, pir::detail::ValueImpl*>
+      while_op_values_args_map;
   int NumOfBlocks() const;
   // int NumOfOps(int block_idx) const;
   int NumOfProgramOps() const;
@@ -90,6 +93,11 @@ class PaddlePirParser {
                  const std::string& name,
                  std::vector<bool>* res) const;
   bool OpHasAttr(pir::Operation* op, const std::string& name) const;
+
+  void GetOpScalarValue(int64_t op_id,
+                        bool if_in_sub_block,
+                        const std::string& scalar_attr_name,
+                        ScalarData* scalar_data) const;
   std::string GetSubBlockOpOutputName(const pir::Value& source) const;
   std::vector<TensorInfo> GetOpInput(int64_t op_id,
                                      int64_t input_idx,
@@ -265,6 +273,8 @@ class PaddlePirParser {
                           std::string tensor_arr_name) const;
   std::string GetTensorArrayName(int64_t op_id, bool if_in_sub_block) const;
   std::string GenOpInputOutputName(const std::string& name) const;
+  void GetWhileInputValuesAndArgsMappings(
+      paddle::dialect::WhileOp *while_op) const;
 
  private:
   bool IsAttrVar(const pir::Operation* op, const int64_t& attr_id) const;
