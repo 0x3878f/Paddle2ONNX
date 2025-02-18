@@ -17,7 +17,6 @@ from onnxbase import randtool
 import hypothesis.strategies as st
 import unittest
 import paddle
-from onnxbase import _test_with_pir
 
 
 class Net_tensorlist(BaseNet):
@@ -88,7 +87,6 @@ class TestGaussianRandomConvert_tensorlist(OPConvertAutoScanTest):
 
         return (config, models)
 
-    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

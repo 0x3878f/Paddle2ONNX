@@ -178,12 +178,16 @@ void PaddlePirParser::GetAllOpOutputName() {
       );
       AddOpOutputName(op, var_name, 0);
     }else if (op->name() == "pd_op.fetch") {
-      std::string var_name = GenOpInputOutputName(op->name());
-      outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      // std::string var_name = GenOpInputOutputName(op->name());
       auto value = op->operand(0).source();
-      AddOpOutputName(value.defining_op(),
-                      var_name,
-                      value.dyn_cast<pir::OpResult>().index());
+      auto output_idx = value.dyn_cast<pir::OpResult>().index();
+      std::string var_name = _op_outputs[value.defining_op()][output_idx];
+
+      outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
+      // auto value = op->operand(0).source();
+      // AddOpOutputName(value.defining_op(),
+      //                 var_name,
+      //                 value.dyn_cast<pir::OpResult>().index());
     }else{
       std::string var_name = GenOpInputOutputName(op->name());
       int num_outputs = op->num_results();
@@ -694,9 +698,6 @@ void PaddlePirParser::GetOpAttr(const pir::Operation* op,
       found = true;
       if (pair.second.isa<pir::DoubleAttribute>()) {
         *res = pair.second.dyn_cast<::pir::DoubleAttribute>().data();
-        break;
-      }else if(op->name()=="pd_op.full"&& pair.second.isa<pir::FloatAttribute>()){
-        *res = static_cast<double>(pair.second.dyn_cast<::pir::FloatAttribute>().data());
         break;
       }
     }

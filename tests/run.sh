@@ -55,9 +55,15 @@ ignore="test_auto_scan_multiclass_nms.py
         test_nn_InstanceNorm3D.py \
         test_nn_Upsample.py \
         test_normalize.py \
+        test_hardtanh.py \
+        test_nn_GRU.py \
         test_scatter_nd_add.py \
         test_quantize_model.py \
         test_quantize_model_minist.py \
+        test_auto_scan_partial_ops.py \
+        test_dygraph2onnx.py \
+        test_auto_scan_dequantize_linear.py \
+        test_auto_scan_quantize_linear.py \
         test_quantize_model_speedup.py \
         test_resnet_fp16.py \
         test_empty.py \

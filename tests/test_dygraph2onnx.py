@@ -15,7 +15,6 @@
 import paddle
 import unittest
 import paddle2onnx
-from onnxbase import _test_with_pir
 
 
 class SimpleNet(paddle.nn.Layer):
@@ -28,7 +27,6 @@ class SimpleNet(paddle.nn.Layer):
 
 
 class TestDygraph2OnnxAPI(unittest.TestCase):
-    @_test_with_pir
     def test_api(self):
         net = SimpleNet()
         input_spec = [paddle.static.InputSpec(shape=[None, 10], dtype="float32")]

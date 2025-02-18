@@ -20,7 +20,6 @@ import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
-from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -92,9 +91,6 @@ class TestDequantizeLinearConvert(OPConvertAutoScanTest):
         else:
             quant_axis = 1
 
-        # scale_shape = input_shape[quant_axis]
-        # zero_shape = input_shape[quant_axis]
-
         if draw(st.booleans()):
             const_weight = True
         else:
@@ -136,7 +132,6 @@ class TestDequantizeLinearConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
-    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

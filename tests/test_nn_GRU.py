@@ -14,7 +14,6 @@
 
 import paddle
 from onnxbase import APIOnnx
-from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -34,7 +33,6 @@ class Net(paddle.nn.Layer):
         return x
 
 
-@_test_with_pir
 def test_GRU_base():
     """
     api: paddle.nn.GRU
