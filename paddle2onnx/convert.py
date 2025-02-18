@@ -150,9 +150,6 @@ def export(
     save_dir = os.path.join(tmp_dir, filename_without_extension)
     if model_filename.endswith(".pdmodel"):
         if os.path.exists(model_filename) and os.path.exists(params_filename):
-            # dir_and_file, extension = os.path.splitext(model_filename)
-            # filename = os.path.basename(model_filename)
-            # filename_without_extension, _ = os.path.splitext(filename)
             place = paddle.CPUPlace()
             exe = paddle.static.Executor(place)
             with paddle.pir_utils.OldIrGuard():
@@ -165,7 +162,6 @@ def export(
                     feed = op.results()
                 if op.name() == "pd_op.fetch":
                     fetch = op.operands_source()
-            # save_dir = os.path.join(tmp_dir, filename_without_extension)
             with paddle.pir_utils.IrGuard():
                 paddle.static.save_inference_model(
                     save_dir, feed, fetch, exe, program=program

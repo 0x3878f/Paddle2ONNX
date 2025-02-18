@@ -500,7 +500,7 @@ class APIOnnx(object):
             else:
                 model_file = os.path.join(self.name, "cliped_model.pdmodel")
                 self.clip_extra_program_only(original_model_file, model_file)
-                # 检查文件是否存在，然后重命名
+                # check if params_file exists and rename it
                 if os.path.exists(params_file):
                     new_params_file = os.path.join(
                         os.path.dirname(params_file),

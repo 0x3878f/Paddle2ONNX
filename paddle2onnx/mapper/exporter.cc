@@ -538,7 +538,6 @@ ONNX_NAMESPACE::GraphProto ModelExporter::ExportBlock(
         op->name() == "cf.yield") {
       continue;
     }
-    //To Do:remove some redundant node
     if (op->name() == "pd_op.if") {
       auto if_op = op->dyn_cast<paddle::dialect::IfOp>();
       // if branch graph
