@@ -3,7 +3,7 @@
 Paddle2ONNX 的编译安装至少需要确保环境满足以下需求：
 
 - cmake >= 3.16.0
-- protobuf == 4.22.0
+- protobuf == 21.12
 
 ## 在 Linux/Mac 下编译并安装
 
@@ -12,7 +12,7 @@ Paddle2ONNX 的编译安装至少需要确保环境满足以下需求：
 ```bash
 git clone https://github.com/protocolbuffers/protobuf.git
 cd protobuf
-git checkout v4.22.0
+git checkout v21.12
 git submodule update --init
 mkdir build_source && cd build_source
 cmake ../cmake -DCMAKE_INSTALL_PREFIX=`pwd`/installed_protobuf_lib -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=14
@@ -56,7 +56,7 @@ pip install dist/*.whl
 ```bash
 git clone https://github.com/protocolbuffers/protobuf.git
 cd protobuf
-git checkout v4.22.0
+git checkout v21.12
 git submodule update --init --recursive
 mkdir build
 cd build
