@@ -16,6 +16,7 @@ from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
 import unittest
 import paddle
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -61,6 +62,7 @@ class TestLinspaceConvert(OPConvertAutoScanTest):
 
         return (config, model)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30, max_duration=-1)
 

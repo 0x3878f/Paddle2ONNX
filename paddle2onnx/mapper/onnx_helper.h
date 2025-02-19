@@ -463,7 +463,6 @@ namespace paddle2onnx
     }
     else
     {
-      std::cout<<"dtype: "<<dtype;
       Assert(
           false,
           "Only support data type of BOOL/FLOAT/DOUBLE/INT32/INT64 in Constant function.");

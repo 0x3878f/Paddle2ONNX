@@ -150,17 +150,10 @@ void PaddlePirParser::GetAllOpOutputName() {
   outputs.clear();
   std::vector<std::pair<TensorInfo, int64_t>> inputs_temp;
   // print pir::program in C++
-  // std::ostringstream print_stream;
-  // print_stream << "ForwardProgram is :\n";
-  // pir_program_->Print(print_stream);
-  // std::cout << "Program (fwd | bwd): \n" << print_stream.str() <<
-  // std::endl;
   for (auto op : global_blocks_ops) {
     //Get global block Input Info
     if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
       std::string var_name = GenOpInputOutputName(op->name());
-      // std::string var_name = op->attribute<pir::StrAttribute>("name").AsString();
-      // inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
       std::string input_name = op->attribute<pir::StrAttribute>("name").AsString();
       int64_t input_name_idx;
       try {

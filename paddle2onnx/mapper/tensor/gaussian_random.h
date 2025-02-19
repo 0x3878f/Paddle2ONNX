@@ -30,10 +30,8 @@ class GaussianRandomMapper : public Mapper {
   GaussianRandomMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
              bool c)
       : Mapper(p, helper, i, c) {
-    in_pir_mode = true;
     GetAttr("mean", &mean_);
     GetAttr("std", &std_);
-    // GetAttr("shape", &shape_);
     GetAttr("seed", &seed_);
   }
   int32_t GetMinOpsetVersion(bool verbose) override;

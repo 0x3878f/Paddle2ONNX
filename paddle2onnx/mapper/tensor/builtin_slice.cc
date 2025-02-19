@@ -21,9 +21,7 @@ REGISTER_PIR_MAPPER(builtin_slice, BuiltinSliceMapper)
 void BuiltinSliceMapper::Opset7() {
   auto input_info = GetInput(0);
   auto output_info = GetOutput(0);
-  if (HasAttr("index")) {
-    GetAttr("index", &index);
-  }
+  GetAttr("index", &index);
   helper_->MakeNode("Identity", {input_info[index].name}, {output_info[0].name});
 }
 

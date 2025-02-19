@@ -52,7 +52,7 @@ class Pool3dMapper : public Mapper {
     GetAttr("strides", &strides_);
     GetAttr("paddings", &pads_);
     GetAttr("ksize", &k_size_);
-    if (OpType() != "max_pool3d_with_index") {
+    if (convert_pir_op_name(OpType()) != "max_pool3d_with_index") {
       GetAttr("pooling_type", &pooling_type_);
       GetAttr("data_format", &data_format_);
       GetAttr("ceil_mode", &ceil_mode_);
