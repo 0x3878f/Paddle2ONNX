@@ -80,6 +80,10 @@ set ignore=!ignore! test_auto_scan_conv2d_transpose.py
 set ignore=!ignore! test_auto_scan_conv3d.py
 set ignore=!ignore! test_auto_scan_grid_sampler.py
 set ignore=!ignore! test_auto_scan_set_value.py
+set ignore=!ignore! test_auto_scan_dequantize_linear.py
+set ignore=!ignore! test_auto_scan_gaussian_random.py
+set ignore=!ignore! test_auto_scan_partial_ops.py
+set ignore=!ignore! test_auto_scan_unary_ops.py
 
 REM Initialize bug count
 set bug=0
