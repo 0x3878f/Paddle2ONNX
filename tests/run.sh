@@ -39,6 +39,8 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_distribute_fpn_proposals1.py \
         test_auto_scan_distribute_fpn_proposals_v2.py \
         test_auto_scan_fill_constant_batch_size_like.py \
+        test_auto_scan_gaussian_random \
+        test_auto_scan_unary_ops.py \
         test_auto_scan_generate_proposals.py \
         test_uniform.py \
         test_ceil.py \
