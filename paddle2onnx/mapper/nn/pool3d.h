@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "paddle2onnx/mapper/mapper.h"
+include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {
 
