@@ -54,7 +54,6 @@ class OnnxHelper;
                    OnnxHelper* h,                                          \
                    int64_t i,                                              \
                    bool c) {                                               \
-      P2OLogger() << "Construct operation : " #op_name << std::endl;       \
       auto m = new class_name(p, h, i, c);                                 \
       m->name_ = #class_name;                                              \
       return m;                                                            \

@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(index_sample, IndexSampleMapper)
+REGISTER_PIR_MAPPER(index_sample, IndexSampleMapper)
 
 int32_t IndexSampleMapper::GetMinOpsetVersion(bool verbose) {
   auto x_info = GetInput("X");

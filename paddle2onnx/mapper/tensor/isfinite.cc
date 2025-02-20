@@ -16,7 +16,6 @@
 
 namespace paddle2onnx {
 REGISTER_PIR_MAPPER(isfinite_v2, Isfiniteapper)
-REGISTER_MAPPER(isfinite_v2, Isfiniteapper)
 
 int32_t Isfiniteapper::GetMinOpsetVersion(bool verbose) { return 10; }
 

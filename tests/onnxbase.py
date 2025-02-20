@@ -19,8 +19,8 @@ from onnxruntime import InferenceSession
 import os
 import numpy as np
 import paddle
+import paddle2onnx
 import paddle.static as static
-import paddle2onnx.paddle2onnx_cpp2py_export as c_p2o
 from paddle2onnx.convert import dygraph2onnx, decompose_program
 import shutil
 from functools import wraps
@@ -286,6 +286,7 @@ class APIOnnx(object):
                     self.input_feed[str(i)] = in_data.numpy()
 
                 i += 1
+        self.input_feed_backup = self.input_feed
 
     def set_device_mode(self, is_gpu=True):
         if paddle.device.is_compiled_with_cuda() is True and is_gpu:
@@ -362,11 +363,16 @@ class APIOnnx(object):
             model_path,
             providers=["CPUExecutionProvider"],
         )
+        input_names = sess.get_inputs()
+        temp_dict = {}
+        self.input_feed = self.input_feed_backup
+        for key, value in self.input_feed.items():
+            temp_dict[input_names[int(key)].name] = value
+        self.input_feed = temp_dict
 
         input_feed = {}
         if len(model.graph.input) == 0:
             return sess.run(output_names=None, input_feed=input_feed)
-
         ort_outs = sess.run(output_names=None, input_feed=self.input_feed)
         return ort_outs
 
@@ -481,6 +487,8 @@ class APIOnnx(object):
             params_file = pdiparams_path
             if not os.path.exists(params_file):
                 params_file = ""
+            # # clip extra
+            model_file = original_model_file
 
             # clip extra
             model_file = None
@@ -492,13 +500,24 @@ class APIOnnx(object):
             else:
                 model_file = os.path.join(self.name, "cliped_model.pdmodel")
                 self.clip_extra_program_only(original_model_file, model_file)
+                # check if params_file exists and rename it
+                if os.path.exists(params_file):
+                    new_params_file = os.path.join(
+                        os.path.dirname(params_file),
+                        "cliped_" + os.path.basename(params_file),
+                    )
+                    os.rename(params_file, new_params_file)
+                    print(f"Renamed '{params_file}' to '{new_params_file}'")
+                    params_file = new_params_file
 
             for v in self._version:
-                onnx_model_str = c_p2o.export(
+                onnx_model_str = paddle2onnx.export(
                     model_file,  # model_filename
                     params_file,  # params_filename
+                    None,  # save_file
                     v,  # opset_version
                     False,  # auto_upgrade_opset
+                    False,  # dist_prim_all
                     True,  # verbose
                     True,  # enable_onnx_checker
                     True,  # enable_experimental_op

@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(logsumexp, ReduceLogSumExpMapper)
+REGISTER_PIR_MAPPER(logsumexp, ReduceLogSumExpMapper)
 
 int32_t ReduceLogSumExpMapper::GetMinOpsetVersion(bool verbose) {
   constexpr int op_version = 11;

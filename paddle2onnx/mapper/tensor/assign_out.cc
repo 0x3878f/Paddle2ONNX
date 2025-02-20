@@ -12,33 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-#include <string>
-#include <vector>
-
-#include "paddle2onnx/mapper/mapper.h"
+#include "paddle2onnx/mapper/tensor/assign_out.h"
+#include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {
+REGISTER_PIR_MAPPER(assign_out, AssignOutMapper)
+REGISTER_PIR_MAPPER(assign_out_, AssignOutMapper)
 
-class InstanceNormMapper : public Mapper {
- public:
-  InstanceNormMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                  int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("epsilon", &epsilon_);
-  }
-
-  InstanceNormMapper(const PaddlePirParser& p, OnnxHelper* helper,  int64_t i,
-             bool c)
-      : Mapper(p, helper, i, c) {
-    GetAttr("epsilon", &epsilon_);
-  }
-
-  int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-
- private:
-  float epsilon_;
-};
+void AssignOutMapper::Opset7() {
+  auto input_info = GetInput("x");
+  auto output_info = GetOutput("out");
+  helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+}
 
 }  // namespace paddle2onnx

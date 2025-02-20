@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(dequantize_linear, DequantizeLinearMapper)
+REGISTER_PIR_MAPPER(dequantize_linear, DequantizeLinearMapper)
 
 int32_t DequantizeLinearMapper::GetMinOpsetVersion(bool verbose) { return 13; }
 

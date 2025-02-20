@@ -19,6 +19,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(unfold, UnfoldMapper)
+REGISTER_PIR_MAPPER(unfold, UnfoldMapper)
 int32_t UnfoldMapper::GetMinOpsetVersion(bool verbose) {
     Logger(verbose, 11) << RequireOpset(11) << std::endl;
     return 11;
@@ -35,7 +36,7 @@ std::vector<std::string> UnfoldMapper::_get_shape(std::string & x){
     std::string nchw = helper_->MakeNode("Shape", {x})->output(0);
     std::vector<std::string> nchw_vec = helper_->Split(nchw, {1,1,1,1}, 0);
     for (int i=0;i<nchw_vec.size();i++){
-        nchw_vec[i] = helper_->Squeeze(nchw_vec[i], {}); 
+        nchw_vec[i] = helper_->Squeeze(nchw_vec[i], {});
     }
     return nchw_vec;
 }
@@ -72,7 +73,7 @@ void UnfoldMapper::Opset11() {
 
     auto transpose_node = helper_->MakeNode("Transpose", {gather_node2->output(0)});
     std::vector<int64_t> perm{0, 1, 2, 4, 3, 5};
-    AddAttribute(transpose_node, "perm", perm); 
+    AddAttribute(transpose_node, "perm", perm);
     helper_->MakeNode("Reshape", {transpose_node->output(0), output_shape}, {output_info[0].name});
 }
 
@@ -86,8 +87,8 @@ std::string UnfoldMapper::_get_im2col_indices_along_dim(std::string intput_d,
             helper_->Constant({}, ONNX_NAMESPACE::TensorProto::INT64, padding_d * 2)
         })->output(0);
     blocks_d = helper_->MakeNode(
-        "Sub", 
-        {blocks_d, 
+        "Sub",
+        {blocks_d,
           helper_->Constant({}, ONNX_NAMESPACE::TensorProto::INT64, dialation_d * (kernel_size_d - 1))
           })->output(0);
     blocks_d_indices = helper_->MakeNode(
@@ -116,8 +117,8 @@ std::string UnfoldMapper::_get_im2col_padded_input(std::string & input_name, int
 }
 std::string UnfoldMapper::_get_im2col_output_shape(std::string &batch_dim, std::string &channel_dim, int64_t kernel_h, int64_t kernel_w){
         std::string channel_unfolded = helper_->MakeNode(
-            "Mul", 
-            {channel_dim, 
+            "Mul",
+            {channel_dim,
                 helper_->Constant({}, ONNX_NAMESPACE::TensorProto::INT64, kernel_h * kernel_w)
             }
         )->output(0);

@@ -456,6 +456,11 @@ namespace paddle2onnx
       tensor->set_raw_data(std::string((const char *)(data), numel));
       delete[] data;
     }
+    else if (dtype == ONNX_NAMESPACE::TensorProto::UINT8)
+    {
+      std::vector<uint8_t> data(numel, static_cast<uint8_t>(value));
+      tensor->set_raw_data(std::string((const char *)(data.data()), numel));
+    }
     else
     {
       Assert(

@@ -33,6 +33,17 @@ class Conv3dMapper : public Mapper {
     GetAttr("data_format", &data_format_);
   }
 
+  Conv3dMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {
+    GetAttr("groups", &groups_);
+    GetAttr("dilations", &dilations_);
+    GetAttr("strides", &strides_);
+    GetAttr("paddings", &paddings_);
+    GetAttr("padding_algorithm", &padding_algorithm_);
+    GetAttr("data_format", &data_format_);
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 

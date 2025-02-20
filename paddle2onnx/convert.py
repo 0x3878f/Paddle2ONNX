@@ -137,6 +137,54 @@ def export(
     external_file="",
     export_fp16_model=False,
 ):
+    # check model_filename
+    assert os.path.exists(
+        model_filename
+    ), f"Model file {model_filename} does not exist."
+
+    # translate old ir program to pir
+    tmp_dir = tempfile.mkdtemp()
+    dir_and_file, extension = os.path.splitext(model_filename)
+    filename = os.path.basename(model_filename)
+    filename_without_extension, _ = os.path.splitext(filename)
+    save_dir = os.path.join(tmp_dir, filename_without_extension)
+    if model_filename.endswith(".pdmodel"):
+        if os.path.exists(model_filename) and os.path.exists(params_filename):
+            place = paddle.CPUPlace()
+            exe = paddle.static.Executor(place)
+            with paddle.pir_utils.OldIrGuard():
+                [inference_program, feed_target_names, fetch_targets] = (
+                    paddle.static.load_inference_model(dir_and_file, exe)
+                )
+            program = paddle.pir.translate_to_pir(inference_program.desc)
+            for op in program.global_block().ops:
+                if op.name() == "pd_op.feed":
+                    feed = op.results()
+                if op.name() == "pd_op.fetch":
+                    fetch = op.operands_source()
+            with paddle.pir_utils.IrGuard():
+                paddle.static.save_inference_model(
+                    save_dir, feed, fetch, exe, program=program
+                )
+            model_filename = save_dir + ".json"
+            params_filename = save_dir + ".pdiparams"
+            assert os.path.exists(
+                model_filename
+            ), f"Pir Model file {model_filename} does not exist."
+            assert os.path.exists(
+                params_filename
+            ), f"Pir Params file {params_filename} does not exist."
+        else:
+            with paddle.pir_utils.OldIrGuard():
+                program = paddle.load(model_filename)
+                pir_program = paddle.pir.translate_to_pir(program.desc)
+            save_dir = os.path.join(tmp_dir, filename_without_extension)
+            model_filename = save_dir + ".json"
+            with paddle.pir_utils.IrGuard():
+                paddle.save(pir_program, model_filename)
+            assert os.path.exists(
+                model_filename
+            ), f"Pir Model file {model_filename} does not exist."
     if paddle.get_flags("FLAGS_enable_pir_api")["FLAGS_enable_pir_api"]:
         if dist_prim_all and auto_upgrade_opset:
             model_filename = decompose_program(model_filename)

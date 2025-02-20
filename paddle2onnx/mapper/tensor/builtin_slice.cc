@@ -12,33 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-#include <string>
-#include <vector>
-
-#include "paddle2onnx/mapper/mapper.h"
+#include "paddle2onnx/mapper/tensor/builtin_slice.h"
 
 namespace paddle2onnx {
+REGISTER_PIR_MAPPER(builtin_slice, BuiltinSliceMapper)
 
-class InstanceNormMapper : public Mapper {
- public:
-  InstanceNormMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                  int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("epsilon", &epsilon_);
-  }
 
-  InstanceNormMapper(const PaddlePirParser& p, OnnxHelper* helper,  int64_t i,
-             bool c)
-      : Mapper(p, helper, i, c) {
-    GetAttr("epsilon", &epsilon_);
-  }
-
-  int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-
- private:
-  float epsilon_;
-};
+void BuiltinSliceMapper::Opset7() {
+  auto input_info = GetInput(0);
+  auto output_info = GetOutput(0);
+  GetAttr("index", &index);
+  helper_->MakeNode("Identity", {input_info[index].name}, {output_info[0].name});
+}
 
 }  // namespace paddle2onnx

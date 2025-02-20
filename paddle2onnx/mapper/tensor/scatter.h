@@ -27,6 +27,12 @@ class ScatterMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("overwrite", &overwrite_);
   }
+  ScatterMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                   bool c)
+      :Mapper(p, helper, i, c) {
+    GetAttr("overwrite", &overwrite_);
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset11() override;
 

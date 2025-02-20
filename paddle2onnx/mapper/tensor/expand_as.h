@@ -27,6 +27,12 @@ class ExpandAsMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("target_shape", &target_shape_);
   }
+
+  ExpandAsMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {
+    GetAttr("target_shape", &target_shape_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset8() override;
 

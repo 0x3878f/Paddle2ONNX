@@ -38,6 +38,22 @@ class RnnMapper : public Mapper {
     }
   }
 
+    RnnMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                  bool c)
+      : Mapper(p, helper, i, c) {
+    MarkAsExperimentalOp();
+    GetAttr("num_layers", &num_layers_);
+    GetAttr("input_size", &input_size_);
+    GetAttr("hidden_size", &hidden_size_);
+    GetAttr("seed", &seed_);
+    GetAttr("dropout_prob", &dropout_prob_);
+    GetAttr("mode", &mode_);
+    GetAttr("is_bidirec", &is_bidirec_);
+    if (HasAttr("is_test")) {
+      GetAttr("is_test", &is_test_);
+    }
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 
