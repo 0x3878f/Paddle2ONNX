@@ -15,7 +15,7 @@
 #include "paddle2onnx/mapper/tensor/isinf.h"
 
 namespace paddle2onnx {
-REGISTER_PIR_MAPPER(isinf_v2, IsInfMapper)
+REGISTER_PIR_MAPPER(isinf, IsInfMapper)
 
 int32_t IsInfMapper::GetMinOpsetVersion(bool verbose) { return 10; }
 

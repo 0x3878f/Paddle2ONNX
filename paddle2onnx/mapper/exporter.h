@@ -69,10 +69,7 @@ inline std::string convert_pir_op_name(const std::string pir_op_name) {
       {"add_n", "sum"},
       {"grid_sample", "grid_sampler"},
       {"nonzero", "where_index"},
-      {"topk", "top_k_v2"},
-      {"isfinite", "isfinite_v2"},
-      {"isinf", "isinf_v2"},
-      {"isnan", "isnan_v2"}};
+      {"topk", "top_k_v2"}};
   std::string op_name = pir_op_name;
   std::string prefix = "pd_op.";
   std::string builtin_prefix = "builtin.";

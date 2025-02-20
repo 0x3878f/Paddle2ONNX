@@ -15,7 +15,7 @@
 #include "paddle2onnx/mapper/tensor/isnan.h"
 
 namespace paddle2onnx {
-REGISTER_PIR_MAPPER(isnan_v2, IsNaNMapper)
+REGISTER_PIR_MAPPER(isnan, IsNaNMapper)
 
 int32_t IsNaNMapper::GetMinOpsetVersion(bool verbose) { return 9; }
 

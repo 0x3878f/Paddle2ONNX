@@ -15,7 +15,7 @@
 #include "paddle2onnx/mapper/tensor/isfinite.h"
 
 namespace paddle2onnx {
-REGISTER_PIR_MAPPER(isfinite_v2, Isfiniteapper)
+REGISTER_PIR_MAPPER(isfinite, Isfiniteapper)
 
 int32_t Isfiniteapper::GetMinOpsetVersion(bool verbose) { return 10; }
 
@@ -31,7 +31,7 @@ void Isfiniteapper::Opset10() {
         helper_->AutoCast(input_info[0].name, input_info[0].dtype, cast_type);
     auto is_inf = helper_->MakeNode("IsInf", {cast_input});
     auto is_nan = helper_->MakeNode("IsNaN", {cast_input});
-    // finite = ~(is_inf | is_nan
+
     auto or_node =
         helper_->MakeNode("Or", {is_inf->output(0), is_nan->output(0)});
     auto not_node =
@@ -58,6 +58,7 @@ void Isfiniteapper::Opset20() {
         helper_->AutoCast(input_info[0].name, input_info[0].dtype, cast_type);
     auto is_inf = helper_->MakeNode("IsInf", {cast_input});
     auto is_nan = helper_->MakeNode("IsNaN", {cast_input});
+
     auto or_node =
         helper_->MakeNode("Or", {is_inf->output(0), is_nan->output(0)});
     auto not_node =
