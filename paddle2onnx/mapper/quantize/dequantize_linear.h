@@ -29,6 +29,16 @@ class DequantizeLinearMapper : public Mapper {
     }
   }
 
+  DequantizeLinearMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                        int64_t i,bool c)
+      :Mapper(p, helper, i, c) {
+    GetAttr("quant_axis", &quant_axis_);
+    GetAttr("bit_length", &bit_length_);
+    if (quant_axis_ == -1) {
+      quant_axis_ = 1;
+    }
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset10() override;
 

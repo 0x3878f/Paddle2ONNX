@@ -28,6 +28,13 @@ class TakeAlongAxisMapper : public Mapper {
     GetAttr("Axis", &axis_);
   }
 
+  TakeAlongAxisMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                      int64_t op_id,
+                      bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
+    GetAttr("Axis", &axis_);
+  }
+
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset11() override;
 

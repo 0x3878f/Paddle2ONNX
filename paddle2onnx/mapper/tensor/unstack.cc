@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(unstack, UnstackMapper)
+REGISTER_PIR_MAPPER(unstack, UnstackMapper)
 
 void UnstackMapper::Opset7() {
   auto x_info = GetInput("X");

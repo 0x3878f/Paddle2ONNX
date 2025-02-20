@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(temporal_shift, TemporalShiftMapper)
+REGISTER_PIR_MAPPER(temporal_shift, TemporalShiftMapper)
 
 int32_t TemporalShiftMapper::GetMinOpsetVersion(bool verbose) {
   if (data_format_ == "NHWC") {

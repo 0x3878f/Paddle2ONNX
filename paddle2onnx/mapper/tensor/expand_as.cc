@@ -20,6 +20,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(expand_as_v2, ExpandAsMapper)
+REGISTER_PIR_MAPPER(expand_as, ExpandAsMapper)
 
 int32_t ExpandAsMapper::GetMinOpsetVersion(bool verbose) {
   if (target_shape_.size() == 0 && !HasInput("target_tensor")) {

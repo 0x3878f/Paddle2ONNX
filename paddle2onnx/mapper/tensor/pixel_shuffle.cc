@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(pixel_shuffle, PixelShuffleMapper)
+REGISTER_PIR_MAPPER(pixel_shuffle, PixelShuffleMapper)
 
 void PixelShuffleMapper::Opset11() {
   auto input_info = GetInput("X");

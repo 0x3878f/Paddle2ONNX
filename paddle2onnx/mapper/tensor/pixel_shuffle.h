@@ -27,6 +27,12 @@ class PixelShuffleMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
     GetAttr("upscale_factor", &upscale_factor_);
   }
+  PixelShuffleMapper(const PaddlePirParser& p, OnnxHelper* helper,
+                     int64_t i,
+                      bool c)
+      :Mapper(p, helper, i, c) {
+    GetAttr("upscale_factor", &upscale_factor_);
+  }
 
   int32_t GetMinOpsetVersion(bool verbose) override {
     Logger(verbose, 11) << RequireOpset(11) << std::endl;

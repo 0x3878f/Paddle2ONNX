@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(quantize_linear, QuantizeLinearMapper)
+REGISTER_PIR_MAPPER(quantize_linear, QuantizeLinearMapper)
 
 int32_t QuantizeLinearMapper::GetMinOpsetVersion(bool verbose) { return 13; }
 

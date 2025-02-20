@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "paddle2onnx/mapper/mapper.h"
+#include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {
 
@@ -33,6 +34,26 @@ class Pool3dMapper : public Mapper {
     GetAttr("paddings", &pads_);
     GetAttr("ksize", &k_size_);
     if (OpType() != "max_pool3d_with_index") {
+      GetAttr("pooling_type", &pooling_type_);
+      GetAttr("data_format", &data_format_);
+      GetAttr("ceil_mode", &ceil_mode_);
+      GetAttr("padding_algorithm", &padding_algorithm_);
+      GetAttr("exclusive", &exclusive_);
+      exclusive_ = !exclusive_;
+    }
+  }
+
+  Pool3dMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
+                  bool c)
+      :Mapper(p, helper, i, c) {
+    op_mapper_["max"] = {"MaxPool", "GlobalMaxPool"};
+    op_mapper_["avg"] = {"AveragePool", "GlobalAveragePool"};
+    GetAttr("global_pooling", &global_pooling_);
+    GetAttr("adaptive", &adaptive_);
+    GetAttr("strides", &strides_);
+    GetAttr("paddings", &pads_);
+    GetAttr("ksize", &k_size_);
+    if (convert_pir_op_name(OpType()) != "max_pool3d_with_index") {
       GetAttr("pooling_type", &pooling_type_);
       GetAttr("data_format", &data_format_);
       GetAttr("ceil_mode", &ceil_mode_);

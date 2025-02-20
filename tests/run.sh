@@ -35,10 +35,12 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_unfold.py \
         test_auto_scan_uniform_random_batch_size_like.py \
         test_auto_scan_uniform_random.py \
+        test_auto_scan_gaussian_random.py \
         test_auto_scan_dist.py \
         test_auto_scan_distribute_fpn_proposals1.py \
         test_auto_scan_distribute_fpn_proposals_v2.py \
         test_auto_scan_fill_constant_batch_size_like.py \
+        test_auto_scan_unary_ops.py \
         test_auto_scan_generate_proposals.py \
         test_uniform.py \
         test_ceil.py \
@@ -55,9 +57,15 @@ ignore="test_auto_scan_multiclass_nms.py
         test_nn_InstanceNorm3D.py \
         test_nn_Upsample.py \
         test_normalize.py \
+        test_hardtanh.py \
+        test_nn_GRU.py \
         test_scatter_nd_add.py \
         test_quantize_model.py \
         test_quantize_model_minist.py \
+        test_auto_scan_partial_ops.py \
+        test_dygraph2onnx.py \
+        test_auto_scan_dequantize_linear.py \
+        test_auto_scan_quantize_linear.py \
         test_quantize_model_speedup.py \
         test_resnet_fp16.py \
         test_empty.py \

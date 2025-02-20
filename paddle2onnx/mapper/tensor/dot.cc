@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(dot, DotMapper)
+REGISTER_PIR_MAPPER(dot, DotMapper)
 
 void DotMapper::Opset7() {
   auto input_x_info = GetInput("X");

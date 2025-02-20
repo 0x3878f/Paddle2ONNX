@@ -20,25 +20,16 @@
 
 namespace paddle2onnx {
 
-class InstanceNormMapper : public Mapper {
+class PirSelectInputMapper : public Mapper {
  public:
-  InstanceNormMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                  int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("epsilon", &epsilon_);
-  }
-
-  InstanceNormMapper(const PaddlePirParser& p, OnnxHelper* helper,  int64_t i,
-             bool c)
-      : Mapper(p, helper, i, c) {
-    GetAttr("epsilon", &epsilon_);
-  }
+  PirSelectInputMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t op_id,
+                 bool if_in_cf_block)
+      : Mapper(p, helper, op_id, if_in_cf_block) {}
 
   int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-
- private:
-  float epsilon_;
+  void Opset9() override;
 };
 
 }  // namespace paddle2onnx

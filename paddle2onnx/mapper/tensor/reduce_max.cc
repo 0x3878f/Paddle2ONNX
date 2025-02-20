@@ -116,6 +116,9 @@ void ReduceMaxMapper::Opset11() {
   }
 
   auto x_info = GetInput("X");
+  if(x_info[0].Rank() == 0) {
+    x_info[0].name = helper_->Unsqueeze(x_info[0].name, {0});
+  }
   auto input_name = x_info[0].name;
   auto input_tpye = x_info[0].dtype;
   if (x_info[0].dtype == P2ODataType::BOOL) {

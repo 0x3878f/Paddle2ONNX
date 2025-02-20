@@ -27,6 +27,10 @@ class ReduceLogSumExpMapper : public Mapper {
       : Mapper(p, helper, block_id, op_id) {
   }
 
+  ReduceLogSumExpMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i, bool c)
+      :Mapper(p, helper, i, c) {
+  }
+
   void Opset18() override;
   void Opset11() override;
 

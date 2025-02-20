@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -33,6 +34,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_round_11():
     """
     api: paddle.round
@@ -41,13 +43,15 @@ def test_round_11():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'round', [11])
+    obj = APIOnnx(op, "round", [11])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 3, 3]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 3, 3]).astype("float32")),
+    )
     obj.run()
 
 
+@_test_with_pir
 def test_round_12():
     """
     api: paddle.round
@@ -56,8 +60,9 @@ def test_round_12():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'round', [12])
+    obj = APIOnnx(op, "round", [12])
     obj.set_input_data(
         "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [3, 3, 3]).astype('float32')))
+        paddle.to_tensor(randtool("float", -1, 1, [3, 3, 3]).astype("float32")),
+    )
     obj.run()

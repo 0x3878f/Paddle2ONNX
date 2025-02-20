@@ -17,6 +17,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(rnn, RnnMapper)
+REGISTER_PIR_MAPPER(rnn, RnnMapper)
 
 int32_t RnnMapper::GetMinOpsetVersion(bool verbose) {
   return 7;
@@ -48,7 +49,7 @@ std::vector<std::string> RnnMapper::MakeParamInputs(int64_t layer_index) {
   for (auto i = bias_start_idx; i < bias_end_idx; ++i) {
     unsqueezed_weights.push_back(helper_->Unsqueeze(weight_list_info[i].name, {0}));
   }
-  
+
   std::vector<std::string> input_weight;
   std::vector<std::string> hidden_weight;
   for (size_t i = 0; i < bidirect_len; i += 2) {
@@ -83,7 +84,7 @@ std::vector<std::string> RnnMapper::MakeParamInputs(int64_t layer_index) {
   hidden_weight_tensor = ReformWeight(hidden_weight_tensor, hidden_size_, reform_permutation);
   input_bias_tensor = ReformWeight(input_bias_tensor, hidden_size_, reform_permutation);
   hidden_bias_tensor = ReformWeight(hidden_bias_tensor, hidden_size_, reform_permutation);
-  
+
   std::vector<std::string> outputs;
   outputs.push_back(input_weight_tensor);
   outputs.push_back(hidden_weight_tensor);

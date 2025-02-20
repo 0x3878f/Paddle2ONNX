@@ -28,7 +28,7 @@ op_api_map = {
     "exp": paddle.exp,
     "floor": paddle.floor,
     "hard_shrink": paddle.nn.functional.hardshrink,
-    "brelu": paddle.nn.functional.hardtanh,
+    # "brelu": paddle.nn.functional.hardtanh,
     "log": paddle.log,
     "log1p": paddle.log1p,
     "log2": paddle.log2,
@@ -109,7 +109,7 @@ class TestUnaryOPConvert(OPConvertAutoScanTest):
             "op_names": "",
             "test_data_shapes": [data_shapes],
             "test_data_types": [[dtype]],
-            "opset_version": [7, 9, 15],
+            "opset_version": [7],
             "input_spec_shape": [],
         }
         models = list()

@@ -15,6 +15,7 @@
 import paddle
 from onnxbase import APIOnnx
 from onnxbase import randtool
+from onnxbase import _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -26,8 +27,8 @@ class Net(paddle.nn.Layer):
         super(Net, self).__init__()
         self.register_buffer(
             "my_buffer",
-            paddle.to_tensor(
-                10, dtype="float32"), )
+            paddle.to_tensor(10, dtype="float32"),
+        )
 
     def forward(self, inputs):
         """
@@ -36,6 +37,7 @@ class Net(paddle.nn.Layer):
         return inputs + self.my_buffer
 
 
+@_test_with_pir
 def test_register_buffer():
     """
     api: register_buffer
@@ -44,8 +46,8 @@ def test_register_buffer():
     op = Net()
     op.eval()
     # net, name, ver_list, delta=1e-6, rtol=1e-5
-    obj = APIOnnx(op, 'register_buffer', [9])
+    obj = APIOnnx(op, "register_buffer", [9])
     obj.set_input_data(
-        "input_data",
-        paddle.to_tensor(randtool("float", -1, 1, [1]).astype('float32')))
+        "input_data", paddle.to_tensor(randtool("float", -1, 1, [1]).astype("float32"))
+    )
     obj.run()

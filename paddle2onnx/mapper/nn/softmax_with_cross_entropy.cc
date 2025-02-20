@@ -16,6 +16,7 @@
 
 namespace paddle2onnx {
 REGISTER_MAPPER(softmax_with_cross_entropy, SoftmaxCrossEntropyLossMapper)
+REGISTER_PIR_MAPPER(cross_entropy_with_softmax, SoftmaxCrossEntropyLossMapper)
 
 int32_t SoftmaxCrossEntropyLossMapper::GetMinOpsetVersion(bool verbose) {
   auto logits = GetInput("Logits");

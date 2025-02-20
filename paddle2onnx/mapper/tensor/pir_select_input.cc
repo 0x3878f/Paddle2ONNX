@@ -12,33 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include "paddle2onnx/mapper/tensor/pir_select_input.h"
+
+#include <cmath>
 #include <string>
 #include <vector>
 
-#include "paddle2onnx/mapper/mapper.h"
-
 namespace paddle2onnx {
+REGISTER_PIR_MAPPER(select_input, PirSelectInputMapper);
 
-class InstanceNormMapper : public Mapper {
- public:
-  InstanceNormMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                  int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("epsilon", &epsilon_);
-  }
+int32_t PirSelectInputMapper::GetMinOpsetVersion(bool verbose) {
+  return 9;
+}
 
-  InstanceNormMapper(const PaddlePirParser& p, OnnxHelper* helper,  int64_t i,
-             bool c)
-      : Mapper(p, helper, i, c) {
-    GetAttr("epsilon", &epsilon_);
-  }
+void PirSelectInputMapper::Opset9() {
+    auto cond_info = GetInput(0);
+    auto false_info = GetInput(1);
+    auto true_info = GetInput(2);
+    auto out_info =  GetOutput(0);
 
-  int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset7() override;
-
- private:
-  float epsilon_;
-};
+    std::string cast_cond_info = helper_-> AutoCast(cond_info[0].name, P2ODataType::INT32, P2ODataType::BOOL);
+    helper_->MakeNode("Where",
+                         {cast_cond_info, true_info[0].name, false_info[0].name},
+                        {out_info[0].name});
+}
 
 }  // namespace paddle2onnx

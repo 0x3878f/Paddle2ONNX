@@ -29,6 +29,13 @@ class TemporalShiftMapper : public Mapper {
     GetAttr("shift_ratio", &shift_ratio_);
     GetAttr("seg_num", &seg_num_);
   }
+  TemporalShiftMapper(const PaddlePirParser &p, OnnxHelper *helper, int64_t op_id,
+               bool in_cf_block)
+      : Mapper(p, helper, op_id, in_cf_block) {
+    GetAttr("data_format", &data_format_);
+    GetAttr("shift_ratio", &shift_ratio_);
+    GetAttr("seg_num", &seg_num_);
+  }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;
 
