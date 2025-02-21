@@ -15,7 +15,7 @@
 from auto_scan_test import OPConvertAutoScanTest, BaseNet
 from hypothesis import reproduce_failure
 import hypothesis.strategies as st
-from onnxbase import randtool
+from onnxbase import randtool, _test_with_pir
 import numpy as np
 import unittest
 import paddle
@@ -24,7 +24,7 @@ op_api_map = {
     "isfinite_v2": paddle.isfinite,
     "isinf_v2": paddle.isinf,
     "isnan_v2": paddle.isnan,
-    "isnan": paddle.fluid.layers.has_nan,
+    "isnan": paddle.isnan,
 }
 
 opset_version_map = {
@@ -105,6 +105,7 @@ class TestLogicopsConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=40, max_duration=-1)
 
