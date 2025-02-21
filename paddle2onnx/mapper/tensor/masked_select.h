@@ -12,25 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle2onnx/mapper/tensor/isnan.h"
+#pragma once
+#include <string>
+#include <vector>
+
+#include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
-REGISTER_PIR_MAPPER(isnan, IsNaNMapper)
 
-int32_t IsNaNMapper::GetMinOpsetVersion(bool verbose) { return 9; }
+class MaskedSelectMapper : public Mapper {
+ public:
+  MaskedSelectMapper(const PaddleParser& p,
+                     OnnxHelper* helper,
+                     int64_t block_id,
+                     int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
+  MaskedSelectMapper(const PaddlePirParser& p,
+                     OnnxHelper* helper,
+                     int64_t i,
+                     bool c)
+      : Mapper(p, helper, i, c) {}
 
-void IsNaNMapper::Opset9() {
-  auto input_info = GetInput("X");
-  auto output_info = GetOutput("Out");
-  if (input_info[0].dtype == P2ODataType::INT32 ||
-      input_info[0].dtype == P2ODataType::INT64) {
-    auto cast_type = P2ODataType::FP64;
+  int32_t GetMinOpsetVersion(bool verbose) override;
+  void Opset9() override;
+};
 
-    std::string cast_input =
-        helper_->AutoCast(input_info[0].name, input_info[0].dtype, cast_type);
-    helper_->MakeNode("IsNaN", {cast_input}, {output_info[0].name});
-  } else {
-    helper_->MakeNode("IsNaN", {input_info[0].name}, {output_info[0].name});
-  }
-}
 }  // namespace paddle2onnx

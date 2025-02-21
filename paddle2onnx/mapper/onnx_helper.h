@@ -134,6 +134,20 @@ namespace paddle2onnx
                          int32_t input_paddle_dtype,
                          int32_t to_paddle_dtype);
 
+    std::vector<int64_t> GetBroadcastShape(const std::vector<int64_t>& shape_a,
+                                           const std::vector<int64_t>& shape_b);
+
+    bool CanBroadcast(const std::vector<int64_t>& shape_a,
+                             const std::vector<int64_t>& shape_b);
+
+    std::string BroadcastTo(const std::string& input,
+                            const std::vector<int64_t> &input_shape,
+                            const std::vector<int64_t>& target_shape);
+    std::string BroadcastTo(const std::string& input,
+                            const std::string& output,
+                            const std::vector<int64_t> &input_shape,
+                            const std::vector<int64_t>& target_shape);
+
     // Helper function for PaddlePaddle's shape tensor list inputs
     // will cast all data type to int64
     // will make sure all inputs to be 1-D tensor

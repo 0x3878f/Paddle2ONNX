@@ -28,7 +28,7 @@ void IsInfMapper::Opset10() {
 
     std::string cast_input =
         helper_->AutoCast(input_info[0].name, input_info[0].dtype, cast_type);
-    auto isnan_node = helper_->MakeNode("IsInf", {cast_input});
+    helper_->MakeNode("IsInf", {cast_input}, {output_info[0].name});
   } else {
     helper_->MakeNode("IsInf", {input_info[0].name}, {output_info[0].name});
   }
@@ -44,7 +44,7 @@ void IsInfMapper::Opset20() {
 
     std::string cast_input =
         helper_->AutoCast(input_info[0].name, input_info[0].dtype, cast_type);
-    auto isnan_node = helper_->MakeNode("IsInf", {cast_input});
+    helper_->MakeNode("IsInf", {cast_input}, {output_info[0].name});
   } else {
     helper_->MakeNode("IsInf", {input_info[0].name}, {output_info[0].name});
   }

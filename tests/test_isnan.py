@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import paddle
-from onnxbase import APIOnnx
+from onnxbase import APIOnnx, randtool
 from onnxbase import _test_with_pir
 
 
@@ -31,6 +31,27 @@ class Net(paddle.nn.Layer):
         """
         x = paddle.isnan(inputs)
         return x.astype("float32")
+
+
+@_test_with_pir
+def test_isnan_int32():
+    """
+    api: paddle.isnan
+    op version: 9
+    """
+    op = Net()
+    op.eval()
+
+    obj = APIOnnx(op, "isnan", [9])
+
+    obj.set_input_data(
+        "input_data",
+        paddle.to_tensor(
+            paddle.to_tensor(randtool("int", -10, 20, [3, 3, 3]).astype("int32")),
+        ),
+    )
+
+    obj.run()
 
 
 @_test_with_pir
