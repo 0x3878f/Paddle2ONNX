@@ -20,8 +20,8 @@ REGISTER_PIR_MAPPER(masked_select, MaskedSelectMapper)
 int32_t MaskedSelectMapper::GetMinOpsetVersion(bool verbose) { return 9; }
 
 void MaskedSelectMapper::Opset9() {
-  auto input_info = GetInput("X");
-  auto mask_info = GetInput("Mask");
+  auto input_info = GetInput("x");
+  auto mask_info = GetInput("mask");
   auto output_info = GetOutput("out");
 
   std::vector<int64_t> input_shape = input_info[0].shape;

@@ -22,11 +22,6 @@ namespace paddle2onnx {
 
 class MaskedSelectMapper : public Mapper {
  public:
-  MaskedSelectMapper(const PaddleParser& p,
-                     OnnxHelper* helper,
-                     int64_t block_id,
-                     int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {}
   MaskedSelectMapper(const PaddlePirParser& p,
                      OnnxHelper* helper,
                      int64_t i,
