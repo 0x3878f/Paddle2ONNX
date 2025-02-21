@@ -26,15 +26,28 @@ void MaskedSelectMapper::Opset9() {
 
   std::vector<int64_t> input_shape = input_info[0].shape;
   std::vector<int64_t> mask_shape = mask_info[0].shape;
-  std::vector<int64_t> broadcasted_shape =
-      helper_->GetBroadcastShape(input_shape, mask_shape);
+  if (input_shape == mask_shape) {
+    helper_->MakeNode("Compress",
+                      {input_info[0].name, mask_info[0].name},
+                      {output_info[0].name});
+  } else {
+    std::vector<int64_t> broadcasted_shape =
+        helper_->GetBroadcastShape(input_shape, mask_shape);
 
-  std::string broadcast_input =
-      helper_->BroadcastTo(input_info[0].name, input_shape, broadcasted_shape);
-  std::string broadcast_mask =
-      helper_->BroadcastTo(mask_info[0].name, mask_shape, broadcasted_shape);
+    std::string broadcast_input = input_info[0].name;
+    if (input_shape != broadcasted_shape) {
+      broadcast_input = helper_->BroadcastTo(
+          input_info[0].name, input_shape, broadcasted_shape);
+    }
 
-  auto compress_node = helper_->MakeNode(
-      "Compress", {broadcast_input, broadcast_mask}, {output_info[0].name});
+    std::string broadcast_mask = mask_info[0].name;
+    if (mask_shape != broadcasted_shape) {
+      broadcast_mask = helper_->BroadcastTo(
+          mask_info[0].name, mask_shape, broadcasted_shape);
+    }
+
+    helper_->MakeNode(
+        "Compress", {broadcast_input, broadcast_mask}, {output_info[0].name});
+  }
 }
 }  // namespace paddle2onnx
