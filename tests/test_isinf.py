@@ -42,7 +42,7 @@ def test_isnan_int32():
     op = Net()
     op.eval()
 
-    obj = APIOnnx(op, "isnan", [9])
+    obj = APIOnnx(op, "isinf", [10])
 
     obj.set_input_data(
         "input_data",
