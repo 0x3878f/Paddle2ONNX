@@ -21,6 +21,7 @@
 
 #include "paddle/common/ddim.h"
 #include "paddle/fluid/ir_adaptor/translator/op_compat_info.h"
+#include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 #include "paddle/fluid/pir/dialect/operator/ir/op_attribute.h"
 #include "paddle/fluid/pir/dialect/operator/ir/op_dialect.h"
 #include "paddle/fluid/pir/dialect/operator/ir/op_type.h"
@@ -31,9 +32,8 @@
 #include "paddle/pir/include/core/builtin_dialect.h"
 #include "paddle/pir/include/core/builtin_op.h"
 #include "paddle/pir/include/core/ir_context.h"
-#include "paddle2onnx/proto/p2o_paddle.pb.h"
-#include "paddle/fluid/pir/dialect/operator/ir/control_flow_op.h"
 #include "paddle2onnx/mapper/data_helper.h"
+#include "paddle2onnx/proto/p2o_paddle.pb.h"
 
 phi::DataType TransToPhiDataType(pir::Type dtype) {
   if (dtype.isa<pir::BFloat16Type>()) {
@@ -148,34 +148,20 @@ void PaddlePirParser::GetAllSubBlockOpOutputName(
 void PaddlePirParser::GetAllOpOutputName() {
   inputs.clear();
   outputs.clear();
-  std::vector<std::pair<TensorInfo, int64_t>> inputs_temp;
-  // print pir::program in C++
   for (auto op : global_blocks_ops) {
-    //Get global block Input Info
-    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed"){
-      std::string var_name = GenOpInputOutputName(op->name());
-      std::string input_name = op->attribute<pir::StrAttribute>("name").AsString();
-      int64_t input_name_idx;
-      try {
-        input_name_idx = std::stoll(input_name);
-        PADDLE_ENFORCE_EQ(
-            input_name == std::to_string(input_name_idx),
-            true,
-            common::errors::InvalidArgument("invalid input name: %s", input_name));
-      } catch (const std::invalid_argument& e) {
-        Assert(false, "input name is not a number: " + input_name);
-      }
-
-      inputs_temp.push_back(
-          std::make_pair(GetTensorInfo(var_name, op->result(0).type()),  input_name_idx)
-      );
+    if (op->name() == "pd_op.data" || op->name() == "pd_op.feed") {
+      std::string input_name =
+          op->attribute<pir::StrAttribute>("name").AsString();
+      std::string var_name =
+          input_name + "." + GenOpInputOutputName(op->name());
+      inputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
       AddOpOutputName(op, var_name, 0);
-    }else if (op->name() == "pd_op.fetch") {
+    } else if (op->name() == "pd_op.fetch") {
       auto value = op->operand(0).source();
       auto output_idx = value.dyn_cast<pir::OpResult>().index();
       std::string var_name = _op_outputs[value.defining_op()][output_idx];
       outputs.push_back(GetTensorInfo(var_name, op->result(0).type()));
-    }else{
+    } else {
       std::string var_name = GenOpInputOutputName(op->name());
       int num_outputs = op->num_results();
       for (int i = 0; i < num_outputs; ++i) {
@@ -183,15 +169,6 @@ void PaddlePirParser::GetAllOpOutputName() {
         AddOpOutputName(op, tmp_var_name, i);
       }
     }
-  }
-  std::sort(inputs_temp.begin(),
-            inputs_temp.end(),
-            [](const std::pair<TensorInfo, int64_t>& a,
-               const std::pair<TensorInfo, int64_t>& b) {
-              return a.second < b.second;
-            });
-  for(auto input : inputs_temp) {
-    inputs.push_back(input.first);
   }
 }
 
@@ -229,17 +206,17 @@ void PaddlePirParser::GetOpArgNameMappings() {
 }
 
 void PaddlePirParser::GetAllBlocksOpsSet(pir::Block* block) {
-  for(auto &op : block->ops()) {
+  for (auto& op : block->ops()) {
     std::string op_name = op->name();
-    if(op_name != "builtin.parameter") {
+    if (op_name != "builtin.parameter") {
       total_blocks_ops.insert(op);
-      if(op_name == "pd_op.if") {
+      if (op_name == "pd_op.if") {
         auto if_op = op->dyn_cast<paddle::dialect::IfOp>();
         pir::Block& true_block = if_op.true_block();
         GetAllBlocksOpsSet(&true_block);
         pir::Block& false_block = if_op.false_block();
         GetAllBlocksOpsSet(&false_block);
-      } else if(op_name == "pd_op.while") {
+      } else if (op_name == "pd_op.while") {
         auto while_op = op->dyn_cast<paddle::dialect::WhileOp>();
         GetAllBlocksOpsSet(&while_op.body());
       }
@@ -374,7 +351,8 @@ bool PaddlePirParser::LoadParams(const std::string& path) {
   is.seekg(0, std::ios::beg);
   std::vector<std::string> var_names;
   GetParamValueName(&var_names);
-  P2OLogger() << "Getting parama's attribute 'param_namefrom' from pir::program successfully"
+  P2OLogger() << "Getting parama's attribute 'param_namefrom' from "
+                 "pir::program successfully"
               << std::endl;
 
   int64_t read_size = 0;
@@ -446,17 +424,19 @@ bool PaddlePirParser::Init(const std::string& _model,
                            const std::string& _params) {
   std::vector<Weight> weights;
   if (!LoadProgram(_model)) {
-    P2OLogger() << "Failed to load "<<_model << std::endl;
+    P2OLogger() << "Failed to load " << _model << std::endl;
     return false;
   }
-  P2OLogger() << "Load PaddlePaddle pir model " <<_model << "successfully" << std::endl;
+  P2OLogger() << "Load PaddlePaddle pir model " << _model << "successfully"
+              << std::endl;
   if (_params != "") {
     if (!LoadParams(_params)) {
       P2OLogger() << "Failed to load parameters of PaddlePaddle model"
                   << std::endl;
       return false;
     }
-    P2OLogger() << "Load parameters " << _params << " successfully" << std::endl;
+    P2OLogger() << "Load parameters " << _params << " successfully"
+                << std::endl;
   }
 
   // InitBlock();
