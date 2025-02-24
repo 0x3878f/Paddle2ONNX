@@ -213,5 +213,6 @@ USE_P2O_MAPPER(mv, MvMapper)
 USE_P2O_MAPPER(isinf, IsInfMapper)
 USE_P2O_MAPPER(isnan, IsNaNMapper)
 USE_P2O_MAPPER(isfinite, Isfiniteapper)
+USE_P2O_MAPPER(masked_select, MaskedSelectMapper)
 #endif // WITH_PADDLE2ONNX_STATIC_INTERNAL_AT_COMPILING
 #endif // WITH_PADDLE2ONNX_STATIC_INTERNAL

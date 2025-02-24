@@ -301,6 +301,77 @@ std::string OnnxHelper::AutoCast(const std::string &input,
   return cast_node->output(0);
 }
 
+bool OnnxHelper::CanBroadcast(const std::vector<int64_t> &shape_a,
+                              const std::vector<int64_t> &shape_b) {
+  if (shape_a.empty() || shape_b.empty()) return false;
+  if (shape_a == shape_b) return true;
+
+  const int64_t a_rank = shape_a.size();
+  const int64_t b_rank = shape_b.size();
+  const int64_t max_rank = std::max(a_rank, b_rank);
+
+  for (int64_t i = 0; i < max_rank; ++i) {
+    const int64_t idx_a = a_rank - 1 - i;
+    const int64_t idx_b = b_rank - 1 - i;
+
+    const int64_t dim_a = (idx_a >= 0) ? shape_a[idx_a] : 1;
+    const int64_t dim_b = (idx_b >= 0) ? shape_b[idx_b] : 1;
+
+    if (dim_a != 1 && dim_b != 1 && dim_a != dim_b) return false;
+  }
+  return true;
+}
+
+std::vector<int64_t> OnnxHelper::GetBroadcastShape(
+    const std::vector<int64_t> &shape_a, const std::vector<int64_t> &shape_b) {
+  std::vector<int64_t> result;
+
+  if (shape_a == shape_b) {
+    result = shape_a;
+    return result;
+  }
+  Assert(CanBroadcast(shape_a, shape_b), "Cannot broadcast shape");
+
+  const int64_t a_rank = shape_a.size();
+  const int64_t b_rank = shape_b.size();
+  const int64_t max_rank = std::max(a_rank, b_rank);
+  std::vector<int64_t> reversed_result;
+
+  for (int64_t i = 0; i < max_rank; ++i) {
+    const int64_t idx_a = a_rank - 1 - i;
+    const int64_t idx_b = b_rank - 1 - i;
+
+    const int64_t dim_a = (idx_a >= 0) ? shape_a[idx_a] : 1;
+    const int64_t dim_b = (idx_b >= 0) ? shape_b[idx_b] : 1;
+
+    result.push_back(std::max(dim_a, dim_b));
+  }
+
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+std::string OnnxHelper::BroadcastTo(const std::string &input,
+                                    const std::vector<int64_t> &input_shape,
+                                    const std::vector<int64_t> &target_shape) {
+  std::string output = MapperHelper::Get()->GenName("helper.broadcast_to");
+  return BroadcastTo(input, output, input_shape, target_shape);
+}
+
+std::string OnnxHelper::BroadcastTo(const std::string &input,
+                                    const std::string &output,
+                                    const std::vector<int64_t> &input_shape,
+                                    const std::vector<int64_t> &target_shape) {
+  Assert(CanBroadcast(input_shape, target_shape), "Cannot broadcast shape");
+
+  std::string shape_const =
+      Constant(ONNX_NAMESPACE::TensorProto::INT64, target_shape);
+
+  auto expand_node = MakeNode("Expand", {input, shape_const}, {output});
+
+  return output;
+}
+
 std::string OnnxHelper::ConcatIndices(const std::vector<TensorInfo> &indices) {
   std::vector<std::string> vars;
   // make sure all the indices be 1-D tensor

@@ -28,8 +28,6 @@ cases=$(find . -name "test*.py" | sort)
 ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_roi_align.py \ # need to be rewrite
         test_auto_scan_pool_adaptive_max_ops.py \
-        test_auto_scan_isx_ops.py \
-        test_auto_scan_masked_select.py \
         test_auto_scan_pad2d.py \
         test_auto_scan_roll.py \
         test_auto_scan_unfold.py \
@@ -47,10 +45,6 @@ ignore="test_auto_scan_multiclass_nms.py
         test_deform_conv2d.py \
         test_floor_divide.py \
         test_has_nan.py \
-        test_isfinite.py \
-        test_isinf.py \
-        test_isnan.py \
-        test_mask_select.py \
         test_median.py \
         test_nn_Conv3DTranspose.py \
         test_nn_GroupNorm.py \
