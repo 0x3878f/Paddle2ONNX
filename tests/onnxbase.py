@@ -355,6 +355,10 @@ class APIOnnx(object):
         """
         make onnx res
         """
+
+        def _get_origin_name(ort_input):
+            return ort_input.name.split(".")[0]
+
         model_path = os.path.join(
             self.pwd, self.name, self.name + "_" + str(ver) + ".onnx"
         )
@@ -363,11 +367,11 @@ class APIOnnx(object):
             model_path,
             providers=["CPUExecutionProvider"],
         )
-        input_names = sess.get_inputs()
+        origin_input_names = list(map(_get_origin_name, sess.get_inputs()))
         temp_dict = {}
         self.input_feed = self.input_feed_backup
-        for key, value in self.input_feed.items():
-            temp_dict[input_names[int(key)].name] = value
+        for idx, name in enumerate(origin_input_names):
+            temp_dict[sess.get_inputs()[idx].name] = self.input_feed[name]
         self.input_feed = temp_dict
 
         input_feed = {}
