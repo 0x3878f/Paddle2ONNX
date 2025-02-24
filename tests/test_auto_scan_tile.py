@@ -17,7 +17,7 @@ import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
-from onnxbase import _test_only_pir
+from onnxbase import _test_with_pir
 
 
 class Net(BaseNet):
@@ -77,7 +77,7 @@ class TestTileConvert(OPConvertAutoScanTest):
 
         return (config, models)
 
-    @_test_only_pir
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
@@ -137,7 +137,7 @@ class TestTileConvert1(OPConvertAutoScanTest):
 
         return (config, models)
 
-    @_test_only_pir
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 
