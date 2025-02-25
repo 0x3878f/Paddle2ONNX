@@ -1,4 +1,4 @@
-// Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+// Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,5 @@ void UniformMapper::Opset7() {
   if (seed_ != 0) {
     AddAttribute(random_node, "seed", static_cast<float>(seed_));
   }
-
-  std::cout << "dtype_" << dtype_ << std::endl;
 }
 }  // namespace paddle2onnx
