@@ -46,7 +46,6 @@ ignore="test_auto_scan_multiclass_nms.py
         test_floor_divide.py \
         test_has_nan.py \
         test_median.py \
-        test_nn_Conv3DTranspose.py \
         test_nn_GroupNorm.py \
         test_nn_InstanceNorm3D.py \
         test_nn_Upsample.py \

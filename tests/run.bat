@@ -50,7 +50,6 @@ set ignore=!ignore! test_deform_conv2d.py
 set ignore=!ignore! test_floor_divide.py
 set ignore=!ignore! test_has_nan.py
 set ignore=!ignore! test_median.py
-set ignore=!ignore! test_nn_Conv3DTranspose.py
 set ignore=!ignore! test_nn_GroupNorm.py
 set ignore=!ignore! test_nn_InstanceNorm3D.py
 set ignore=!ignore! test_nn_Upsample.py
