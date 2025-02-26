@@ -23,6 +23,7 @@ namespace paddle2onnx {
 REGISTER_MAPPER(pool3d, Pool3dMapper)
 REGISTER_PIR_MAPPER(pool3d, Pool3dMapper)
 REGISTER_MAPPER(max_pool3d_with_index, Pool3dMapper)
+REGISTER_PIR_MAPPER(max_pool3d_with_index, Pool3dMapper)
 
 bool Pool3dMapper::IsSameSpan(const int64_t& in_size, const int64_t& out_size) {
   std::vector<int64_t> spans;
@@ -51,7 +52,7 @@ void Pool3dMapper::AdaptivePool(const std::vector<TensorInfo>& input_info,
   int64_t kernel_h = input_h - (output_h - 1) * stride_h;
   int64_t kernel_w = input_w - (output_w - 1) * stride_w;
   std::string onnx_pool_type;
-  if (OpType() == "max_pool3d_with_index") {
+  if (convert_pir_op_name(OpType()) == "max_pool3d_with_index") {
     onnx_pool_type = "MaxPool";
   } else {
     auto iter = op_mapper_.find(pooling_type_);
@@ -59,16 +60,17 @@ void Pool3dMapper::AdaptivePool(const std::vector<TensorInfo>& input_info,
   }
 
   std::shared_ptr<ONNX_NAMESPACE::NodeProto> node;
-  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) != kNoNeedCastTypesOpSet7.end())
-  {
-    node = helper_->MakeNode(onnx_pool_type, {input_info[0].name}, {output_info[0].name});
-  }
-  else
-  {
-    auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
-                                   P2ODataType::FP32);
+  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) !=
+      kNoNeedCastTypesOpSet7.end()) {
+    node = helper_->MakeNode(
+        onnx_pool_type, {input_info[0].name}, {output_info[0].name});
+  } else {
+    auto input = helper_->AutoCast(
+        input_info[0].name, input_info[0].dtype, P2ODataType::FP32);
     node = helper_->MakeNode(onnx_pool_type, {input});
-    helper_->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
+    helper_->AutoCast(node->output(0),
+                      output_info[0].name,
+                      P2ODataType::FP32,
                       output_info[0].dtype);
   }
 
@@ -120,15 +122,15 @@ void Pool3dMapper::NoAdaptivePool(const std::vector<TensorInfo>& input_info,
   int64_t max_ksize = *std::max_element(std::begin(k_size_), std::end(k_size_));
   int64_t max_pads = *std::max_element(std::begin(pads_), std::end(pads_));
   auto input_x = input_info[0].name;
-  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) == kNoNeedCastTypesOpSet7.end())
-  {
-    input_x = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
-                                P2ODataType::FP32);
+  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) ==
+      kNoNeedCastTypesOpSet7.end()) {
+    input_x = helper_->AutoCast(
+        input_info[0].name, input_info[0].dtype, P2ODataType::FP32);
   }
 
   if (max_ksize <= max_pads) {
-    std::vector<int64_t> onnx_paddings = {0, 0, pads_[0], pads_[1], pads_[2],
-                                          0, 0, pads_[3], pads_[4], pads_[5]};
+    std::vector<int64_t> onnx_paddings = {
+        0, 0, pads_[0], pads_[1], pads_[2], 0, 0, pads_[3], pads_[4], pads_[5]};
     std::vector<std::string> inputs_names = {input_x};
     if (helper_->GetOpsetVersion() >= 11) {
       std::string paddings_node =
@@ -152,21 +154,21 @@ void Pool3dMapper::NoAdaptivePool(const std::vector<TensorInfo>& input_info,
     pads_.resize(6, 0);
   }
   std::string onnx_pool_type;
-  if (OpType() == "max_pool3d_with_index") {
+  if (convert_pir_op_name(OpType()) == "max_pool3d_with_index") {
     onnx_pool_type = "MaxPool";
   } else {
     auto iter = op_mapper_.find(pooling_type_);
     onnx_pool_type = iter->second[0];
   }
   std::shared_ptr<ONNX_NAMESPACE::NodeProto> node(nullptr);
-  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) != kNoNeedCastTypesOpSet7.end())
-  {
+  if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) !=
+      kNoNeedCastTypesOpSet7.end()) {
     node = helper_->MakeNode(onnx_pool_type, {input_x}, {output_info[0].name});
-  }
-  else
-  {
+  } else {
     node = helper_->MakeNode(onnx_pool_type, {input_x});
-    helper_->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
+    helper_->AutoCast(node->output(0),
+                      output_info[0].name,
+                      P2ODataType::FP32,
                       output_info[0].dtype);
   }
 
@@ -264,24 +266,23 @@ void Pool3dMapper::Opset7() {
 
   if (global_pooling_ || (adaptive_ && is_1x1_kernel)) {
     std::string onnx_pool_type;
-    if (OpType() == "max_pool3d_with_index") {
+    if (convert_pir_op_name(OpType()) == "max_pool3d_with_index") {
       onnx_pool_type = "GlobalMaxPool";
     } else {
       auto iter = op_mapper_.find(pooling_type_);
       onnx_pool_type = iter->second[1];
     }
 
-    if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) != kNoNeedCastTypesOpSet7.end())
-    {
-      auto output = helper_->MakeNode(onnx_pool_type, {input_info[0].name}, {output_info[0].name});
-    }
-    else
-    {
-      auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
-                                     P2ODataType::FP32);
+    if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) !=
+        kNoNeedCastTypesOpSet7.end()) {
+      auto output = helper_->MakeNode(
+          onnx_pool_type, {input_info[0].name}, {output_info[0].name});
+    } else {
+      auto input = helper_->AutoCast(
+          input_info[0].name, input_info[0].dtype, P2ODataType::FP32);
       auto output = helper_->MakeNode(onnx_pool_type, {input})->output(0);
-      helper_->AutoCast(output, output_info[0].name, P2ODataType::FP32,
-                        output_info[0].dtype);
+      helper_->AutoCast(
+          output, output_info[0].name, P2ODataType::FP32, output_info[0].dtype);
     }
   } else if (adaptive_) {
     AdaptivePool(input_info, output_info);

@@ -47,7 +47,6 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_quantize_linear.py \
         test_quantize_model_speedup.py \
         test_resnet_fp16.py \
-        test_auto_scan_pool_max_ops.py \
         test_auto_scan_fill_constant.py"
 bug=0
 
