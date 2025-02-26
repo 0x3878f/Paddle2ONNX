@@ -29,18 +29,15 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_roi_align.py \ # need to be rewrite
         test_auto_scan_pool_adaptive_max_ops.py \
         test_auto_scan_pad2d.py \
-        test_auto_scan_unfold.py \
         test_auto_scan_uniform_random_batch_size_like.py \
         test_auto_scan_uniform_random.py \
         test_auto_scan_gaussian_random.py \
         test_auto_scan_distribute_fpn_proposals1.py \
         test_auto_scan_distribute_fpn_proposals_v2.py \
         test_auto_scan_fill_constant_batch_size_like.py \
-        test_auto_scan_unary_ops.py \
         test_auto_scan_generate_proposals.py \
         test_uniform.py \
         test_deform_conv2d.py \
-        test_hardtanh.py \
         test_nn_GRU.py \
         test_quantize_model.py \
         test_quantize_model_minist.py \
@@ -50,7 +47,6 @@ ignore="test_auto_scan_multiclass_nms.py
         test_auto_scan_quantize_linear.py \
         test_quantize_model_speedup.py \
         test_resnet_fp16.py \
-        test_empty.py \
         test_auto_scan_pool_max_ops.py \
         test_auto_scan_fill_constant.py"
 bug=0

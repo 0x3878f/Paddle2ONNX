@@ -11,36 +11,36 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #pragma once
+
+#include <cmath>
+#include <map>
 #include <string>
 #include <vector>
 
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
-
-class EmptyMapper : public Mapper {
+class HardtanhMapper : public Mapper {
  public:
-  EmptyMapper(const PaddleParser& p,
-              OnnxHelper* helper,
-              int64_t block_id,
-              int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("dtype", &output_dtype_);
-  }
-  EmptyMapper(const PaddlePirParser& p,
-              OnnxHelper* helper,
-              int64_t block_id,
-              int64_t op_id)
-      : Mapper(p, helper, block_id, op_id) {
-    GetAttr("dtype", &output_dtype_);
+  HardtanhMapper(const PaddlePirParser& p,
+                 OnnxHelper* helper,
+                 int64_t i,
+                 bool c)
+      : Mapper(p, helper, i, c) {
+    if (HasAttr("min")) {
+      GetAttr("min", &min_);
+    }
+    if (HasAttr("max")) {
+      GetAttr("max", &max_);
+    }
   }
 
   int32_t GetMinOpsetVersion(bool verbose) override;
-  void Opset11() override;
+  void Opset7() override;
 
  private:
-  int64_t output_dtype_;
+  float min_ = -1.0;
+  float max_ = 1.0;
 };
 }  // namespace paddle2onnx
