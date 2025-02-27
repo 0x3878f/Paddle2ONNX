@@ -16,14 +16,16 @@
 #include <string>
 #include <vector>
 
-#include "paddle2onnx/mapper/mapper.h"
 #include "paddle2onnx/mapper/exporter.h"
+#include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
 class Pool3dMapper : public Mapper {
  public:
-  Pool3dMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+  Pool3dMapper(const PaddleParser& p,
+               OnnxHelper* helper,
+               int64_t block_id,
                int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
     op_mapper_["max"] = {"MaxPool", "GlobalMaxPool"};
@@ -43,9 +45,8 @@ class Pool3dMapper : public Mapper {
     }
   }
 
-  Pool3dMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i,
-                  bool c)
-      :Mapper(p, helper, i, c) {
+  Pool3dMapper(const PaddlePirParser& p, OnnxHelper* helper, int64_t i, bool c)
+      : Mapper(p, helper, i, c) {
     op_mapper_["max"] = {"MaxPool", "GlobalMaxPool"};
     op_mapper_["avg"] = {"AveragePool", "GlobalAveragePool"};
     GetAttr("global_pooling", &global_pooling_);
@@ -53,10 +54,10 @@ class Pool3dMapper : public Mapper {
     GetAttr("strides", &strides_);
     GetAttr("paddings", &pads_);
     GetAttr("ksize", &k_size_);
+    GetAttr("ceil_mode", &ceil_mode_);
     if (convert_pir_op_name(OpType()) != "max_pool3d_with_index") {
       GetAttr("pooling_type", &pooling_type_);
       GetAttr("data_format", &data_format_);
-      GetAttr("ceil_mode", &ceil_mode_);
       GetAttr("padding_algorithm", &padding_algorithm_);
       GetAttr("exclusive", &exclusive_);
       exclusive_ = !exclusive_;
@@ -71,7 +72,8 @@ class Pool3dMapper : public Mapper {
                     const std::vector<TensorInfo>& output_info);
   void NoAdaptivePool(const std::vector<TensorInfo>& input_info,
                       const std::vector<TensorInfo>& output_info);
-  const std::unordered_set<int32_t> kNoNeedCastTypesOpSet7{P2ODataType::FP16, P2ODataType::FP32};
+  const std::unordered_set<int32_t> kNoNeedCastTypesOpSet7{P2ODataType::FP16,
+                                                           P2ODataType::FP32};
   bool ceil_mode_;
   bool global_pooling_;
   bool adaptive_;

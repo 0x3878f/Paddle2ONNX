@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "paddle2onnx/mapper/exporter.h"
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
@@ -70,21 +71,22 @@ class Pool2dMapper : public Mapper {
     }
     GetAttr("strides", &strides_);
     GetAttr("paddings", &pads_);
-    // TODO: need double check
-    GetAttr("pooling_type", &pooling_type_);
-    GetAttr("data_format", &data_format_);
     GetAttr("ceil_mode", &ceil_mode_);
-    if (HasAttr("padding_algorithm")) {
-      GetAttr("padding_algorithm", &padding_algorithm_);
-    } else {
-      padding_algorithm_ = "EXPLICIT";
+    if (convert_pir_op_name(OpType()) != "max_pool2d_with_index") {
+      GetAttr("pooling_type", &pooling_type_);
+      GetAttr("data_format", &data_format_);
+      if (HasAttr("padding_algorithm")) {
+        GetAttr("padding_algorithm", &padding_algorithm_);
+      } else {
+        padding_algorithm_ = "EXPLICIT";
+      }
+      if (HasAttr("exclusive")) {
+        GetAttr("exclusive", &exclusive_);
+      } else {
+        exclusive_ = true;
+      }
+      exclusive_ = !exclusive_;
     }
-    if (HasAttr("exclusive")) {
-      GetAttr("exclusive", &exclusive_);
-    } else {
-      exclusive_ = true;
-    }
-    exclusive_ = !exclusive_;
   }
   int32_t GetMinOpsetVersion(bool verbose) override;
   void Opset7() override;

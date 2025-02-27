@@ -16,7 +16,7 @@ from auto_scan_test import OPConvertAutoScanTest, BaseNet
 import hypothesis.strategies as st
 import unittest
 import copy
-from onnxbase import _test_only_pir
+from onnxbase import _test_with_pir
 
 
 # TODO(wangmingkai02): add test for set_value which none_axes_ > 0
@@ -55,14 +55,14 @@ class TestSetValueConvert(OPConvertAutoScanTest):
             "test_data_shapes": [input_shape, update_input_shape],
             "test_data_types": [[dtype], [dtype]],
             "opset_version": [17, 19],
-            "input_spec_shape": [],
+            "input_spec_shape": [input_shape, update_input_shape],
         }
 
         models = Net(config)
 
         return (config, models)
 
-    @_test_only_pir
+    @_test_with_pir
     def test(self):
         self.run_and_statis(max_examples=30)
 

@@ -65,7 +65,7 @@ opset_version_map = {
     "exp": [7, 13, 15],
     "floor": [7, 13, 15],
     "hard_shrink": [9, 15],
-    "brelu": [9, 15],
+    # "brelu": [9, 15],
     "log": [7, 13, 15],
     "log1p": [7, 13, 14, 15],
     "log2": [7, 13, 15],

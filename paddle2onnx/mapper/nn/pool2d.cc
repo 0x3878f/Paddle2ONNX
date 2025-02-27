@@ -24,6 +24,7 @@ REGISTER_MAPPER(pool2d, Pool2dMapper)
 REGISTER_MAPPER(max_pool2d_with_index, Pool2dMapper)
 
 REGISTER_PIR_MAPPER(pool2d, Pool2dMapper)
+REGISTER_PIR_MAPPER(max_pool2d_with_index, Pool2dMapper)
 
 bool Pool2dMapper::IsSameSpan(const int64_t& in_size, const int64_t& out_size) {
   std::vector<int64_t> spans;
@@ -48,16 +49,13 @@ void Pool2dMapper::AdaptivePool(const std::vector<TensorInfo>& input_info,
   int64_t kernel_h = input_h - (output_h - 1) * stride_h;
   int64_t kernel_w = input_w - (output_w - 1) * stride_w;
   std::string onnx_pool_type;
-  // if (OpType() == "max_pool2d_with_index") {
-  //   onnx_pool_type = "MaxPool";
-  // } else {
-  //   auto iter = op_mapper_.find(pooling_type_);
-  //   onnx_pool_type = iter->second[0];
-  // }
-  auto iter = op_mapper_.find(pooling_type_);
-  Assert(iter != op_mapper_.end(), "Pooling not found");
-  onnx_pool_type = iter->second[0];
-
+  if (convert_pir_op_name(OpType()) == "max_pool2d_with_index") {
+    onnx_pool_type = "MaxPool";
+  } else {
+    auto iter = op_mapper_.find(pooling_type_);
+    Assert(iter != op_mapper_.end(), "Pooling not found");
+    onnx_pool_type = iter->second[0];
+  }
   std::shared_ptr<ONNX_NAMESPACE::NodeProto> node(nullptr);
   if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) !=
       kNoNeedCastTypesOpSet7.end()) {
@@ -150,15 +148,13 @@ void Pool2dMapper::NoAdaptivePool(const std::vector<TensorInfo>& input_info,
     pads_.resize(4, 0);
   }
   std::string onnx_pool_type;
-  // if (OpType() == "max_pool2d_with_index") {
-  //   onnx_pool_type = "MaxPool";
-  // } else {
-  //   auto iter = op_mapper_.find(pooling_type_);
-  //   onnx_pool_type = iter->second[0];
-  // }
-  auto iter = op_mapper_.find(pooling_type_);
-  Assert(iter != op_mapper_.end(), "Pooling not found");
-  onnx_pool_type = iter->second[0];
+  if (convert_pir_op_name(OpType()) == "max_pool2d_with_index") {
+    onnx_pool_type = "MaxPool";
+  } else {
+    auto iter = op_mapper_.find(pooling_type_);
+    Assert(iter != op_mapper_.end(), "Pooling not found");
+    onnx_pool_type = iter->second[0];
+  }
   std::shared_ptr<ONNX_NAMESPACE::NodeProto> node(nullptr);
   if (kNoNeedCastTypesOpSet7.find(input_info[0].dtype) !=
       kNoNeedCastTypesOpSet7.end()) {
@@ -209,13 +205,17 @@ int32_t Pool2dMapper::GetMinOpsetVersion(bool verbose) {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
   if (in_pir_mode) {
-    // TODO(qinzhongyu): For PIR, kernel size is in inputs
-    auto ksize = GetInput("ksize")[0];
-    Assert(IsConstantInput("ksize"), "ksize's type is not constant.");
-    // for (auto i = 0; i < ksize.shape.size(); ++ i) {
-    //   k_size_.push_back(ksize.shape[i]);
-    // }
-    TryGetInputValue("ksize", &k_size_);
+    if (convert_pir_op_name(OpType()) != "max_pool2d_with_index") {
+      // TODO(qinzhongyu): For PIR, kernel size is in inputs
+      auto ksize = GetInput("ksize")[0];
+      Assert(IsConstantInput("ksize"), "ksize's type is not constant.");
+      // for (auto i = 0; i < ksize.shape.size(); ++ i) {
+      //   k_size_.push_back(ksize.shape[i]);
+      // }
+      TryGetInputValue("ksize", &k_size_);
+    } else {
+      GetAttr("kernel_size", &k_size_);
+    }
   } else {
     if (IsAttrVar("ksize")) {
       Error() << "While Attribute(ksize)'s type is Tensor, it's not "
@@ -287,7 +287,10 @@ void Pool2dMapper::Opset7() {
     }
     */
     // k_size_ = GetInputAttrVar("ksize", "value");
-    TryGetInputValue("ksize", &k_size_);
+    if (convert_pir_op_name(OpType()) != "max_pool2d_with_index")
+      TryGetInputValue("ksize", &k_size_);
+    else
+      GetAttr("kernel_size", &k_size_);
   } else {
     GetAttr("ksize", &k_size_);
   }
@@ -301,7 +304,7 @@ void Pool2dMapper::Opset7() {
 
   if (global_pooling_ || (adaptive_ && is_1x1_kernel)) {
     std::string onnx_pool_type;
-    if (OpType() == "max_pool2d_with_index") {
+    if (convert_pir_op_name(OpType()) == "max_pool2d_with_index") {
       onnx_pool_type = "GlobalMaxPool";
     } else {
       auto iter = op_mapper_.find(pooling_type_);

@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import paddle
-from onnxbase import APIOnnx
-from onnxbase import randtool
+from onnxbase import APIOnnx, randtool, _test_with_pir
 
 
 class Net(paddle.nn.Layer):
@@ -33,6 +32,7 @@ class Net(paddle.nn.Layer):
         return x
 
 
+@_test_with_pir
 def test_hardtanh_9():
     """
     api: paddle.hardtanh
@@ -49,6 +49,7 @@ def test_hardtanh_9():
     obj.run()
 
 
+@_test_with_pir
 def test_hardtanh_10():
     """
     api: paddle.hardtanh
@@ -65,6 +66,7 @@ def test_hardtanh_10():
     obj.run()
 
 
+@_test_with_pir
 def test_hardtanh_11():
     """
     api: paddle.hardtanh
@@ -81,6 +83,7 @@ def test_hardtanh_11():
     obj.run()
 
 
+@_test_with_pir
 def test_hardtanh_12():
     """
     api: paddle.hardtanh
